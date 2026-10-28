@@ -3,7 +3,7 @@ import { Vector3 } from 'three'
 import type { GameEvent, DieId, DieSymbol, GameState, PlayerId } from '../core'
 import type { createBoard } from '../scene/board'
 import { collectionSlot } from '../scene/tableLayout'
-import { eventDice } from './resolutionPlan'
+import { eventDice, favorFailureTitle } from './resolutionPlan'
 import { eventText } from './eventText'
 import { resourceSteps } from './resources'
 
@@ -145,6 +145,13 @@ export function createCombatPresenter(
     },
     async play(event: GameEvent) {
       if (closed) return
+      const failure = favorFailureTitle(event)
+      if (failure) {
+        feedback.cue?.({ title: failure })
+        await animate(t => wait(t, reduced() ? 0.65 : 1.3))
+        if (!closed) feedback.cue?.(null)
+        return
+      }
       const text = eventText(event)
       if (text) feedback.cue?.({ text,
         symbol: event.type === 'AttackBlocked' || event.type === 'DamageDealt' ? event.symbol : event.type === 'TokensStolen' ? 'hand' : undefined,
@@ -205,7 +212,7 @@ export function createCombatPresenter(
             if (closed) return
             await flight(source(event), board.dice.get(value.dieId)!.position.clone(), { blocked: true, color: '#aee5c5' })
           }
-        } else if (event.type === 'FavorReduced' || event.type === 'FavorEffectApplied' || event.type === 'FavorFailed') {
+        } else if (event.type === 'FavorReduced' || event.type === 'FavorEffectApplied') {
           await flight(source(event), event.type === 'FavorReduced' ? board.totem(event.targetId, event.favorId).position.clone() : source(event), { blocked: true, color: '#c1b8ff' })
         }
       } finally {

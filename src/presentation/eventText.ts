@@ -9,7 +9,7 @@ export function eventText(event: GameEvent | null): string {
     case 'TokensGained': return `${playerLabel(event.playerId)} ${event.dieIds.length} altın jeton kazandı.`
     case 'TokensStolen': return `${playerLabel(event.playerId)} ${event.amount} jeton çaldı.`
     case 'FavorInvoked': return `${playerLabel(event.playerId)}: ${FAVOR_CATALOG[event.favorId].name} · ${event.cost} jeton ödendi.`
-    case 'FavorFailed': return event.reason === 'cancelled' ? `${playerLabel(event.playerId)}: ${FAVOR_CATALOG[event.favorId].name} sıfır seviyeye indirildi; iptal edildi.` : `${playerLabel(event.playerId)}: ${FAVOR_CATALOG[event.favorId].name} için ${event.cost} jeton yok; güç uygulanmadı.`
+    case 'FavorFailed': return event.reason === 'cancelled' ? `${playerLabel(event.playerId)}: ${FAVOR_CATALOG[event.favorId].name} sıfır seviyeye indirildi; iptal edildi.` : event.reason === 'tokens' ? `${playerLabel(event.playerId)}: ${FAVOR_CATALOG[event.favorId].name} için ${event.cost} jeton yok; güç uygulanmadı.` : `${playerLabel(event.playerId)}: ${FAVOR_CATALOG[event.favorId].name} kullanılamadı.`
     case 'DiceRecast': return `${playerLabel(event.playerId)}: ${FAVOR_CATALOG[event.favorId].name} ile ${event.dice.length} zar ${event.added ? 'eklendi' : 'yeniden atıldı'}.`
     case 'DiceRemoved': return `${playerLabel(event.targetId)}: ${event.dieIds.length} zar bu tur kaldırıldı.`
     case 'DiceValuesChanged': return `${playerLabel(event.playerId)}: ${FAVOR_CATALOG[event.favorId].name} · ${event.values.map(v => `${v.dieId.split('/')[1]} ×${v.value}`).join(', ') || 'uygun zar yok'}.`

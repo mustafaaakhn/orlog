@@ -24,3 +24,10 @@ export function phaseTitle(event: GameEvent, previous: GamePhase['name']): strin
   if (event.phase.name === 'resolution') return 'Çözümleme'
   return ''
 }
+
+export function favorFailureTitle(event: GameEvent): string {
+  if (event.type !== 'FavorFailed') return ''
+  if (event.reason === 'tokens') return 'Yeterli jeton yok · Güç kullanılamadı'
+  if (event.reason === 'cancelled') return 'Güç iptal edildi · Seviye sıfıra indirildi'
+  return 'Güç kullanılamadı'
+}
