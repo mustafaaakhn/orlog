@@ -776,3 +776,8 @@ input:not([type=checkbox]):not([type=radio]):not([type=range]) { min-height: 44p
 .phase-banner strong { flex: 1; min-width: 0; overflow-wrap: anywhere; }
 .turn-heading > div:first-child { min-width: 0; max-width: 100%; overflow-wrap: anywhere; }
 .coin-result p { min-width: 0; overflow-wrap: anywhere; }
+
+.opponent-settings { margin: 1.2rem 0; border: 1px solid #76633f; padding: 1rem; }
+.opponent-settings label { display: inline-flex; align-items: center; gap: .5rem; min-height: 44px; margin-right: 1.5rem; }
+.opponent-settings select { color: #f0e6cc; background: #17251f; border: 1px solid #76633f; border-radius: 4px; padding: .6rem; font: inherit; min-height: 44px; }
+.opponent-settings p { margin-bottom: 0; }

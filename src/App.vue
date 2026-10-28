@@ -12,6 +12,9 @@ import FavorPicker from './ui/FavorPicker.vue'
 import { eventText, playerLabel } from './presentation/eventText'
 import type { GameOptions, PlayerId, FavorId, FavorLevel, FavorInput } from './core'
 import { createRollSession } from './app/rollSession'
+import { createComputerDriver } from './app/computerDriver'
+import { DIFFICULTIES } from './ai/computer'
+import type { OpponentOptions } from './ai/computer'
 
 const TablePreview = defineAsyncComponent({
   loader: () => import('./scene/TablePreview.vue'),
@@ -43,8 +46,9 @@ onUnmounted(() => {
   audio.dispose()
 })
 const names = ref<Record<PlayerId, string>>({ 'player-1': 'Oyuncu I', 'player-2': 'Oyuncu II' })
-function start(options: GameOptions, playerNames: Record<PlayerId, string>) {
-  if (session.start(options)) { names.value = playerNames; preparing.value = false; void nextTick(focusAction) }
+const opponent = ref<OpponentOptions>({ mode: 'computer', difficulty: 'normal' })
+function start(options: GameOptions, playerNames: Record<PlayerId, string>, opponentOptions: OpponentOptions) {
+  if (session.start(options)) { names.value = playerNames; opponent.value = opponentOptions; preparing.value = false; void nextTick(focusAction) }
 }
 function restart() { if (!busy.value) { audio.stopEffects(); session.restart(); preparing.value = true; void nextTick(() => document.querySelector<HTMLInputElement>('.setup-panel input')?.focus()) } }
 const closeView = ref(false)
@@ -60,10 +64,21 @@ const activePlayer = computed(() =>
     : null,
 )
 const busy = computed(() => !!pending.value || !sceneReady.value)
+const computerTurn = computed(() => !preparing.value && opponent.value.mode === 'computer' && activePlayer.value?.id === 'player-2')
+const driver = createComputerDriver(command => session.dispatch(command))
+watch([state, pending, preparing, sceneReady, paused, opponent], () => {
+  driver.update({ state: state.value, playerId: opponent.value.mode === 'computer' ? 'player-2' : null,
+    difficulty: opponent.value.difficulty, blocked: preparing.value || busy.value || paused.value })
+}, { immediate: true, flush: 'sync' })
+onUnmounted(() => driver.dispose())
+function selectDie(dieId: Parameters<typeof session.select>[0]) {
+  if (!busy.value && !computerTurn.value && !preparing.value) session.select(dieId)
+}
 const instruction = computed(() => {
   if (pending.value?.events.some((event) => event.type === 'DiceRolled'))
     return 'Zarlar kâsede yatışıyor…'
   if (pending.value) return eventText(lastEvent.value) || 'Olaylar masada çözülüyor…'
+  if (computerTurn.value) return `Bilgisayar düşünüyor… (${DIFFICULTIES[opponent.value.difficulty].label})`
   if (phase.value.name === 'ended') return `${names.value[phase.value.winnerId]} kazandı. Yeni bir maç için yeniden başlat.`
   if (phase.value.name === 'round-complete') return 'Tur tamamlandı. Sonraki turda ilk oyuncu değişecek; canlar ve jetonlar korunur.'
   if (phase.value.name === 'resolution') return 'İki güç seçimi de tamamlandı. Savaşı başlat.'
@@ -74,7 +89,7 @@ const instruction = computed(() => {
     return 'Son atışın zarları otomatik saklandı. Sonucu onayla.'
   return 'Saklamak istediğin zarlara dokun; geri almak için tekrar dokun. Ardından seçimi onayla.'
 })
-const phaseTitle = computed(() => preparing.value ? 'Maç hazırlığı · İki oyuncu güçlerini seçiyor' :
+const phaseTitle = computed(() => preparing.value ? 'Maç hazırlığı · Mod ve güç seçimi' :
   phase.value.name === 'ended' ? `${names.value[phase.value.winnerId]} kazandı` :
   `Tur ${state.value.round} · ${activePlayer.value ? names.value[activePlayer.value.id] + ' · ' : ''}${phase.value.name === 'roll' ? 'Zar atışı ve seçim' : phase.value.name === 'favor' ? 'Güç seçimi' : phase.value.name === 'resolution' ? 'Savaş' : 'Tur tamamlandı'}`)
 function focusAction() {
@@ -98,10 +113,10 @@ watch(pending, async (value, old) => {
   }
 }, { flush: 'sync' })
 function choose(favorId: FavorId, level: FavorLevel, input?: FavorInput) {
-  if (!busy.value && phase.value.name === 'favor') session.dispatch({ type: 'ChooseFavor', playerId: phase.value.activePlayerId, favorId, level, input })
+  if (!busy.value && !computerTurn.value && phase.value.name === 'favor') session.dispatch({ type: 'ChooseFavor', playerId: phase.value.activePlayerId, favorId, level, input })
 }
 function skip() {
-  if (!busy.value && phase.value.name === 'favor') session.dispatch({ type: 'SkipFavor', playerId: phase.value.activePlayerId })
+  if (!busy.value && !computerTurn.value && phase.value.name === 'favor') session.dispatch({ type: 'SkipFavor', playerId: phase.value.activePlayerId })
 }
 function advance() {
   if (busy.value) return
@@ -112,14 +127,14 @@ function availability(ready: boolean) {
   if (!ready) { audio.stopEffects(); session.recover() }
 }
 function roll() {
-  if (!busy.value && phase.value.name === 'roll')
+  if (!busy.value && !computerTurn.value && phase.value.name === 'roll')
     session.dispatch({
       type: 'RollDice',
       playerId: phase.value.activePlayerId,
     })
 }
 function confirm() {
-  if (!busy.value && phase.value.name === 'roll')
+  if (!busy.value && !computerTurn.value && phase.value.name === 'roll')
     session.dispatch({
       type: 'ConfirmRoll',
       playerId: phase.value.activePlayerId,
@@ -154,6 +169,7 @@ function confirm() {
       </div>
       <ExperienceSettings :settings="settings" :audio-failed="audioFailed" @retry="audio.unlock()" />
       <details class="rules-guide"><summary>Nasıl oynanır?</summary><ol>
+        <li>Bilgisayara karşı veya aynı cihazda iki kişilik maç seç. Bilgisayar sırasını kendi oynar; savaşı ve sonraki turu sen başlatırsın.</li>
         <li>Her oyuncu 15 can, 0 jeton ve üç güçle başlar. Yazı tura ilk oyuncuyu seçer.</li>
         <li>Dönüşümlü en fazla üç atış yap. Saklayacağın zarları seçip onayla; üçüncü atış otomatik saklanır.</li>
         <li>Altın çerçeveler jeton verir. Ok kalkanla, balta miğferle engellenir. El, rakibin jetonlarını çalar.</li>
@@ -180,7 +196,7 @@ function confirm() {
           @availability="availability"
           @presented="session.present"
           @settled="session.settle($event)"
-          @select="!busy && session.select($event)"
+          @select="selectDie"
         />
         <div class="view-controls" aria-label="Sahne görünümü">
           <button
@@ -201,8 +217,7 @@ function confirm() {
       </div>
       <div class="table-meta">
         <p>
-          <span class="small-diamond" aria-hidden="true">◇</span> Yerel iki
-          oyuncu <span class="meta-divider">/</span> 15 can · 0 jeton
+          <span class="small-diamond" aria-hidden="true">◇</span> {{ preparing ? 'Yerel maç · Modunu seç' : opponent.mode === 'computer' ? `Bilgisayara karşı · ${DIFFICULTIES[opponent.difficulty].label}` : 'Yerel iki oyuncu' }} <span class="meta-divider">/</span> 15 can · 0 jeton
         </p>
         <button
           class="guide-toggle"
@@ -229,7 +244,7 @@ function confirm() {
           </div>
           <div class="roll-actions">
             <button
-              v-if="phase.name === 'roll' && phase.step === 'awaiting-roll'"
+              v-if="!computerTurn && phase.name === 'roll' && phase.step === 'awaiting-roll'"
               class="primary-action"
               :disabled="busy"
               @click="roll"
@@ -237,7 +252,7 @@ function confirm() {
               Zarları at <span aria-hidden="true">↗</span>
             </button>
             <button
-              v-else-if="phase.name === 'roll'"
+              v-else-if="!computerTurn && phase.name === 'roll'"
               class="primary-action"
               :disabled="busy"
               @click="confirm"
@@ -266,7 +281,7 @@ function confirm() {
         <div class="resource-scores" aria-label="Oyuncu kaynakları">
           <p v-for="player in state.players" :key="player.id"><strong>{{ names[player.id] }}</strong><span>{{ playerLabel(player.id) }} · {{ player.health }} can · {{ player.tokens }} jeton</span></p>
         </div>
-        <FavorPicker v-if="phase.name === 'favor'" :key="phase.activePlayerId" :state="state" :player="state.players[phase.activePlayerId]" :disabled="busy" @choose="choose" @skip="skip" />
+        <FavorPicker v-if="!computerTurn && phase.name === 'favor'" :key="phase.activePlayerId" :state="state" :player="state.players[phase.activePlayerId]" :disabled="busy" @choose="choose" @skip="skip" />
         <details v-if="combatLog.length" class="combat-log" :open="reduced"><summary>Tur olayları</summary><ol><li v-for="event in combatLog" :key="event.id">{{ event.text }}</li></ol></details>
         <div class="dice-trays">
           <DiceTray
@@ -275,12 +290,12 @@ function confirm() {
             :player="player"
             :active="activePlayer?.id === player.id"
             :selectable="
-              !busy &&
+              !busy && !computerTurn &&
               phase.name === 'roll' &&
               phase.step === 'selecting-dice' &&
               phase.activePlayerId === player.id
             "
-            @select="session.select($event)"
+            @select="selectDie"
           />
         </div>
       </section>
@@ -335,7 +350,7 @@ function confirm() {
     </section>
     <footer>
       <span>VALHALLA’DAN İLHAM ALAN BİR MASA DENEYİMİ</span
-      ><span>AŞAMA 06 <span aria-hidden="true">/</span> YEREL TAM MAÇ</span>
+      ><span>AŞAMA 07 <span aria-hidden="true">/</span> BİLGİSAYAR RAKİBİ</span>
     </footer>
   </main>
 </template>
