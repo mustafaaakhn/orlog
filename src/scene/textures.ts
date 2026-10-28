@@ -18,8 +18,13 @@ function texture(element: HTMLCanvasElement) {
 export function createSymbolTexture(symbol: DieSymbol) {
   const { element, context } = canvas(128);
   context.scale(1.28, 1.28);
+  const path = new Path2D(SYMBOL_PATHS[symbol]);
+  context.strokeStyle = '#49321b';
+  context.lineWidth = 3.5;
+  context.lineJoin = 'round';
+  context.stroke(path);
   context.fillStyle = '#ffe4b0';
-  context.fill(new Path2D(SYMBOL_PATHS[symbol]), 'evenodd');
+  context.fill(path, 'evenodd');
   return texture(element);
 }
 // Only surface noise; never consumes the game's random source.
@@ -29,18 +34,18 @@ function noise(x: number, y: number) {
 }
 export function createClothTexture() {
   const { element, context: ctx } = canvas(1024);
-  ctx.fillStyle = "#29484d";
+  ctx.fillStyle = "#b9aa8f";
   ctx.fillRect(0, 0, 1024, 1024);
-  // Dense linen warp/weft with larger, irregular dye variation.
+  // Fine flax warp/weft; low contrast keeps the weave quiet at table distance.
   for (let y = 0; y < 1024; y += 4)
     for (let x = 0; x < 1024; x += 4) {
       const shade = noise(x, y);
-      ctx.fillStyle = `rgba(170,188,171,${0.025 + shade * 0.075})`;
+      ctx.fillStyle = `rgba(238,225,200,${0.035 + shade * 0.055})`;
       ctx.fillRect(x, y + ((x / 4) % 2) * 2, 3, 1);
-      ctx.fillStyle = `rgba(3,17,21,${0.08 + shade * 0.12})`;
+      ctx.fillStyle = `rgba(77,65,47,${0.025 + shade * 0.045})`;
       ctx.fillRect(x + 3, y, 1, 4);
     }
-  for (let i = 0; i < 45; i++) {
+  for (let i = 0; i < 28; i++) {
     const x = noise(i, 2) * 1024,
       y = noise(i, 3) * 1024;
     const gradient = ctx.createRadialGradient(
@@ -51,8 +56,8 @@ export function createClothTexture() {
       y,
       40 + noise(i, 5) * 130,
     );
-    gradient.addColorStop(0, "rgba(5,19,24,.09)");
-    gradient.addColorStop(1, "rgba(5,19,24,0)");
+    gradient.addColorStop(0, "rgba(91,74,48,.025)");
+    gradient.addColorStop(1, "rgba(91,74,48,0)");
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 1024, 1024);
   }
@@ -63,14 +68,14 @@ export function createClothTexture() {
 }
 export function createWoodTexture() {
   const { element, context: ctx } = canvas(512);
-  ctx.fillStyle = "#60412c";
+  ctx.fillStyle = "#4d3d31";
   ctx.fillRect(0, 0, 512, 512);
   for (let y = 0; y < 512; y++) {
     const grain = Math.sin(y * 0.52 + Math.sin(y * 0.071) * 3);
     ctx.strokeStyle =
       grain > 0
-        ? `rgba(190,143,85,${grain * 0.16})`
-        : `rgba(24,12,8,${-grain * 0.2})`;
+        ? `rgba(159,137,102,${grain * 0.12})`
+        : `rgba(26,21,17,${-grain * 0.16})`;
     ctx.lineWidth = 0.5 + noise(y, 5);
     ctx.beginPath();
     ctx.moveTo(0, y);
@@ -82,7 +87,7 @@ export function createWoodTexture() {
     ctx.stroke();
   }
   for (let i = 0; i < 120; i++) {
-    ctx.strokeStyle = `rgba(224,191,141,${noise(i, 0) * 0.09})`;
+    ctx.strokeStyle = `rgba(197,178,144,${noise(i, 0) * 0.06})`;
     ctx.beginPath();
     const x = noise(i, 1) * 512,
       y = noise(i, 2) * 512;
@@ -108,9 +113,9 @@ export function createBowlTexture() {
       const fine = noise(x, y) * 9;
       const shade = grain * 8 + Math.sin(radius * 0.09) * 5 + fine;
       const i = (y * 512 + x) * 4;
-      pixels.data[i] = 103 + shade;
-      pixels.data[i + 1] = 69 + shade * 0.7;
-      pixels.data[i + 2] = 44 + shade * 0.4;
+      pixels.data[i] = 80 + shade * 0.8;
+      pixels.data[i + 1] = 63 + shade * 0.65;
+      pixels.data[i + 2] = 48 + shade * 0.5;
       pixels.data[i + 3] = 255;
     }
   ctx.putImageData(pixels, 0, 0);

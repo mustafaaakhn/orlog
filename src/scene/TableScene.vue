@@ -343,14 +343,14 @@ onBeforeUnmount(dispose);
 <template>
   <primitive :object="camera" :position="camera.position" />
   <TresHemisphereLight
-    color="#d6e2dc"
-    ground-color="#30251d"
-    :intensity="1.35"
+    color="#e4e5df"
+    ground-color="#6c6050"
+    :intensity="1.5"
   />
   <TresDirectionalLight
-    color="#ffd6a0"
+    color="#ffe5bf"
     :position="keyPosition"
-    :intensity="2.4"
+    :intensity="1.8"
     cast-shadow
     :shadow-mapSize="shadowSize"
     :shadow-camera-left="-11"
@@ -359,18 +359,19 @@ onBeforeUnmount(dispose);
     :shadow-camera-bottom="-10"
     :shadow-camera-near="0.5"
     :shadow-camera-far="35"
+    :shadow-radius="4"
     :shadow-normalBias="0.025"
     :shadow-bias="-0.0001"
   />
   <TresDirectionalLight
-    color="#b6d6df"
+    color="#d5e2ed"
     :position="fillPosition"
-    :intensity="1.1"
+    :intensity="0.9"
   />
   <TresDirectionalLight
     color="#f3e4c9"
     :position="frontPosition"
-    :intensity="1.2"
+    :intensity="0.65"
   />
   <primitive :object="board.object" :dispose="null" />
 </template>

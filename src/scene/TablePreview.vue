@@ -153,9 +153,9 @@ onErrorCaptured(() => {
       :key="sceneKey"
       shadows
       render-mode="on-demand"
-      clear-color="#152327"
+      clear-color="#c4b598"
       :dpr="quality === 'high' ? 1.75 : quality === 'low' ? 1 : [1, 1.25]"
-      :tone-mapping-exposure="1.05"
+      :tone-mapping-exposure="1"
       aria-label="Üç boyutlu Orlog masası: iki ayrı ahşap hazne, ortada savaş zarları, solda can taşları ve sağda yatay tanrı levhaları. Zarları doğrudan masada seç. Klavyede Tab ile zarlara geç, Space veya Enter ile seç; yön tuşlarıyla gezin."
       role="img"
       @ready="ready"

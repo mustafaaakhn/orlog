@@ -80,17 +80,17 @@ export function createBoard(invalidate: () => void = () => {}) {
 
   const wood = material({
     map: keepTexture(createWoodTexture()),
-    roughness: 0.7,
-    bumpScale: 0.018,
+    roughness: 0.78,
+    bumpScale: 0.012,
   });
   wood.bumpMap = wood.map;
   const bowlWood = material({
     map: keepTexture(createBowlTexture()),
-    roughness: 0.76,
-    bumpScale: 0.012,
+    roughness: 0.82,
+    bumpScale: 0.008,
   });
   bowlWood.bumpMap = bowlWood.map;
-  const darkWood = material({ color: "#2e2019", roughness: 0.9 });
+  const darkWood = material({ color: "#3d3026", roughness: 0.9 });
   const brass = material({
     color: "#b99856",
     map: keepTexture(createSurfaceTexture("metal")),
@@ -100,7 +100,7 @@ export function createBoard(invalidate: () => void = () => {}) {
   const cloth = material({
     map: keepTexture(createClothTexture()),
     roughness: 1,
-    bumpScale: 0.022,
+    bumpScale: 0.012,
   });
   cloth.bumpMap = cloth.map;
   const bone = material({
@@ -119,22 +119,34 @@ export function createBoard(invalidate: () => void = () => {}) {
     roughness: 0.48,
     metalness: 0.18,
   });
-  const inlay = material({ color: "#a69264", roughness: 1 });
+  const inlay = material({ color: "#827055", roughness: 1 });
 
   const table = mesh(
     root,
-    geometry(new BoxGeometry(18.4, 0.42, 18.2)),
+    geometry(new BoxGeometry(18.4, 0.2, 18.2)),
     darkWood,
-    [0, -0.3, 0],
+    [0, -0.19, 0],
   );
+  table.castShadow = false;
   const fabric = mesh(
     root,
-    geometry(new BoxGeometry(17.8, 0.12, 17.6)),
+    geometry(new BoxGeometry(18.3, 0.12, 18.1)),
     cloth,
     [0, -0.03, 0],
   );
 
-  // Woven borders, corner diamonds and a simple compass inlay.
+  // Visual cloth continues beyond the board. Share the same map and world-space
+  // weave scale; this surface never participates in bowl physics or picking.
+  fabric.castShadow = false;
+  const surroundShape = geometry(new PlaneGeometry(200, 200));
+  const uv = surroundShape.getAttribute("uv");
+  for (let i = 0; i < uv.count; i++)
+    uv.setXY(i, uv.getX(i) * 200 / 18.3, uv.getY(i) * 200 / 18.1);
+  const surround = mesh(root, surroundShape, cloth, [0, -0.31, 0]);
+  surround.rotation.x = -Math.PI / 2;
+  surround.castShadow = false;
+
+  // Subtle stitched borders retain the play area's physical edge.
   const borderLong = geometry(new BoxGeometry(17.25, 0.012, 0.035));
   const borderShort = geometry(new BoxGeometry(0.035, 0.012, 17.0));
   const borders = new Group();
@@ -148,6 +160,8 @@ export function createBoard(invalidate: () => void = () => {}) {
   for (const x of [-8, 8])
     for (const z of [-8.0, 8.0])
       mesh(borders, diamond, inlay, [x, 0.04, z]).rotation.y = Math.PI / 4;
+  // Stitch-sized trim needs no shadow pass; avoid subpixel edge acne on linen.
+  borders.traverse(object => { if (object instanceof Mesh) object.castShadow = false; });
   const bowlProfile = [
     [0.01, 0.08],
     [2.2, 0.08],
