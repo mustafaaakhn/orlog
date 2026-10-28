@@ -34,15 +34,15 @@ function noise(x: number, y: number) {
 }
 export function createClothTexture() {
   const { element, context: ctx } = canvas(1024);
-  ctx.fillStyle = "#b9aa8f";
+  ctx.fillStyle = "#c5b99f";
   ctx.fillRect(0, 0, 1024, 1024);
   // Fine flax warp/weft; low contrast keeps the weave quiet at table distance.
   for (let y = 0; y < 1024; y += 4)
     for (let x = 0; x < 1024; x += 4) {
       const shade = noise(x, y);
-      ctx.fillStyle = `rgba(238,225,200,${0.035 + shade * 0.055})`;
+      ctx.fillStyle = `rgba(238,225,200,${0.13 + shade * 0.14})`;
       ctx.fillRect(x, y + ((x / 4) % 2) * 2, 3, 1);
-      ctx.fillStyle = `rgba(77,65,47,${0.025 + shade * 0.045})`;
+      ctx.fillStyle = `rgba(77,65,47,${0.09 + shade * 0.12})`;
       ctx.fillRect(x + 3, y, 1, 4);
     }
   for (let i = 0; i < 28; i++) {
@@ -63,7 +63,7 @@ export function createClothTexture() {
   }
   const result = texture(element);
   result.wrapS = result.wrapT = RepeatWrapping;
-  result.repeat.set(2, 2);
+  result.repeat.set(5, 5);
   return result;
 }
 export function createWoodTexture() {
@@ -158,13 +158,13 @@ export function createFaceTexture(face: DieFace) {
   }
   if (face.grantsToken) {
     ctx.strokeStyle = "#78501e";
-    ctx.lineWidth = 15;
+    ctx.lineWidth = 25;
     ctx.strokeRect(14, 14, 228, 228);
-    ctx.strokeStyle = "#d7a744";
-    ctx.lineWidth = 9;
+    ctx.strokeStyle = "#dda82d";
+    ctx.lineWidth = 17;
     ctx.strokeRect(14, 14, 228, 228);
     ctx.strokeStyle = "#f3d58a";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 4;
     ctx.strokeRect(10, 10, 236, 236);
     ctx.fillStyle = "#6e4718";
     for (const [x, y] of [

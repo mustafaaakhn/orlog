@@ -30,6 +30,7 @@ export function collectionSlot(player: PlayerId, index: number): [number, number
 }
 
 export function tokenSlot(index: number): [number, number, number] {
-  const visible = Math.max(0, Math.min(index, 39))
-  return [((visible % 5) - 2) * 0.36, 0.1 + Math.floor(visible / 10) * 0.09, Math.floor((visible % 10) / 5) * 0.36]
+  const stack = Math.floor(Math.max(0, index) / 5)
+  const level = Math.max(0, index) % 5
+  return [(stack % 5) * 0.56, 0.09 + level * 0.145, -Math.floor(stack / 5) * 0.57]
 }

@@ -85,6 +85,13 @@ export function createRollSession(options: GameOptions = {}) {
       if (!pending.value && ['round-complete', 'ended'].includes(game.state.phase.name))
         pending.value = { id: ++batchSequence, revision: game.state.revision, state: game.state, events: [] }
     },
+    finishLastRoll(blocked = false) {
+      const current = game.state
+      const phase = current.phase
+      if (blocked || pending.value || state.value !== current || phase.name !== 'roll' ||
+        phase.step !== 'selecting-dice' || current.players[phase.activePlayerId].rollsUsed !== 3) return false
+      return dispatch({ type: 'ConfirmRoll', playerId: phase.activePlayerId })
+    },
     advanceRound() {
       if (pending.value || state.value !== game.state || game.state.phase.name !== 'round-complete') return false
       return dispatch({ type: 'NextRound', playerId: game.state.firstPlayerId })

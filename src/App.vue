@@ -110,11 +110,9 @@ function restart() {
   sceneGeneration.value++;
   preparing.value = true;
   setupScreen.value = "welcome";
-  closeView.value = false;
   overlay.value = null;
   void nextTick(() => document.querySelector<HTMLElement>(".welcome-play")?.focus());
 }
-const closeView = ref(false);
 const sceneReady = ref(false);
 const session = createRollSession();
 const { state, pending, error, lastEvent, history } = session;
@@ -176,7 +174,7 @@ const instruction = computed(() => {
   if (phase.value.step === "awaiting-roll")
     return "Kendi haznendeki zarları at.";
   if (activePlayer.value?.rollsUsed === 3)
-    return "Son atışın zarları otomatik saklandı. Sonucu onayla.";
+    return "Son atışın zarları saklandı; sıra otomatik ilerliyor.";
   return "Saklayacağın zarlara dokun; merkezden geri almak için tekrar dokun.";
 });
 function focusAction() {
@@ -246,8 +244,10 @@ function availability(ready: boolean) {
   }
 }
 watch([state, pending, sceneReady, paused, preparing, overlay], () => {
-  if (!preparing.value && !busy.value && !paused.value && !overlay.value)
+  if (!preparing.value && !busy.value && !paused.value && !overlay.value) {
+    session.finishLastRoll();
     session.advanceRound();
+  }
 });
 function roll() {
   if (!busy.value && !computerTurn.value && phase.value.name === "roll")
@@ -326,7 +326,6 @@ function confirm() {
         :paused="paused || !!overlay"
         :quality="settings.quality"
         :speed="speed"
-        :close-view="closeView && phase.name === 'roll'"
         :state="state"
         :batch="pending"
         :viewer-id="viewerId"
@@ -348,59 +347,16 @@ function confirm() {
       @screen="setupScreen = $event"
     />
     <section v-else class="match-screen" aria-label="Orlog oyun masası">
-      <div class="match-hud">
-        <article
-          v-for="player in state.players"
-          :key="player.id"
-          class="player-hud"
-          :class="[
-            player.id,
-            {
-              'has-turn': activePlayer?.id === player.id,
-              'is-self': player.id === viewerId,
-              'is-opponent': player.id !== viewerId,
-            },
-          ]"
-        >
-          <div class="player-identity">
-            <span class="player-seal">{{
-              player.id === "player-1" ? "I" : "II"
-            }}</span>
-            <div>
-              <span class="player-label">{{
-                player.id === viewerId ? "Senin tarafın" : "Karşı taraf"
-              }}</span
-              ><strong>{{ names[player.id] }}</strong>
-            </div>
-          </div>
-          <p class="player-resources">
-            <b>{{ player.health }}</b> can <span></span
-            ><b>{{ player.tokens }}</b> jeton
-          </p>
-        </article>
-        <div class="match-round" role="status" aria-live="polite">
-          <strong>Tur {{ state.round }}</strong
-          ><span>{{
-            phase.name === "roll"
-              ? "Zar atışı"
-              : phase.name === "favor"
-                ? "Tanrı gücü"
-                : phase.name === "ended"
-                  ? "Maç bitti"
-                  : "Savaş"
-          }}</span>
-        </div>
+      <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
+        <p v-for="player in state.players" :key="player.id">
+          {{ names[player.id] }}: {{ player.health }} can, {{ player.tokens }} jeton.
+          {{ player.id === viewerId ? 'Senin tarafın.' : 'Karşı taraf.' }}
+        </p>
+        <p>{{ instruction }}</p>
       </div>
-      <div class="table-tools" aria-label="Sahne görünümü">
-        <button
-          class="text-button"
-          :disabled="busy"
-          :aria-pressed="closeView"
-          @click="closeView = !closeView"
-        >
-          {{ closeView ? "Tüm masayı gör" : "Zarlara yaklaş" }}
-        </button>
-      </div>
+      <p class="table-round" aria-label="Tur ve sıra">
+        Tur {{ state.round }}<span v-if="activePlayer"> · {{ names[activePlayer.id] }}</span>
+      </p>
       <section
         v-if="!computerTurn && phase.name === 'favor'"
         class="favor-action-panel"
@@ -419,81 +375,24 @@ function confirm() {
       <section
         id="match-controls"
         tabindex="-1"
-        class="action-dock roll-panel"
-        :aria-busy="!!pending"
+        class="match-actions"
         aria-label="Oyun kontrolleri"
       >
-        <div class="dock-status">
-          <strong>{{
-            phase.name === "ended"
-              ? `${names[phase.winnerId]} kazandı`
-              : activePlayer
-                ? `${names[activePlayer.id]}${computerTurn ? " düşünüyor…" : ", sıra sende."}`
-                : phase.name === "resolution"
-                  ? "Savaş zamanı."
-                  : "Tur tamamlandı."
-          }}</strong
-          ><span v-if="activePlayer && phase.name === 'roll'"
-            >Atış
-            {{
-              Math.min(
-                activePlayer.rollsUsed +
-                  (phase.step === "awaiting-roll" ? 1 : 0),
-                3,
-              )
-            }}
-            / 3</span
-          ><span v-if="pending">{{
-            paused ? "Duraklatıldı" : "Olaylar oynanıyor…"
-          }}</span>
-        </div>
-        <div class="dock-main">
-          <p class="roll-instruction" role="status" aria-live="polite">
-            {{ instruction }}
-          </p>
-          <div class="roll-actions">
-            <button
-              v-if="
-                !computerTurn &&
-                phase.name === 'roll' &&
-                phase.step === 'awaiting-roll'
-              "
-              class="primary-action"
-              :disabled="busy"
-              @click="roll"
-            >
-              Zarları at <UiIcon name="arrow" />
-            </button>
-            <button
-              v-else-if="!computerTurn && phase.name === 'roll'"
-              class="primary-action"
-              :disabled="busy"
-              @click="confirm"
-            >
-              {{
-                activePlayer?.rollsUsed === 3
-                  ? "Sonucu onayla"
-                  : "Seçimi onayla"
-              }}<UiIcon name="check" />
-            </button>
-            <button
-              v-if="phase.name === 'resolution'"
-              class="primary-action"
-              :disabled="busy"
-              @click="advance"
-            >
-              Savaşı başlat<UiIcon name="arrow" />
-            </button>
-            <button
-              v-if="phase.name === 'ended'"
-              class="primary-action"
-              :disabled="busy"
-              @click="restart"
-            >
-              Yeni oyun <UiIcon name="arrow" />
-            </button>
-          </div>
-        </div>
+        <template v-if="!busy && !computerTurn && phase.name === 'roll'">
+          <button v-if="phase.step === 'awaiting-roll'" class="primary-action" @click="roll">
+            Zar at <UiIcon name="arrow" />
+          </button>
+          <button v-else-if="activePlayer && activePlayer.rollsUsed < 3" class="primary-action" @click="confirm">
+            Seçimi onayla <UiIcon name="check" />
+          </button>
+        </template>
+        <button v-if="!busy && phase.name === 'resolution'" class="primary-action" @click="advance">
+          Savaşı başlat <UiIcon name="arrow" />
+        </button>
+        <template v-if="!busy && phase.name === 'ended'">
+          <p class="match-winner">{{ names[phase.winnerId] }} kazandı.</p>
+          <button class="primary-action" @click="restart">Yeni oyun <UiIcon name="arrow" /></button>
+        </template>
         <p v-if="error" class="field-error" role="alert">{{ error }}</p>
       </section>
     </section>

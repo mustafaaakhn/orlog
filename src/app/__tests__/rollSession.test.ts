@@ -216,3 +216,59 @@ describe('automatic round completion boundary', () => {
     expect(session.advanceRound()).toBe(false)
   })
 })
+
+describe('third roll automatic handoff', () => {
+  function thirdRoll(session: ReturnType<typeof createRollSession>) {
+    for (let i = 0; i < 4; i++) {
+      roll(session); settle(session)
+      const phase = session.state.value.phase
+      if (phase.name !== 'roll') throw new Error('Expected roll')
+      session.dispatch({ type: 'ConfirmRoll', playerId: phase.activePlayerId }); settle(session)
+    }
+    return roll(session)
+  }
+  it('waits for the last recording, honors blocking and hands off exactly once', () => {
+    const session = createRollSession()
+    expect(session.finishLastRoll()).toBe(false)
+    const third = thirdRoll(session)
+    expect(session.finishLastRoll()).toBe(false)
+    session.settle(third.id + 1)
+    expect(session.finishLastRoll()).toBe(false)
+    session.settle(third.id)
+    expect(session.state.value.players['player-1'].dice.every(die => die.kept)).toBe(true)
+    expect(session.finishLastRoll(true)).toBe(false)
+    expect(session.finishLastRoll()).toBe(true)
+    const handoff = session.pending.value!
+    expect(session.finishLastRoll()).toBe(false)
+    session.settle(third.id)
+    expect(session.pending.value).toBe(handoff)
+    settle(session)
+    expect(session.state.value.phase).toEqual({ name: 'roll', step: 'awaiting-roll', activePlayerId: 'player-2' })
+    const last = roll(session)
+    expect(session.finishLastRoll()).toBe(false)
+    settle(session)
+    expect(session.finishLastRoll()).toBe(true)
+    expect(session.pending.value!.events).toContainEqual(expect.objectContaining({type: 'PhaseChanged', phase: { name: 'favor', activePlayerId: 'player-1' }}))
+    settle(session)
+    expect(session.state.value.phase.name).toBe('favor')
+    expect(session.finishLastRoll()).toBe(false)
+    expect(last.state.players['player-2'].rollsUsed).toBe(3)
+  })
+  it('leaves the first two confirmations explicit and rejects previous-match completions', () => {
+    const session = createRollSession()
+    roll(session); settle(session)
+    expect(session.finishLastRoll()).toBe(false)
+    session.restart()
+    const third = thirdRoll(session)
+    session.recover()
+    expect(session.finishLastRoll(true)).toBe(false)
+    expect(session.finishLastRoll()).toBe(true)
+    const handoff = session.pending.value!
+    session.settle(third.id)
+    expect(session.pending.value).toBe(handoff)
+    session.recover(); session.restart()
+    session.settle(handoff.id)
+    expect(session.finishLastRoll()).toBe(false)
+    expect(session.state.value.revision).toBe(0)
+  })
+})

@@ -54,3 +54,18 @@ describe("player-facing table layout", () => {
     expect(closestDieTarget([], 0, 0, 400, 400)).toBeUndefined();
   });
 });
+
+import { tokenSlot } from '../tableLayout'
+describe('physical gold plate stacks', () => {
+  it.each([5, 6, 10, 11, 12, 41, 127])('places all %i plates in stacks of at most five without truncation', count => {
+    const stacks = new Map<string, number[]>()
+    for (let i = 0; i < count; i++) {
+      const [x, y, z] = tokenSlot(i), key = `${x}/${z}`
+      stacks.set(key, [...stacks.get(key) ?? [], y])
+    }
+    expect(stacks.size).toBe(Math.ceil(count / 5))
+    expect([...stacks.values()].every(levels => levels.length <= 5 && new Set(levels).size === levels.length)).toBe(true)
+    expect([...stacks.values()].reduce((sum, levels) => sum + levels.length, 0)).toBe(count)
+    if (count === 12) expect([...stacks.values()].map(levels => levels.length)).toEqual([5, 5, 2])
+  })
+})

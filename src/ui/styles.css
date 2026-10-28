@@ -2828,3 +2828,84 @@ input[type="radio"] {
   .resolution-cue.is-title { top: 36%; }
   .resolution-cue p { font-size: 14px; }
 }
+
+.scene-favor-controls {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.scene-favor-target {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  pointer-events: auto;
+}
+.scene-favor-target:focus-visible {
+  outline: 2px solid #fff1ca;
+  outline-offset: 2px;
+}
+.favor-target-name {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 4px 8px;
+  color: var(--ink);
+  background: var(--cue-background);
+  font-size: 14px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.scene-favor-target:hover .favor-target-name,
+.scene-favor-target:focus .favor-target-name { display: block; }
+
+/* 7F: the playing surface owns the viewport; only the available action remains. */
+.in-match .scene-layer { inset: 84px 0 76px; }
+.match-actions {
+  position: absolute;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  text-align: center;
+  width: max-content;
+  max-width: calc(100% - 24px);
+}
+.match-actions .primary-action { min-width: 172px; min-height: 52px; }
+.match-actions:empty { display: none; }
+.table-round {
+  position: absolute;
+  margin: 0;
+  top: 8px;
+  left: 24px;
+  padding: 5px 10px;
+  background: var(--cue-background);
+  color: #fff4dd;
+  font-size: 14px;
+  max-width: calc(100% - 48px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.match-winner { color: var(--text); background: var(--panel); padding: 8px 12px; }
+@media (max-width: 600px) {
+  .in-match .scene-layer { inset: 90px 0 76px; }
+  .match-actions .primary-action { min-height: 48px; }
+  .table-round { left: 12px; max-width: calc(100% - 24px); }
+}
+@media (max-height: 700px) and (min-width: 601px) {
+  .in-match .scene-layer { inset: 64px 0 76px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .in-match .scene-layer { inset: 56px 0 0; }
+  .match-actions { left: auto; right: 12px; bottom: 12px; transform: none; max-width: 190px; }
+  .match-actions .primary-action { min-width: 150px; }
+  .table-round { top: 4px; }
+}

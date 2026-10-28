@@ -1,5 +1,10 @@
 import {
   BoxGeometry,
+  DoubleSide,
+  InstancedMesh,
+  Matrix4,
+  TubeGeometry,
+  CatmullRomCurve3,
   BufferGeometry,
   CylinderGeometry,
   Group,
@@ -16,6 +21,8 @@ import {
   Vector2,
   Vector3,
 } from "three";
+import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
+import { createClothGeometry } from "./clothGeometry";
 import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js";
 import { FAVOR_ART_URL, FAVOR_ART_IDS, favorArtIndex } from "./favorArt";
 import { DICE_DEFINITIONS, DEFAULT_FAVORS, FAVOR_CATALOG } from "../core";
@@ -91,6 +98,8 @@ export function createBoard(invalidate: () => void = () => {}) {
   });
   bowlWood.bumpMap = bowlWood.map;
   const darkWood = material({ color: "#3d3026", roughness: 0.9 });
+  // Exposed lighter wood inside the cut stays legible on the unlit outer wall.
+  const carvedWood = material({ color: '#c8a16d', roughness: 0.82, emissive: '#805026', emissiveIntensity: 0.18 });
   const brass = material({
     color: "#b99856",
     map: keepTexture(createSurfaceTexture("metal")),
@@ -99,8 +108,9 @@ export function createBoard(invalidate: () => void = () => {}) {
   });
   const cloth = material({
     map: keepTexture(createClothTexture()),
-    roughness: 1,
-    bumpScale: 0.012,
+    roughness: 0.96,
+    side: DoubleSide,
+    bumpScale: 0.055,
   });
   cloth.bumpMap = cloth.map;
   const bone = material({
@@ -119,57 +129,28 @@ export function createBoard(invalidate: () => void = () => {}) {
     roughness: 0.48,
     metalness: 0.18,
   });
-  const inlay = material({ color: "#827055", roughness: 1 });
 
   const table = mesh(
     root,
-    geometry(new BoxGeometry(18.4, 0.2, 18.2)),
-    darkWood,
-    [0, -0.19, 0],
+    geometry(new RoundedBoxGeometry(21.5, 0.48, 20.8, 2, 0.12)),
+    wood,
+    [0, -0.235, 0],
   );
   table.castShadow = false;
-  const fabric = mesh(
-    root,
-    geometry(new BoxGeometry(18.3, 0.12, 18.1)),
-    cloth,
-    [0, -0.03, 0],
-  );
-
-  // Visual cloth continues beyond the board. Share the same map and world-space
-  // weave scale; this surface never participates in bowl physics or picking.
-  fabric.castShadow = false;
-  const surroundShape = geometry(new PlaneGeometry(200, 200));
-  const uv = surroundShape.getAttribute("uv");
-  for (let i = 0; i < uv.count; i++)
-    uv.setXY(i, uv.getX(i) * 200 / 18.3, uv.getY(i) * 200 / 18.1);
-  const surround = mesh(root, surroundShape, cloth, [0, -0.31, 0]);
+  const fabric = mesh(root, geometry(createClothGeometry()), cloth, [0, 0, 0]);
+  fabric.name = 'Draped linen with raised irregular hem';
+  // The dark surroundings are separate from the cut fabric and the wooden table.
+  const surround = mesh(root, geometry(new PlaneGeometry(200, 200)), darkWood, [0, -0.58, 0]);
   surround.rotation.x = -Math.PI / 2;
   surround.castShadow = false;
-
-  // Subtle stitched borders retain the play area's physical edge.
-  const borderLong = geometry(new BoxGeometry(17.25, 0.012, 0.035));
-  const borderShort = geometry(new BoxGeometry(0.035, 0.012, 17.0));
-  const borders = new Group();
-  root.add(borders);
-  for (const z of [-8.45, 8.45]) {
-    mesh(borders, borderLong, inlay, [0, 0.038, z]);
-    mesh(borders, borderLong, inlay, [0, 0.038, z + Math.sign(z) * 0.13]);
-  }
-  for (const x of [-8.5, 8.5]) mesh(borders, borderShort, inlay, [x, 0.038, 0]);
-  const diamond = geometry(new BoxGeometry(0.22, 0.014, 0.22));
-  for (const x of [-8, 8])
-    for (const z of [-8.0, 8.0])
-      mesh(borders, diamond, inlay, [x, 0.04, z]).rotation.y = Math.PI / 4;
-  // Stitch-sized trim needs no shadow pass; avoid subpixel edge acne on linen.
-  borders.traverse(object => { if (object instanceof Mesh) object.castShadow = false; });
   const bowlProfile = [
     [0.01, 0.08],
     [2.2, 0.08],
-    [2.52, 0.19],
-    [2.8, 0.43],
-    [3.05, 0.8],
-    [3.11, 0.99],
-    [3.05, 1.07],
+    [2.65, 0.19],
+    [2.99, 0.43],
+    [3.23, 0.8],
+    [3.25, 0.99],
+    [3.15, 1.07],
     [2.96, 1.04],
     [2.86, 0.78],
     [2.63, 0.5],
@@ -178,14 +159,31 @@ export function createBoard(invalidate: () => void = () => {}) {
   ].map(([x, y]) => new Vector2(x, y));
   const bowlShape = geometry(new LatheGeometry(bowlProfile, 96));
   const bowlFloor = geometry(new CylinderGeometry(2.35, 2.35, 0.03, 96));
-  const rim = geometry(new TorusGeometry(3.065, 0.035, 8, 96));
+  const rim = geometry(new TorusGeometry(3.09, 0.045, 8, 96));
   const innerRing = geometry(new TorusGeometry(2.16, 0.012, 6, 96));
+  // An original continuous wave-and-eye carving follows the outer wood wall.
+  const carvingParts: BufferGeometry[] = [];
+  for (const strand of [-1, 1]) for (let i = 0; i < 24; i++) {
+    const points = Array.from({ length: 13 }, (_, j) => {
+      const t = j / 12, angle = (i + t) * Math.PI * 2 / 24;
+      // The cut follows the exposed outer shoulder; the lip must not hide it
+      // when viewed from the near seat. This is outside the inner collider.
+      const radius = 3.09 + Math.sin(t * Math.PI * 2) * 0.09 * strand;
+      const top = radius > 3.15 ? 1.07 - (radius - 3.15) * 0.8 : 1.04 + (radius - 2.96) * 0.03 / 0.19;
+      const y = top - 0.012;
+      return new Vector3(Math.sin(angle) * radius, y, Math.cos(angle) * radius);
+    });
+    carvingParts.push(new TubeGeometry(new CatmullRomCurve3(points), 8, 0.025, 3, false));
+  }
+  const carvingShape = geometry(mergeGeometries(carvingParts)!);
+  carvingParts.forEach(part => part.dispose());
   for (const player of ["player-1", "player-2"] as const) {
     const bowl = new Group();
     bowl.name = `${player}: personal dice bowl`;
     bowl.position.set(...bowlCenter(player));
     root.add(bowl);
     mesh(bowl, bowlShape, wood, [0, 0, 0]);
+    mesh(bowl, carvingShape, carvedWood, [0, 0, 0]);
     mesh(bowl, bowlFloor, bowlWood, [0, 0.31, 0]);
     mesh(bowl, rim, brass, [0, 1.035, 0]).rotation.x = -Math.PI / 2;
     mesh(bowl, innerRing, darkWood, [0, 0.33, 0]).rotation.x = -Math.PI / 2;
@@ -225,17 +223,13 @@ export function createBoard(invalidate: () => void = () => {}) {
           plaque.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), normal);
           plaque.castShadow = false;
         });
-        const marker = mesh(
-          die,
-          geometry(new BoxGeometry(0.98, 0.98, 0.98)),
-          material({ color: "#d8b76e", wireframe: true }),
-          [0, 0, 0],
-        );
-        marker.visible = false;
-        marker.name = "selection-marker";
-        const activity = mesh(die, marker.geometry, material({ color: '#ffe4a0', emissive: '#d8b76e', emissiveIntensity: 1, wireframe: true, transparent: true }), [0, 0, 0]);
+        // The shared presenter marker remains an invisible anchor; no wire cage.
+        const marker = new Group();
+        marker.name = 'selection-marker';
+        die.add(marker);
+        const activity = mesh(die, geometry(new TorusGeometry(0.53, 0.035, 4, 24)), material({ color: '#ffe4a0', emissive: '#d8b76e', emissiveIntensity: 1 }), [0, -0.39, 0]);
+        activity.rotation.x = -Math.PI / 2;
         activity.name = 'activity-marker';
-        activity.scale.setScalar(1.08);
         activity.visible = false;
         die.visible = false;
         root.add(die);
@@ -258,6 +252,9 @@ export function createBoard(invalidate: () => void = () => {}) {
   const portraitSurface = material({
     map: atlas,
     roughness: 0.83,
+    emissive: "#e4c7a1",
+    emissiveMap: atlas,
+    emissiveIntensity: 0.14,
     metalness: 0,
   });
   const portraitShapes = new Map<FavorId, PlaneGeometry>();
@@ -285,7 +282,27 @@ export function createBoard(invalidate: () => void = () => {}) {
   };
   const valueSurfaces = new Map<number, MeshStandardMaterial>();
   const tokenGroups: Group[] = [];
-  const tokenShape = geometry(new CylinderGeometry(0.17, 0.17, 0.08, 12));
+  const plateParts: BufferGeometry[] = [new RoundedBoxGeometry(0.47, 0.12, 0.47, 1, 0.045)];
+  // Raised four-loop maker's mark, built from metal, never a text decal.
+  for (const x of [-0.085, 0.085]) for (const z of [-0.085, 0.085]) {
+    const loop = new TorusGeometry(0.056, 0.014, 3, 6);
+    loop.rotateX(-Math.PI / 2);
+    loop.translate(x, 0.071, z);
+    plateParts.push(loop);
+  }
+  for (const z of [-0.085, 0.085]) {
+    const bar = new BoxGeometry(0.17, 0.025, 0.025); bar.translate(0, 0.071, z); plateParts.push(bar);
+  }
+  for (const x of [-0.085, 0.085]) {
+    const bar = new BoxGeometry(0.025, 0.025, 0.17); bar.translate(x, 0.071, 0); plateParts.push(bar);
+  }
+  const flatParts = plateParts.map(part => part.index ? part.toNonIndexed() : part);
+  const tokenShape = geometry(mergeGeometries(flatParts)!);
+  const gold = material({ color: '#edbd55', metalness: 0.28, roughness: 0.42, map: brass.map, emissive: '#8a5815', emissiveIntensity: 0.14 });
+  flatParts.forEach(part => part.dispose());
+  plateParts.forEach(part => part.dispose());
+  const tokenMeshes: InstancedMesh[] = [];
+  const tokenMatrix = new Matrix4();
   const effect = mesh(
     root,
     geometry(new SphereGeometry(0.18, 12, 8)),
@@ -293,7 +310,7 @@ export function createBoard(invalidate: () => void = () => {}) {
     [0, 0, 0],
   );
   effect.visible = false;
-  const flyingBrass = brass.clone();
+  const flyingBrass = gold.clone();
   flyingBrass.emissive.set('#d8b76e');
   flyingBrass.emissiveIntensity = 0.55;
   materials.add(flyingBrass);
@@ -324,11 +341,20 @@ export function createBoard(invalidate: () => void = () => {}) {
     tokens.rotation.y = playerAngle(player);
     root.add(tokens);
     tokenGroups.push(tokens);
+    const plates = new InstancedMesh(tokenShape, gold, 16);
+    plates.count = 0;
+    plates.castShadow = plates.receiveShadow = true;
+    tokens.add(plates);
+    tokenMeshes.push(plates);
     for (let i = 0; i < 3; i++) {
       const totem = new Group();
       totem.name = FAVOR_CATALOG[DEFAULT_FAVORS[i]!].name;
       totem.position.set(...seatPosition(player, 4.25 + i * 1.36, 0, 5.25));
       totem.rotation.y = playerAngle(player);
+      totem.userData.playerId = player;
+      const contour = mesh(totem, geometry(new RoundedBoxGeometry(1.32, 0.12, 2.09, 2, 0.08)), material({ color: '#f4d899', emissive: '#dbab48', emissiveIntensity: 0.8 }), [0, 0.13, 0]);
+      contour.name = 'favor-contour';
+      contour.visible = false;
       mesh(totem, totemBody, wood, [0, 0.15, 0]);
       const portrait = mesh(
         totem,
@@ -473,14 +499,29 @@ export function createBoard(invalidate: () => void = () => {}) {
           stone.visible = i < player.health;
         });
         const group = tokenGroups[index]!;
-        // Stack real token counts; counters remain readable for large reserves.
-        while (group.children.length < Math.min(player.tokens, 40)) {
-          const i = group.children.length;
-          mesh(group, tokenShape, brass, tokenSlot(i));
+        // One instance per real plate, no former forty-token truncation.
+        if (group.userData.count !== player.tokens) {
+          let plates = tokenMeshes[index]!;
+          if (plates.instanceMatrix.count < player.tokens) {
+            group.remove(plates);
+            plates.dispose();
+            plates = new InstancedMesh(tokenShape, gold, Math.max(16, player.tokens * 2));
+            plates.castShadow = plates.receiveShadow = true;
+            tokenMeshes[index] = plates;
+            group.add(plates);
+          }
+          plates.count = player.tokens;
+          for (let i = 0; i < player.tokens; i++) {
+            tokenMatrix.makeTranslation(...tokenSlot(i));
+            plates.setMatrixAt(i, tokenMatrix);
+          }
+          plates.instanceMatrix.needsUpdate = true;
+          plates.computeBoundingSphere();
+          group.userData.count = player.tokens;
+          // Very large reserves still fit their assigned area; no rule limit.
+          const rows = Math.ceil(player.tokens / 25);
+          group.scale.setScalar(Math.min(1, 2 / Math.max(2, rows * 0.57)));
         }
-        group.children.forEach((token, i) => {
-          token.visible = i < player.tokens;
-        });
       });
     },
     syncDice(state: GameState) {
@@ -508,9 +549,8 @@ export function createBoard(invalidate: () => void = () => {}) {
     setNarrow(narrow: boolean) {
       // Keep both players facing each other at every width. Only the table's
       // peripheral resources move inward; physics and battle lines stay fixed.
-      table.scale.x = narrow ? 14.8 / 18.4 : 1;
-      fabric.scale.x = table.scale.x;
-      borders.scale.x = table.scale.x;
+      table.scale.x = narrow ? 17 / 21.5 : 1;
+      fabric.scale.x = narrow ? 14.8 / 18.3 : 1;
       for (const [index, player] of (
         ["player-1", "player-2"] as const
       ).entries()) {
@@ -530,8 +570,16 @@ export function createBoard(invalidate: () => void = () => {}) {
         }
       }
     },
+    favorTargets() { return totemGroups.filter(totem => totem.visible); },
+    highlightFavor(player: PlayerId | null, id: FavorId | null) {
+      for (const totem of totemGroups) {
+        totem.getObjectByName('favor-contour')!.visible = totem.userData.playerId === player && totem.userData.favorId === id;
+      }
+      invalidate();
+    },
     dispose() {
       disposed = true;
+      tokenMeshes.forEach(value => value.dispose());
       geometries.forEach((value) => value.dispose());
       materials.forEach((value) => value.dispose());
       textures.forEach((value) => value.dispose());

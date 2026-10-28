@@ -8,14 +8,14 @@ export interface SceneDieTarget {
 
 // Expanded touch targets can overlap on small displays. The pointer chooses the
 // closest projected die, while keyboard activation keeps the focused identity.
-export function closestDieTarget(
-  targets: readonly SceneDieTarget[],
+export function closestDieTarget<T extends { x: number; y: number }>(
+  targets: readonly T[],
   x: number,
   y: number,
   width: number,
   height: number,
 ) {
-  let result: SceneDieTarget | undefined;
+  let result: T | undefined;
   let distance = Infinity;
   for (const target of targets) {
     const squared =
@@ -27,4 +27,11 @@ export function closestDieTarget(
     }
   }
   return result;
+}
+
+export interface SceneFavorTarget {
+  playerId: import('../core').PlayerId
+  favorId: import('../core').FavorId
+  x: number
+  y: number
 }

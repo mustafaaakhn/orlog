@@ -21,6 +21,8 @@ import type { AudioPort } from "../audio/catalog";
 import type { PresentationBatch } from "../app/rollSession";
 import type { DieId, GameState, GameEvent, PlayerId } from "../core";
 
+import SceneFavorControls from "../ui/SceneFavorControls.vue";
+import type { SceneFavorTarget } from "./dieTargets";
 import SceneDiceControls from "../ui/SceneDiceControls.vue";
 import type { SceneDieTarget } from "./dieTargets";
 const props = defineProps<{
@@ -29,7 +31,7 @@ const props = defineProps<{
   paused: boolean;
   quality: string;
   speed: number;
-  closeView: boolean;
+
   viewerId?: PlayerId;
   controlPlayer?: PlayerId | null;
   state: GameState;
@@ -43,6 +45,9 @@ const emit = defineEmits<{
   select: [dieId: DieId];
 }>();
 const targets = ref<SceneDieTarget[]>([]);
+const favors = ref<SceneFavorTarget[]>([]);
+const highlightedFavor = ref<SceneFavorTarget | null>(null);
+watch([() => props.batch, () => props.paused], () => { highlightedFavor.value = null; });
 const cue = ref<PresentationCue | null>(null);
 const collected = ref<DieId[]>([]);
 const controlsDisabled = computed(
@@ -153,7 +158,7 @@ onErrorCaptured(() => {
       :key="sceneKey"
       shadows
       render-mode="on-demand"
-      clear-color="#c4b598"
+      clear-color="#30251e"
       :dpr="quality === 'high' ? 1.75 : quality === 'low' ? 1 : [1, 1.25]"
       :tone-mapping-exposure="1"
       aria-label="Üç boyutlu Orlog masası: iki ayrı ahşap hazne, ortada savaş zarları, solda can taşları ve sağda yatay tanrı levhaları. Zarları doğrudan masada seç. Klavyede Tab ile zarlara geç, Space veya Enter ile seç; yön tuşlarıyla gezin."
@@ -169,7 +174,7 @@ onErrorCaptured(() => {
         :paused="paused"
         :quality="quality"
         :speed="speed"
-        :close-view="closeView"
+        :highlighted-favor="highlightedFavor"
         :viewer-id="viewerId ?? 'player-1'"
         :state="state"
         :batch="batch"
@@ -181,8 +186,10 @@ onErrorCaptured(() => {
         @select="emit('select', $event)"
         @failed="failed"
         @targets="targets = $event"
+        @favors="favors = $event"
       />
     </TresCanvas>
+    <SceneFavorControls v-if="status === 'ready' && !batch && !paused" :targets="favors" @highlight="highlightedFavor = $event" />
     <div class="resolution-cue" :class="{ 'is-title': cue?.title }" role="status" aria-live="polite" aria-atomic="true">
       <template v-if="cue">
         <h2 v-if="cue.title">{{ cue.title }}</h2>

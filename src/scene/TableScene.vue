@@ -35,7 +35,7 @@ const props = defineProps<{
   paused: boolean;
   quality: string;
   speed: number;
-  closeView: boolean;
+  highlightedFavor: { playerId: PlayerId; favorId: import("../core").FavorId } | null;
   viewerId: PlayerId;
   state: GameState;
   batch: PresentationBatch | null;
@@ -47,6 +47,7 @@ const emit = defineEmits<{
   select: [dieId: DieId];
   failed: [];
   targets: [targets: SceneDieTarget[]];
+  favors: [targets: import("./dieTargets").SceneFavorTarget[]];
   cue: [cue: PresentationCue | null];
   collected: [ids: DieId[]];
 }>();
@@ -181,7 +182,7 @@ watch(
   { immediate: true },
 );
 // Stable prop identities prevent scene patches from invalidating every idle frame.
-const keyPosition: [number, number, number] = [-5, 10, 4];
+const keyPosition: [number, number, number] = [-8, 9, 3];
 const fillPosition: [number, number, number] = [6, 7, -4];
 const frontPosition: [number, number, number] = [0, 5, 10];
 const shadowSize = computed(
@@ -221,13 +222,16 @@ function publishTargets() {
       targets.push({ id, x: (point.x + 1) * 50, y: (1 - point.y) * 50 });
   }
   emit("targets", targets);
+  emit('favors', board.favorTargets().map(totem => {
+    const point = totem.getWorldPosition(new Vector3()).add(new Vector3(0, 0.26, 0)).project(camera);
+    return { playerId: totem.userData.playerId, favorId: totem.userData.favorId, x: (point.x + 1) * 50, y: (1 - point.y) * 50 };
+  }));
 }
 
 watch(
   [
     () => sizes.aspectRatio.value,
     () => sizes.width.value,
-    () => props.closeView,
     () => props.viewerId,
     () => props.state.players[props.viewerId].dice.length,
   ],
@@ -236,23 +240,13 @@ watch(
     const side = playerSide(props.viewerId);
     const narrow = sizes.width.value < 620 && aspect < 1.1;
     board.setNarrow(narrow);
-    direction.set(0, 1.0, (narrow ? 0.36 : 0.62) * side).normalize();
+    direction.set(0, 1, (narrow ? 0.78 : 1.05) * side).normalize();
     up.set(0, Math.abs(direction.z), -direction.y * side);
-    const target = new Vector3(
-      0,
-      props.closeView ? 0.5 : 0.2,
-      props.closeView ? 3.4 * side : 0,
-    );
-    // Fit all corners of the presentation bounds in the camera's frustum.
-    const halfWidth = props.closeView
-      ? props.state.players[props.viewerId].dice.length > 6
-        ? 5.2
-        : 3.6
-      : narrow
-        ? TABLE_NARROW_HALF_WIDTH
-        : TABLE_HALF_WIDTH;
-    const halfDepth = props.closeView ? 5.0 : TABLE_HALF_DEPTH;
-    const centerZ = props.closeView ? 3.4 * side : 0;
+    const target = new Vector3(0, 0.2, 0);
+    // Fit both seats in one oblique view; no optional zoom mode.
+    const halfWidth = narrow ? TABLE_NARROW_HALF_WIDTH : TABLE_HALF_WIDTH;
+    const halfDepth = TABLE_HALF_DEPTH;
+    const centerZ = 0;
     const tangent = Math.tan((camera.fov * Math.PI) / 360);
     let distance = 0;
     for (const x of [-halfWidth, halfWidth]) {
@@ -278,6 +272,7 @@ watch(
   { immediate: true },
 );
 
+watch(() => props.highlightedFavor, value => board.highlightFavor(value?.playerId ?? null, value?.favorId ?? null));
 const raycaster = new Raycaster();
 let pointer: { x: number; y: number; id: number } | undefined;
 function pointerDown(event: PointerEvent) {
@@ -345,12 +340,12 @@ onBeforeUnmount(dispose);
   <TresHemisphereLight
     color="#e4e5df"
     ground-color="#6c6050"
-    :intensity="1.5"
+    :intensity="0.85"
   />
   <TresDirectionalLight
     color="#ffe5bf"
     :position="keyPosition"
-    :intensity="1.8"
+    :intensity="2.1"
     cast-shadow
     :shadow-mapSize="shadowSize"
     :shadow-camera-left="-11"
@@ -366,12 +361,12 @@ onBeforeUnmount(dispose);
   <TresDirectionalLight
     color="#d5e2ed"
     :position="fillPosition"
-    :intensity="0.9"
+    :intensity="0.5"
   />
   <TresDirectionalLight
     color="#f3e4c9"
     :position="frontPosition"
-    :intensity="0.65"
+    :intensity="0.35"
   />
   <primitive :object="board.object" :dispose="null" />
 </template>
