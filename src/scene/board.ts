@@ -1,5 +1,6 @@
 import {
   BoxGeometry,
+  Color,
   DoubleSide,
   InstancedMesh,
   Matrix4,
@@ -392,11 +393,92 @@ export function createBoard(invalidate: () => void = () => {}) {
     return [symbol, object];
   })) as Record<'arrow' | 'axe', Mesh<PlaneGeometry, MeshStandardMaterial>>;
 
+  // One hand and one instanced cargo per theft event, sharing the real plate shape.
+  const stealObject = new Group();
+  stealObject.name = 'hand carrying stolen gold';
+  root.add(stealObject);
+  stealObject.visible = false;
+  const hand = mesh(stealObject, geometry(new PlaneGeometry(1.35, 1.35)), material({
+    map: keepTexture(createSymbolTexture('hand')), transparent: true,
+    depthWrite: false, side: DoubleSide, color: '#fff0c7', emissive: '#b38a3b', emissiveIntensity: 0.6,
+  }), [0, 0.65, 0]);
+  hand.rotation.x = -Math.PI / 2;
+  let cargo = new InstancedMesh(tokenShape, flyingBrass, 16);
+  cargo.castShadow = true;
+  stealObject.add(cargo);
+  let stolen: { owner: PlayerId; indices: number[] } | null = null;
+  const white = new Color('#ffffff'), selectedGold = new Color(2.6, 2.1, 1.4);
+  function tokenPosition(playerId: PlayerId, index: number) {
+    const group = tokenGroups[playerId === 'player-1' ? 0 : 1]!;
+    group.updateMatrixWorld(true);
+    return group.localToWorld(new Vector3(...tokenSlot(index)));
+  }
+  function clearSteal() {
+    stealObject.visible = false;
+    if (stolen) {
+      const plates = tokenMeshes[stolen.owner === 'player-1' ? 0 : 1]!;
+      for (const index of stolen.indices) if (index < plates.count) {
+        tokenMatrix.makeTranslation(...tokenSlot(index));
+        plates.setMatrixAt(index, tokenMatrix);
+        plates.setColorAt(index, white);
+      }
+      plates.instanceMatrix.needsUpdate = true;
+      if (plates.instanceColor) plates.instanceColor.needsUpdate = true;
+      plates.computeBoundingSphere();
+    }
+    stolen = null;
+    cargo.visible = false;
+    invalidate();
+  }
+  const steal = {
+    object: stealObject,
+    prepare(owner: PlayerId, start: number, count: number) {
+      clearSteal();
+      stolen = { owner, indices: Array.from({ length: count }, (_, i) => start + i) };
+      const plates = tokenMeshes[owner === 'player-1' ? 0 : 1]!;
+      // Initialize all colors before assigning selected plates, avoiding black instances.
+      if (!plates.instanceColor) for (let i = 0; i < plates.count; i++) plates.setColorAt(i, white);
+      for (const index of stolen.indices) plates.setColorAt(index, selectedGold);
+      if (plates.instanceColor) plates.instanceColor.needsUpdate = true;
+      if (cargo.instanceMatrix.count < count) {
+        stealObject.remove(cargo); cargo.dispose();
+        cargo = new InstancedMesh(tokenShape, flyingBrass, count);
+        cargo.castShadow = true;
+        stealObject.add(cargo);
+      }
+      hand.rotation.z = owner === 'player-1' ? Math.PI : 0;
+      cargo.count = count;
+      cargo.visible = false;
+      return stolen.indices.map(index => tokenPosition(owner, index));
+    },
+    cargo(points: Vector3[]) {
+      for (const [i, point] of points.entries()) {
+        tokenMatrix.makeTranslation(point.x, point.y, point.z);
+        cargo.setMatrixAt(i, tokenMatrix);
+      }
+      cargo.instanceMatrix.needsUpdate = true;
+      cargo.computeBoundingSphere();
+    },
+    lift() {
+      if (!stolen) return;
+      const plates = tokenMeshes[stolen.owner === 'player-1' ? 0 : 1]!;
+      for (const index of stolen.indices) {
+        tokenMatrix.makeScale(0, 0, 0);
+        plates.setMatrixAt(index, tokenMatrix);
+      }
+      plates.instanceMatrix.needsUpdate = true;
+      cargo.visible = true;
+      invalidate();
+    },
+    clear: clearSteal,
+  };
+
   return {
     object: root,
     dice,
     effect,
     tokenEffect,
+    steal,
     attackEffects,
     lifeStone(playerId: PlayerId, index: number) {
       return stoneGroups[playerId === 'player-1' ? 0 : 1]!.children[Math.max(0, Math.min(index, 14))] as Mesh<SphereGeometry, MeshStandardMaterial>;
@@ -406,11 +488,7 @@ export function createBoard(invalidate: () => void = () => {}) {
       group.updateMatrixWorld(true);
       return group.children[Math.max(0, Math.min(index, 14))]!.getWorldPosition(new Vector3());
     },
-    tokenPosition(playerId: PlayerId, index: number) {
-      const group = tokenGroups[playerId === 'player-1' ? 0 : 1]!;
-      group.updateMatrixWorld(true);
-      return group.localToWorld(new Vector3(...tokenSlot(index)));
-    },
+    tokenPosition,
     totem(playerId: PlayerId, favorId: string) {
       const index = Math.max(0, loadouts[playerId].indexOf(favorId as FavorId));
       return totemGroups[(playerId === "player-1" ? 0 : 3) + index]!;
@@ -514,8 +592,10 @@ export function createBoard(invalidate: () => void = () => {}) {
           for (let i = 0; i < player.tokens; i++) {
             tokenMatrix.makeTranslation(...tokenSlot(i));
             plates.setMatrixAt(i, tokenMatrix);
+            if (plates.instanceColor) plates.setColorAt(i, white);
           }
           plates.instanceMatrix.needsUpdate = true;
+          if (plates.instanceColor) plates.instanceColor.needsUpdate = true;
           plates.computeBoundingSphere();
           group.userData.count = player.tokens;
           // Very large reserves still fit their assigned area; no rule limit.
@@ -579,6 +659,8 @@ export function createBoard(invalidate: () => void = () => {}) {
     },
     dispose() {
       disposed = true;
+      clearSteal();
+      cargo.dispose();
       tokenMeshes.forEach(value => value.dispose());
       geometries.forEach((value) => value.dispose());
       materials.forEach((value) => value.dispose());

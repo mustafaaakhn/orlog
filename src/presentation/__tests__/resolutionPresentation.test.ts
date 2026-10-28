@@ -85,7 +85,7 @@ describe('event-driven resolution presentation', () => {
       for (let step = 1; step <= resourceSteps(event); step++) {
         const previous = state.players[player][field]
         state = applyResourceProgress(state, event, step)
-        expect(state.players[player][field]).toBe(previous + (decreasing ? -1 : 1))
+        expect(state.players[player][field]).toBe(previous + (event.type === 'TokensStolen' ? event.amount : decreasing ? -1 : 1))
         expect(applyResourceProgress(state, event, step).players).toEqual(state.players)
       }
       expect(state.players).toEqual(applyResourceEvent(before, event).players)

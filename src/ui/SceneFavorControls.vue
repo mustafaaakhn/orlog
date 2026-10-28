@@ -25,6 +25,7 @@ function inspect(target: SceneFavorTarget, activate = false) {
       class="scene-favor-target"
       :style="{ left: `${target.x}%`, top: `${target.y}%`, zIndex: aimed === target ? 2 : undefined }"
       :data-favor-id="target.favorId"
+      :data-player-id="target.playerId"
       :aria-haspopup="target.playerId === activePlayer ? 'dialog' : undefined"
       :aria-label="`${target.playerId === 'player-1' ? 'Oyuncu I' : 'Oyuncu II'}: ${FAVOR_CATALOG[target.favorId].name}`"
       @pointerenter="inspect(target)"

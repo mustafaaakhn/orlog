@@ -15,6 +15,8 @@ export interface PresentationCue {
   progress?: string
 }
 
+export const COMBAT_DURATION_SCALE = 1.7
+
 type Board = ReturnType<typeof createBoard>
 export function createCombatPresenter(
   board: Board,
@@ -32,14 +34,16 @@ export function createCombatPresenter(
   let paused = false
   const collected = new Set<DieId>()
   const counts: Record<PlayerId, number> = { 'player-1': 0, 'player-2': 0 }
-  function animate(build: (timeline: gsap.core.Timeline) => void) {
+  let durationScale = 1
+  function animate(build: (timeline: gsap.core.Timeline) => void, combat = true) {
     if (closed) return Promise.resolve()
     return new Promise<void>(resolve => {
       const done = () => { active = undefined; finish = undefined; resolve() }
       finish = done
       active = gsap.timeline({ onUpdate: invalidate, onComplete: done })
       build(active)
-      active.timeScale(speed())
+      durationScale = combat && !reduced() ? COMBAT_DURATION_SCALE : 1
+      active.timeScale(speed() / durationScale)
       if (paused) active.pause()
       if (active && !active.duration()) { active.kill(); done() }
     })
@@ -77,6 +81,42 @@ export function createCombatPresenter(
     })
     orb.visible = false
     invalidate()
+  }
+  async function stealGold(event: Extract<GameEvent, { type: 'TokensStolen' }>) {
+    if (closed || event.amount <= 0) return
+    const effect = board.steal.object
+    const points = board.steal.prepare(event.targetId, event.targetTokens, event.amount)
+    const pickup = points.reduce((sum, point) => sum.add(point), new Vector3()).multiplyScalar(1 / points.length)
+    const destinations = points.map((_, i) => board.tokenPosition(event.playerId, event.tokens - event.amount + i))
+    const arrival = destinations.reduce((sum, point) => sum.add(point), new Vector3()).multiplyScalar(1 / destinations.length)
+    const offsets = points.map(point => point.clone().sub(pickup))
+    const finalOffsets = destinations.map(point => point.clone().sub(arrival))
+    board.steal.cargo(offsets)
+    effect.position.copy(source(event)).add(new Vector3(0, 1, 0))
+    if (reduced()) effect.position.copy(pickup)
+    effect.visible = true
+    try {
+      await animate(t => {
+        if (reduced()) wait(t, 0.16)
+        else t.to(effect.position, { x: pickup.x, z: pickup.z, y: pickup.y + 0.12, duration: 0.34, ease: 'power2.out' })
+        t.call(() => { if (!closed && !paused) board.steal.lift() })
+        if (reduced()) wait(t, 0.12)
+        else {
+          t.to(effect.position, { y: Math.max(pickup.y, arrival.y) + 1.5, duration: 0.18, ease: 'power2.out' })
+          t.to(effect.position, { x: arrival.x, z: arrival.z, duration: 0.52, ease: 'power2.inOut' })
+          t.to(effect.position, { y: arrival.y, duration: 0.18, ease: 'power2.in' })
+          // Settle every real plate into its destination slot in the same trip.
+          const morph = { value: 0 }
+          t.to(morph, { value: 1, duration: 0.16, onUpdate: () => board.steal.cargo(offsets.map((point, i) => point.clone().lerp(finalOffsets[i]!, morph.value))) })
+        }
+        t.call(() => {
+          if (closed || paused) return
+          effect.visible = false
+          contact(event, 1)
+        })
+        wait(t, reduced() ? 0.08 : 0.12)
+      })
+    } finally { board.steal.clear() }
   }
   async function stoneContact(event: GameEvent, player: PlayerId, index: number, step: number, from: Vector3, healing = false, symbol?: 'axe' | 'arrow') {
     const stone = board.lifeStone(player, index)
@@ -140,7 +180,7 @@ export function createCombatPresenter(
     async title(title: string) {
       if (closed) return
       feedback.cue?.({ title })
-      await animate(t => wait(t, reduced() ? 0.45 : 0.9))
+      await animate(t => wait(t, reduced() ? 0.45 : 0.9), false)
       if (!closed) feedback.cue?.(null)
     },
     async play(event: GameEvent) {
@@ -148,7 +188,7 @@ export function createCombatPresenter(
       const failure = favorFailureTitle(event)
       if (failure) {
         feedback.cue?.({ title: failure })
-        await animate(t => wait(t, reduced() ? 0.65 : 1.3))
+        await animate(t => wait(t, reduced() ? 0.65 : 1.3), false)
         if (!closed) feedback.cue?.(null)
         return
       }
@@ -169,7 +209,9 @@ export function createCombatPresenter(
             const index = healing ? event.health - event.amount + step - 1 : event.health + event.amount - step
             await stoneContact(event, player, index, step, source(event), healing, event.type === 'DamageDealt' ? event.symbol : undefined)
           }
-        } else if (event.type === 'TokensGained' || event.type === 'TokensGranted' || event.type === 'TokensStolen' || event.type === 'TokensDestroyed' || event.type === 'FavorInvoked') {
+        } else if (event.type === 'TokensStolen') {
+          await stealGold(event)
+        } else if (event.type === 'TokensGained' || event.type === 'TokensGranted' || event.type === 'TokensDestroyed' || event.type === 'FavorInvoked') {
           const count = resourceSteps(event)
           if (event.type === 'TokensGained') markers(ids, false)
           for (let step = 1; step <= count && !closed; step++) {
@@ -182,10 +224,10 @@ export function createCombatPresenter(
             const tokenIndex = outgoing ? event.tokens + count - step : event.tokens - count + step - 1
             const pile = board.tokenPosition(tokenOwner, tokenIndex)
             const from = event.type === 'TokensGained' ? board.dice.get(event.dieIds[step - 1]!)!.position.clone()
-              : event.type === 'TokensStolen' ? board.tokenPosition(event.targetId, event.targetTokens + count - step)
+
               : outgoing ? pile : source(event)
             const to = outgoing ? source(event) : pile
-            feedback.cue?.({ text, symbol: event.type === 'TokensStolen' ? 'hand' : undefined, progress: `${step} / ${count}` })
+            feedback.cue?.({ text, progress: `${step} / ${count}` })
             await flight(from, to, { token: true, contact: () => contact(event, step) })
           }
           if (event.type === 'FavorInvoked' && !closed) {
@@ -219,7 +261,7 @@ export function createCombatPresenter(
         markers(ids, false)
       }
     },
-    setSpeed(value: number) { active?.timeScale(value) },
+    setSpeed(value: number) { active?.timeScale(value / durationScale) },
     setPaused(value: boolean) { paused = value; active?.paused(value) },
     dispose() {
       closed = true
@@ -228,6 +270,7 @@ export function createCombatPresenter(
       feedback.cue?.(null)
       board.effect.visible = false
       board.tokenEffect.visible = false
+      board.steal.clear()
       Object.values(board.attackEffects).forEach(effect => { effect.visible = false })
     },
   }

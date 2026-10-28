@@ -52,7 +52,7 @@ describe('sequential presentation', () => {
       } finally { queue.dispose(); presenter.dispose() }
     }
     expect(orders[0]).toEqual(orders[1])
-  }, 15000)
+  }, 30000)
   it('disposes an in-flight animation, completes its wait and never applies its event', async () => {
     const { before, events } = resolution()
     const presenter = createCombatPresenter(mockBoard(before), () => {}, () => 1)

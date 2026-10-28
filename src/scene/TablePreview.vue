@@ -61,10 +61,10 @@ function inspectFavor(target: SceneFavorTarget, activate: boolean) {
   if (activate) { menuPinned.value = true; void nextTick(() => favorMenu.value?.focus()); }
 }
 function closeFavor() {
-  const id = menuFavor.value?.favorId;
+  const target = menuFavor.value;
   menuFavor.value = null;
   menuPinned.value = false;
-  if (id) document.querySelector<HTMLElement>(`[data-favor-id="${id}"]`)?.focus();
+  if (target) document.querySelector<HTMLElement>(`[data-player-id="${target.playerId}"][data-favor-id="${target.favorId}"]`)?.focus();
   // Focusing the source is also a preview trigger; Escape must still close it.
   menuFavor.value = null;
 }
