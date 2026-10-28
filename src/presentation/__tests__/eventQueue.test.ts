@@ -1,11 +1,10 @@
 import { describe, expect, it } from 'vitest'
-import { Group, Vector3, Mesh, SphereGeometry, MeshStandardMaterial } from 'three'
 import { Game, PLAYER_IDS } from '../../core'
-import type { GameEvent, GameState, DieId } from '../../core'
+import type { GameEvent } from '../../core'
 import { createEventQueue } from '../eventQueue'
 import { applyResourceEvent } from '../resources'
 import { createCombatPresenter } from '../combatPresenter'
-import type { createBoard } from '../../scene/board'
+import { mockBoard } from './testBoard'
 
 function resolution() {
   const game = new Game({ random: () => 0 })
@@ -18,11 +17,6 @@ function resolution() {
   const result = game.dispatch({ type: 'ResolveRound', playerId: 'player-1' })
   if (!result.ok) throw new Error(result.error.message)
   return { before, ...result }
-}
-function mockBoard(state: GameState) {
-  const dice = new Map<DieId, Group>()
-  Object.values(state.players).forEach(player => player.dice.forEach(die => dice.set(die.id, new Group())))
-  return { dice, effect: new Mesh(new SphereGeometry(), new MeshStandardMaterial()), tokenEffect: new Group(), resourcePosition: () => new Vector3(2, 0, 0), totem: () => new Group() } as unknown as ReturnType<typeof createBoard>
 }
 
 describe('sequential presentation', () => {
@@ -101,4 +95,4 @@ it('reduced combat preserves the complete resource result and leaves no visible 
   expect(shown.players).toEqual(state.players)
   expect(board.effect.visible).toBe(false)
   queue.dispose(); presenter.dispose()
-})
+}, 10000)

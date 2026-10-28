@@ -1,5 +1,5 @@
 import { shallowRef } from 'vue'
-import { applyResourceEvent } from '../presentation/resources'
+import { applyResourceEvent, applyResourceProgress, resourceSteps } from '../presentation/resources'
 import { Game } from '../core'
 import type { DieId, GameCommand, GameEvent, GameState, GameOptions } from '../core'
 
@@ -16,6 +16,8 @@ export function createRollSession(options: GameOptions = {}) {
   let matchSequence = 0
   let game = new Game(options)
   let appliedSequence = 0
+  let contactSequence = 0
+  let contactStep = 0
   const history = shallowRef<readonly GameEvent[]>([])
   const lastEvent = shallowRef<GameEvent | null>(null)
   let batchSequence = 0
@@ -49,8 +51,17 @@ export function createRollSession(options: GameOptions = {}) {
     error,
     lastEvent,
     history,
+    progress(batchId: number, event: GameEvent, step: number) {
+      if (pending.value?.id !== batchId || !pending.value.events.includes(event) ||
+        event.sequence <= appliedSequence || event.sequence < contactSequence ||
+        !Number.isInteger(step) || step < 1 || step > resourceSteps(event) ||
+        (event.sequence === contactSequence && step <= contactStep)) return
+      contactStep = step
+      contactSequence = event.sequence
+      state.value = applyResourceProgress(state.value, event, step)
+    },
     present(batchId: number, event: GameEvent) {
-      if (pending.value?.id !== batchId || event.sequence <= appliedSequence || !pending.value.events.includes(event)) return
+      if (pending.value?.id !== batchId || event.sequence <= appliedSequence || event.sequence < contactSequence || !pending.value.events.includes(event)) return
       appliedSequence = event.sequence
       state.value = applyResourceEvent(state.value, event)
       lastEvent.value = event
@@ -61,6 +72,8 @@ export function createRollSession(options: GameOptions = {}) {
       game = new Game({ ...options, gameId: `local-match-${++matchSequence}` })
       state.value = game.state
       appliedSequence = 0
+      contactSequence = 0
+      contactStep = 0
       lastEvent.value = null
       history.value = []
       error.value = ''
@@ -68,6 +81,14 @@ export function createRollSession(options: GameOptions = {}) {
     },
     dispatch,
     settle,
+    resume() {
+      if (!pending.value && ['round-complete', 'ended'].includes(game.state.phase.name))
+        pending.value = { id: ++batchSequence, revision: game.state.revision, state: game.state, events: [] }
+    },
+    advanceRound() {
+      if (pending.value || state.value !== game.state || game.state.phase.name !== 'round-complete') return false
+      return dispatch({ type: 'NextRound', playerId: game.state.firstPlayerId })
+    },
     select(dieId: DieId) {
       const phase = state.value.phase
       if (phase.name !== 'roll' || phase.step !== 'selecting-dice') return false
@@ -91,6 +112,8 @@ export function createRollSession(options: GameOptions = {}) {
       if (pending.value) return
       game = new Game({ ...options, gameId: `local-match-${++matchSequence}` })
       appliedSequence = 0
+      contactSequence = 0
+      contactStep = 0
       lastEvent.value = null
       history.value = []
       state.value = game.state

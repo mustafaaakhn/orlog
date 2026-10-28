@@ -30,27 +30,27 @@ export function resolveRound(state: Mutable<GameState>, events: GameEventPayload
     state.phase = { name: 'ended', winnerId }
     events.push({ type: 'GameEnded', winnerId, loserId }, { type: 'PhaseChanged', phase: state.phase })
   }
-  function heal(playerId: PlayerId, amount: number, favorId: FavorId) {
+  function heal(playerId: PlayerId, amount: number, favorId: FavorId, dieIds?: readonly DieState['id'][]) {
     if (ended) return
     const player = state.players[playerId], restored = Math.min(MAX_HEALTH - player.health, amount)
     player.health += restored
-    events.push({ type: 'HealthRestored', playerId, health: player.health, amount: restored, favorId })
+    events.push({ type: 'HealthRestored', playerId, health: player.health, amount: restored, favorId, ...(dieIds ? { dieIds } : {}) })
   }
-  function grant(playerId: PlayerId, amount: number, favorId: FavorId) {
+  function grant(playerId: PlayerId, amount: number, favorId: FavorId, dieIds?: readonly DieState['id'][]) {
     state.players[playerId].tokens += amount
-    events.push({ type: 'TokensGranted', playerId, favorId, amount, tokens: state.players[playerId].tokens })
+    events.push({ type: 'TokensGranted', playerId, favorId, amount, tokens: state.players[playerId].tokens, ...(dieIds ? { dieIds } : {}) })
   }
-  function destroy(playerId: PlayerId, amount: number, favorId: FavorId) {
+  function destroy(playerId: PlayerId, amount: number, favorId: FavorId, dieIds?: readonly DieState['id'][]) {
     const targetId = other(playerId), target = state.players[targetId], destroyed = Math.min(target.tokens, amount)
     target.tokens -= destroyed
-    events.push({ type: 'TokensDestroyed', playerId, targetId, favorId, amount: destroyed, tokens: target.tokens })
+    events.push({ type: 'TokensDestroyed', playerId, targetId, favorId, amount: destroyed, tokens: target.tokens, ...(dieIds ? { dieIds } : {}) })
   }
-  function damage(playerId: PlayerId, amount: number, source: { dieId?: DieState['id']; favorId?: FavorId }) {
+  function damage(playerId: PlayerId, amount: number, source: { dieId?: DieState['id']; favorId?: FavorId; symbol?: 'axe' | 'arrow' }) {
     const targetId = other(playerId), target = state.players[targetId], dealt = Math.min(target.health, amount)
     target.health -= dealt
     events.push({ type: 'DamageDealt', playerId, targetId, amount: dealt, health: target.health, ...source })
     checkDeath(targetId)
-    if (!ended && hooks[targetId].damage) grant(targetId, dealt * hooks[targetId].damage, 'mimirs-wisdom')
+    if (!ended && hooks[targetId].damage) grant(targetId, dealt * hooks[targetId].damage, 'mimirs-wisdom', source.dieId ? [source.dieId] : undefined)
     return dealt
   }
   function changeValues(playerId: PlayerId, favorId: FavorId, changed: DieState[]) {
@@ -155,8 +155,8 @@ export function resolveRound(state: Mutable<GameState>, events: GameEventPayload
           else changeValues(playerId, favorId, [])
           break
         }
-        case 'hand-tokens': grant(playerId, matching(playerId, 'hand').length * n, favorId); break
-        case 'arrow-destroy': destroy(playerId, matching(playerId, 'arrow').length * n, favorId); break
+        case 'hand-tokens': grant(playerId, matching(playerId, 'hand').length * n, favorId, matching(playerId, 'hand').map(d => d.id)); break
+        case 'arrow-destroy': destroy(playerId, matching(playerId, 'arrow').length * n, favorId, matching(playerId, 'arrow').map(d => d.id)); break
         case 'sacrifice-tokens':
         case 'sacrifice-destroy': {
           const amount = sacrifice(playerId, choice.input?.health ?? 0, favorId)
@@ -193,10 +193,10 @@ export function resolveRound(state: Mutable<GameState>, events: GameEventPayload
         const defender = bypass ? undefined : defenders[defenseIndex++]
         if (defender) {
           events.push({ type: 'AttackBlocked', playerId, targetId, dieId: die.id, defenderDieId: defender.id, symbol: attack })
-          if (hooks[targetId].block) heal(targetId, hooks[targetId].block, 'heimdalls-watch')
+          if (hooks[targetId].block) heal(targetId, hooks[targetId].block, 'heimdalls-watch', [die.id, defender.id])
         } else {
-          const dealt = damage(playerId, 1, { dieId: die.id })
-          if (!ended && attack === 'axe' && hooks[playerId].axe) heal(playerId, dealt * hooks[playerId].axe, 'hels-grip')
+          const dealt = damage(playerId, 1, { dieId: die.id, symbol: attack })
+          if (!ended && attack === 'axe' && hooks[playerId].axe) heal(playerId, dealt * hooks[playerId].axe, 'hels-grip', [die.id])
         }
         if (ended) return
       }

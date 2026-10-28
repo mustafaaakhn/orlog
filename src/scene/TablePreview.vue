@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import GameMark from "../ui/GameMark.vue";
+import SymbolIcon from '../ui/SymbolIcon.vue';
+import UiIcon from '../ui/UiIcon.vue';
+import type { PresentationCue } from '../presentation/combatPresenter';
 import { getDieFace } from "../core";
 import { SYMBOL_GUIDE } from "./symbols";
 import {
@@ -36,9 +39,12 @@ const emit = defineEmits<{
   availability: [ready: boolean];
   settled: [batchId: number];
   presented: [batchId: number, event: GameEvent];
+  progress: [batchId: number, event: GameEvent, step: number];
   select: [dieId: DieId];
 }>();
 const targets = ref<SceneDieTarget[]>([]);
+const cue = ref<PresentationCue | null>(null);
+const collected = ref<DieId[]>([]);
 const controlsDisabled = computed(
   () =>
     !!props.batch ||
@@ -55,7 +61,7 @@ const diceSummary = computed(() =>
         const symbol = SYMBOL_GUIDE.find(
           (value) => value.id === face.symbol,
         )!.name;
-        return `Zar ${index + 1}: ${symbol}${face.grantsToken ? ", altın çerçeveli" : ""}${die.value > 1 ? `, etki ${die.value}` : ""}, ${die.removed ? "kaldırıldı" : die.kept ? "merkezde, kilitli" : die.selected ? "merkezde, seçili" : "haznede"}`;
+        return `Zar ${index + 1}: ${symbol}${face.grantsToken ? ", altın çerçeveli" : ""}${die.value > 1 ? `, etki ${die.value}` : ""}, ${die.removed ? "kaldırıldı" : collected.value.includes(die.id) ? 'kendi kenarında, kullanıldı' : die.kept ? "merkezde, kilitli" : die.selected ? "merkezde, seçili" : "haznede"}`;
       })
       .join("; "),
   })),
@@ -79,6 +85,7 @@ function detachCanvas() {
   activeCanvas = undefined;
 }
 function failed() {
+  cue.value = null;
   sceneComponent.value?.dispose();
   clearLoadingTimeout();
   detachCanvas();
@@ -167,12 +174,28 @@ onErrorCaptured(() => {
         :state="state"
         :batch="batch"
         @presented="(id, event) => emit('presented', id, event)"
+        @progress="(id, event, step) => emit('progress', id, event, step)"
+        @cue="cue = $event"
+        @collected="collected = $event"
         @settled="emit('settled', $event)"
         @select="emit('select', $event)"
         @failed="failed"
         @targets="targets = $event"
       />
     </TresCanvas>
+    <div class="resolution-cue" :class="{ 'is-title': cue?.title }" role="status" aria-live="polite" aria-atomic="true">
+      <template v-if="cue">
+        <h2 v-if="cue.title">{{ cue.title }}</h2>
+        <template v-else>
+          <span v-if="cue.symbol" class="cue-symbols" aria-hidden="true">
+            <SymbolIcon :symbol="cue.symbol" />
+            <UiIcon v-if="cue.targetSymbol" name="arrow" />
+            <SymbolIcon v-if="cue.targetSymbol" :symbol="cue.targetSymbol" />
+          </span>
+          <p>{{ cue.text }} <span v-if="cue.progress" class="cue-progress">{{ cue.progress }}</span></p>
+        </template>
+      </template>
+    </div>
     <section
       v-if="status === 'ready'"
       class="sr-only"

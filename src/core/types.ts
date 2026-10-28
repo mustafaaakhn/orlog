@@ -112,17 +112,17 @@ export interface RolledDie {
 export type GameEventPayload =
   | { readonly type: 'TokensGained'; readonly playerId: PlayerId; readonly dieIds: readonly DieId[]; readonly tokens: number }
   | { readonly type: 'AttackBlocked'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly dieId: DieId; readonly defenderDieId: DieId; readonly symbol: 'axe' | 'arrow' }
-  | { readonly type: 'DamageDealt'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly amount: number; readonly health: number; readonly dieId?: DieId; readonly favorId?: FavorId }
+  | { readonly type: 'DamageDealt'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly amount: number; readonly health: number; readonly dieId?: DieId; readonly favorId?: FavorId; readonly symbol?: 'axe' | 'arrow' }
   | { readonly type: 'TokensStolen'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly amount: number; readonly tokens: number; readonly targetTokens: number; readonly dieIds: readonly DieId[] }
   | { readonly type: 'FavorInvoked'; readonly playerId: PlayerId; readonly favorId: FavorId; readonly level: FavorLevel; readonly cost: number; readonly tokens: number }
   | { readonly type: 'FavorFailed'; readonly playerId: PlayerId; readonly favorId: FavorId; readonly cost: number; readonly reason?: 'tokens' | 'cancelled' }
-  | { readonly type: 'HealthRestored'; readonly playerId: PlayerId; readonly amount: number; readonly health: number; readonly favorId?: FavorId }
+  | { readonly type: 'HealthRestored'; readonly playerId: PlayerId; readonly amount: number; readonly health: number; readonly favorId?: FavorId; readonly dieIds?: readonly DieId[] }
   | { readonly type: 'HelmetsRemoved'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly dieIds: readonly DieId[] }
   | { readonly type: 'DiceRecast'; readonly playerId: PlayerId; readonly favorId: FavorId; readonly dice: readonly DieState[]; readonly added: boolean }
   | { readonly type: 'DiceRemoved'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly favorId: FavorId; readonly dieIds: readonly DieId[] }
   | { readonly type: 'DiceValuesChanged'; readonly playerId: PlayerId; readonly favorId: FavorId; readonly values: readonly { readonly dieId: DieId; readonly value: number }[] }
-  | { readonly type: 'TokensGranted'; readonly playerId: PlayerId; readonly favorId: FavorId; readonly amount: number; readonly tokens: number }
-  | { readonly type: 'TokensDestroyed'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly favorId: FavorId; readonly amount: number; readonly tokens: number }
+  | { readonly type: 'TokensGranted'; readonly playerId: PlayerId; readonly favorId: FavorId; readonly amount: number; readonly tokens: number; readonly dieIds?: readonly DieId[] }
+  | { readonly type: 'TokensDestroyed'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly favorId: FavorId; readonly amount: number; readonly tokens: number; readonly dieIds?: readonly DieId[] }
   | { readonly type: 'HealthSacrificed'; readonly playerId: PlayerId; readonly favorId: FavorId; readonly amount: number; readonly health: number }
   | { readonly type: 'FavorReduced'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly favorId: FavorId; readonly level: number }
   | { readonly type: 'FavorEffectApplied'; readonly playerId: PlayerId; readonly favorId: FavorId; readonly amount: number }

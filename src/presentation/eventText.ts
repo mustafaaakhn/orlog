@@ -4,8 +4,8 @@ export const playerLabel = (id: PlayerId) => `Oyuncu ${id === 'player-1' ? 'I' :
 export function eventText(event: GameEvent | null): string {
   if (!event) return ''
   switch (event.type) {
-    case 'AttackBlocked': return `${playerLabel(event.targetId)} ${event.symbol === 'arrow' ? 'oku kalkanla' : 'baltayı miğferle'} engelledi.`
-    case 'DamageDealt': return `${playerLabel(event.targetId)} ${event.amount} hasar aldı.`
+    case 'AttackBlocked': return `${playerLabel(event.playerId)} saldırdı; ${playerLabel(event.targetId)} ${event.symbol === 'arrow' ? 'oku kalkanla' : 'baltayı miğferle'} engelledi.`
+    case 'DamageDealt': return `${playerLabel(event.playerId)}${event.symbol === 'arrow' ? ' okla' : event.symbol === 'axe' ? ' baltayla' : ' güçle'} vurdu; ${playerLabel(event.targetId)} ${event.amount} hasar aldı.`
     case 'TokensGained': return `${playerLabel(event.playerId)} ${event.dieIds.length} altın jeton kazandı.`
     case 'TokensStolen': return `${playerLabel(event.playerId)} ${event.amount} jeton çaldı.`
     case 'FavorInvoked': return `${playerLabel(event.playerId)}: ${FAVOR_CATALOG[event.favorId].name} · ${event.cost} jeton ödendi.`

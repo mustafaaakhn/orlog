@@ -1,5 +1,32 @@
 import type { GameEvent, GameState } from '../core'
 
+export function resourceSteps(event: GameEvent): number {
+  if (event.type === 'TokensGained') return event.dieIds.length
+  if (event.type === 'FavorInvoked') return event.cost
+  if (['DamageDealt', 'HealthRestored', 'HealthSacrificed', 'TokensGranted', 'TokensDestroyed', 'TokensStolen'].includes(event.type))
+    return 'amount' in event ? event.amount : 0
+  return 0
+}
+
+// Intermediate display values are absolute offsets from the event's final value.
+// Replaying a contact cannot charge, heal or transfer a resource twice.
+export function applyResourceProgress(state: GameState, event: GameEvent, step: number): GameState {
+  const count = resourceSteps(event)
+  if (!Number.isInteger(step) || step < 1 || step > count) return state
+  const remaining = count - step
+  switch (event.type) {
+    case 'DamageDealt':
+    case 'HealthSacrificed': return applyResourceEvent(state, { ...event, health: event.health + remaining })
+    case 'HealthRestored': return applyResourceEvent(state, { ...event, health: event.health - remaining })
+    case 'TokensGained':
+    case 'TokensGranted': return applyResourceEvent(state, { ...event, tokens: event.tokens - remaining })
+    case 'TokensDestroyed':
+    case 'FavorInvoked': return applyResourceEvent(state, { ...event, tokens: event.tokens + remaining })
+    case 'TokensStolen': return applyResourceEvent(state, { ...event, tokens: event.tokens - remaining, targetTokens: event.targetTokens + remaining })
+    default: return state
+  }
+}
+
 export function applyResourceEvent(state: GameState, event: GameEvent): GameState {
   const players = { ...state.players }
   switch (event.type) {

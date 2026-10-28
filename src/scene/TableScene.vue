@@ -12,7 +12,9 @@ import {
 import { createBoard } from "./board";
 import { createEventQueue } from "../presentation/eventQueue";
 import { createCombatPresenter } from "../presentation/combatPresenter";
-import { applyResourceEvent } from "../presentation/resources";
+import type { PresentationCue } from "../presentation/combatPresenter";
+import { lastContributions, phaseTitle } from "../presentation/resolutionPlan";
+import { applyResourceEvent, applyResourceProgress, resourceSteps } from "../presentation/resources";
 import type { AudioPort } from "../audio/catalog";
 import { createRollRecorder } from "../presentation/rollRecorder";
 import { createDicePresenter } from "../presentation/dicePresenter";
@@ -41,9 +43,12 @@ const props = defineProps<{
 const emit = defineEmits<{
   settled: [batchId: number];
   presented: [batchId: number, event: GameEvent];
+  progress: [batchId: number, event: GameEvent, step: number];
   select: [dieId: DieId];
   failed: [];
   targets: [targets: SceneDieTarget[]];
+  cue: [cue: PresentationCue | null];
+  collected: [ids: DieId[]];
 }>();
 const { sizes, invalidate, renderer, scene } = useTres();
 const board = createBoard(invalidate);
@@ -51,23 +56,48 @@ board.syncDice(props.state);
 board.syncResources(props.state);
 let sceneClosed = false;
 const recorder = createRollRecorder();
-const presenter = createDicePresenter(board.dice, invalidate, {
-  record: recorder.record,
-  reduced: () => props.reduced,
-  speed: () => props.speed,
-  audio: props.audio,
-});
 const combat = createCombatPresenter(
   board,
   invalidate,
   () => props.speed,
   () => props.reduced,
+  {
+    cue: value => emit('cue', value),
+    progress: (event, step) => {
+      if (sceneClosed || !props.batch || props.paused) return;
+      shown = applyResourceProgress(shown, event, step);
+      board.syncResources(shown);
+      props.audio.event(event);
+      emit('progress', props.batch.id, event, step);
+      invalidate();
+    },
+  },
 );
+const presenter = createDicePresenter(board.dice, invalidate, {
+  record: recorder.record,
+  reduced: () => props.reduced,
+  speed: () => props.speed,
+  audio: props.audio,
+  collected: combat.collected,
+});
 let shown = props.state;
+let shownPhase = props.state.phase.name;
+let last = new Map<DieId, string>();
 const queue = createEventQueue(
   async (event) => {
     const batch = props.batch;
     if (!batch) return;
+    if (event.type === 'RoundStarted') {
+      combat.reset();
+      emit('collected', []);
+      board.syncDice(batch.state);
+    }
+    const title = phaseTitle(event, shownPhase);
+    if (event.type === 'PhaseChanged') shownPhase = event.phase.name;
+    if (title) await combat.title(title);
+    if (event.type === 'DiceRolled' && batch.state.round === 1 && shown.revision === 0)
+      await combat.title('Tur 1 · Zar atışı');
+    if (sceneClosed) return;
     await presenter.play({
       ...batch,
       state:
@@ -77,14 +107,17 @@ const queue = createEventQueue(
       events: [event],
     });
     await combat.play(event);
-    if (event.type === "RoundStarted") board.syncDice(batch.state);
   },
   (event) => {
-    props.audio.event(event);
+    if (!resourceSteps(event)) props.audio.event(event);
     shown = applyResourceEvent(shown, event);
     board.syncResources(shown);
     invalidate();
     if (props.batch) emit("presented", props.batch.id, event);
+  },
+  async event => {
+    await combat.collect([...last].filter(([, eventId]) => eventId === event.id).map(([id]) => id));
+    if (!sceneClosed) emit('collected', [...combat.collected]);
   },
 );
 watch(
@@ -110,11 +143,12 @@ watch(
     board.syncResources(state);
     if (
       !props.batch &&
-      (state.revision === 0 ||
-        state.phase.name === "round-complete" ||
-        state.phase.name === "ended")
+      state.revision === 0
     ) {
       board.syncDice(state);
+      combat.reset();
+      shownPhase = state.phase.name;
+      emit('collected', []);
       invalidate();
     }
   },
@@ -128,14 +162,23 @@ watch(
       return;
     }
     try {
+      const resolution = batch.state.phase.name === 'round-complete' || batch.state.phase.name === 'ended';
+      last = resolution ? lastContributions(batch.events) : new Map();
       await queue.play(batch.events);
-      if (!sceneClosed) emit("settled", batch.id);
+      if (sceneClosed) return;
+      if (resolution) {
+        await combat.cleanup(batch.state);
+        if (!sceneClosed) emit('collected', [...combat.collected]);
+      }
+      emit('cue', null);
+      if (await queue.ready() && !sceneClosed) emit("settled", batch.id);
     } catch (error) {
       if (sceneClosed) return;
       console.error("Dice presentation failed", error);
       if (!sceneClosed) emit("failed");
     }
   },
+  { immediate: true },
 );
 // Stable prop identities prevent scene patches from invalidating every idle frame.
 const keyPosition: [number, number, number] = [-5, 10, 4];

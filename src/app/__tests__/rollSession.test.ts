@@ -126,3 +126,93 @@ describe('match resource presentation', () => {
     expect(second.events[0]!.id).not.toBe(first.events[0]!.id)
   })
 })
+
+function resolveSession(session: ReturnType<typeof createRollSession>) {
+  while (session.state.value.phase.name === 'roll') {
+    const phase = session.state.value.phase
+    session.dispatch({ type: phase.step === 'awaiting-roll' ? 'RollDice' : 'ConfirmRoll', playerId: phase.activePlayerId })
+    settle(session)
+  }
+  while (session.state.value.phase.name === 'favor') {
+    const phase = session.state.value.phase
+    session.dispatch({ type: 'SkipFavor', playerId: phase.activePlayerId })
+    settle(session)
+  }
+  session.dispatch({ type: 'ResolveRound', playerId: session.state.value.firstPlayerId })
+  return session.pending.value!
+}
+
+describe('automatic round completion boundary', () => {
+  it('waits for the matching batch, dispatches NextRound once and preserves resources', () => {
+    const session = createRollSession({ random: () => 0.4 })
+    const batch = resolveSession(session)
+    expect(session.advanceRound()).toBe(false)
+    session.settle(batch.id + 1)
+    expect(session.advanceRound()).toBe(false)
+    session.settle(batch.id)
+    const resources = Object.values(session.state.value.players).map(p => [p.health, p.tokens])
+    expect(session.advanceRound()).toBe(true)
+    const next = session.pending.value!
+    expect(session.advanceRound()).toBe(false)
+    session.settle(batch.id)
+    expect(session.pending.value).toBe(next)
+    session.settle(next.id)
+    expect(session.state.value.round).toBe(2)
+    expect(session.state.value.firstPlayerId).toBe('player-2')
+    expect(Object.values(session.state.value.players).map(p => [p.health, p.tokens])).toEqual(resources)
+    expect(session.advanceRound()).toBe(false)
+  })
+
+  it('keeps progress monotonic and event history single, rejecting foreign/stale contacts', () => {
+    const session = createRollSession({ random: () => 0.4 })
+    const batch = resolveSession(session)
+    const gold = batch.events.find(e => e.type === 'TokensGained' && e.playerId === 'player-1')!
+    session.progress(batch.id + 1, gold, 1)
+    session.progress(batch.id, { ...gold }, 1)
+    expect(session.state.value.players['player-1'].tokens).toBe(0)
+    session.progress(batch.id, gold, 1)
+    expect(session.state.value.players['player-1'].tokens).toBe(1)
+    session.progress(batch.id, gold, 2)
+    session.progress(batch.id, gold, 1)
+    session.progress(batch.id, gold, Infinity)
+    session.progress(batch.id, gold, 1.5)
+    expect(session.state.value.players['player-1'].tokens).toBe(2)
+    expect(session.history.value).toHaveLength(0)
+    session.present(batch.id, gold)
+    session.present(batch.id, gold)
+    session.progress(batch.id, gold, 1)
+    expect(session.state.value.players['player-1'].tokens).toBe(3)
+    expect(session.history.value).toHaveLength(1)
+    session.recover()
+    session.resume()
+    const recovery = session.pending.value!
+    expect(recovery.events).toEqual([])
+    expect(session.advanceRound()).toBe(false)
+    session.progress(batch.id, gold, 1)
+    session.settle(batch.id)
+    expect(session.pending.value).toBe(recovery)
+    session.settle(recovery.id)
+    expect(session.advanceRound()).toBe(true)
+  })
+
+  it('never advances a finished match, including recovery and callbacks from a previous match', () => {
+    const session = createRollSession({ random: () => 0 })
+    let final = resolveSession(session)
+    session.settle(final.id)
+    while (session.state.value.phase.name !== 'ended') {
+      expect(session.advanceRound()).toBe(true)
+      settle(session)
+      final = resolveSession(session)
+      session.settle(final.id)
+    }
+    expect(session.advanceRound()).toBe(false)
+    session.recover(); session.resume()
+    settle(session)
+    expect(session.advanceRound()).toBe(false)
+    session.restart()
+    session.settle(final.id)
+    expect(session.state.value.round).toBe(1)
+    expect(session.state.value.revision).toBe(0)
+    expect(session.advanceRound()).toBe(false)
+  })
+})

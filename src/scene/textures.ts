@@ -1,5 +1,5 @@
 import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from "three";
-import type { DieFace } from "../core";
+import type { DieFace, DieSymbol } from "../core";
 import { SYMBOL_PATHS } from "./symbols";
 
 function canvas(size: number) {
@@ -14,6 +14,13 @@ function texture(element: HTMLCanvasElement) {
   result.colorSpace = SRGBColorSpace;
   result.anisotropy = 4;
   return result;
+}
+export function createSymbolTexture(symbol: DieSymbol) {
+  const { element, context } = canvas(128);
+  context.scale(1.28, 1.28);
+  context.fillStyle = '#ffe4b0';
+  context.fill(new Path2D(SYMBOL_PATHS[symbol]), 'evenodd');
+  return texture(element);
 }
 // Only surface noise; never consumes the game's random source.
 function noise(x: number, y: number) {

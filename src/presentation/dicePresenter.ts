@@ -24,6 +24,7 @@ export function createDicePresenter(
     reduced?: () => boolean;
     speed?: () => number;
     audio?: AudioPort;
+    collected?: ReadonlySet<DieId>;
   },
 ) {
   let disposed = false;
@@ -64,6 +65,7 @@ export function createDicePresenter(
     await animate((timeline) => {
       for (const player of Object.values(state.players)) {
         player.dice.forEach((value, index) => {
+          if (options.collected?.has(value.id)) return;
           const object = dice.get(value.id)!;
           object.visible = !!value.faceId && !value.removed;
           if (!value.faceId) return;

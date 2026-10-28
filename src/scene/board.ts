@@ -31,6 +31,7 @@ import {
   lifeStoneSlot,
   playerAngle,
   seatPosition,
+  tokenSlot,
 } from "./tableLayout";
 import {
   createClothTexture,
@@ -39,6 +40,7 @@ import {
   createWoodTexture,
   createBowlTexture,
   createSurfaceTexture,
+  createSymbolTexture,
 } from "./textures";
 
 export function createBoard(invalidate: () => void = () => {}) {
@@ -217,6 +219,10 @@ export function createBoard(invalidate: () => void = () => {}) {
         );
         marker.visible = false;
         marker.name = "selection-marker";
+        const activity = mesh(die, marker.geometry, material({ color: '#ffe4a0', emissive: '#d8b76e', emissiveIntensity: 1, wireframe: true, transparent: true }), [0, 0, 0]);
+        activity.name = 'activity-marker';
+        activity.scale.setScalar(1.08);
+        activity.visible = false;
         die.visible = false;
         root.add(die);
       },
@@ -273,7 +279,11 @@ export function createBoard(invalidate: () => void = () => {}) {
     [0, 0, 0],
   );
   effect.visible = false;
-  const tokenEffect = mesh(root, tokenShape, brass, [0, 0, 0]);
+  const flyingBrass = brass.clone();
+  flyingBrass.emissive.set('#d8b76e');
+  flyingBrass.emissiveIntensity = 0.55;
+  materials.add(flyingBrass);
+  const tokenEffect = mesh(root, tokenShape, flyingBrass, [0, 0, 0]);
   tokenEffect.visible = false;
 
   for (const [index, player] of (["player-1", "player-2"] as const).entries()) {
@@ -282,10 +292,12 @@ export function createBoard(invalidate: () => void = () => {}) {
     stones.position.set(...seatPosition(player, -5.7, 0, 5.15));
     stones.rotation.y = playerAngle(player);
     for (let i = 0; i < 15; i++) {
+      const surface = (index === 0 ? blueStone : redStone).clone();
+      materials.add(surface);
       const stone = mesh(
         stones,
         pebble,
-        index === 0 ? blueStone : redStone,
+        surface,
         lifeStoneSlot(i),
       );
       stone.scale.set(1, 0.65 + (i % 3) * 0.08, 0.83);
@@ -333,11 +345,32 @@ export function createBoard(invalidate: () => void = () => {}) {
     }
   }
 
+  const attackEffects = Object.fromEntries((['arrow', 'axe'] as const).map(symbol => {
+    const object = mesh(root, geometry(new PlaneGeometry(1.15, 1.15)), material({ map: keepTexture(createSymbolTexture(symbol)), transparent: true, emissive: '#d8b76e', emissiveIntensity: 0.5, depthWrite: false }), [0, 0, 0]);
+    object.rotation.x = -Math.PI / 2;
+    object.visible = false;
+    return [symbol, object];
+  })) as Record<'arrow' | 'axe', Mesh<PlaneGeometry, MeshStandardMaterial>>;
+
   return {
     object: root,
     dice,
     effect,
     tokenEffect,
+    attackEffects,
+    lifeStone(playerId: PlayerId, index: number) {
+      return stoneGroups[playerId === 'player-1' ? 0 : 1]!.children[Math.max(0, Math.min(index, 14))] as Mesh<SphereGeometry, MeshStandardMaterial>;
+    },
+    lifePosition(playerId: PlayerId, index: number) {
+      const group = stoneGroups[playerId === 'player-1' ? 0 : 1]!;
+      group.updateMatrixWorld(true);
+      return group.children[Math.max(0, Math.min(index, 14))]!.getWorldPosition(new Vector3());
+    },
+    tokenPosition(playerId: PlayerId, index: number) {
+      const group = tokenGroups[playerId === 'player-1' ? 0 : 1]!;
+      group.updateMatrixWorld(true);
+      return group.localToWorld(new Vector3(...tokenSlot(index)));
+    },
     totem(playerId: PlayerId, favorId: string) {
       const index = Math.max(0, loadouts[playerId].indexOf(favorId as FavorId));
       return totemGroups[(playerId === "player-1" ? 0 : 3) + index]!;
@@ -429,11 +462,7 @@ export function createBoard(invalidate: () => void = () => {}) {
         // Stack real token counts; counters remain readable for large reserves.
         while (group.children.length < Math.min(player.tokens, 40)) {
           const i = group.children.length;
-          mesh(group, tokenShape, brass, [
-            ((i % 5) - 2) * 0.36,
-            0.1 + Math.floor(i / 10) * 0.09,
-            Math.floor((i % 10) / 5) * 0.36,
-          ]);
+          mesh(group, tokenShape, brass, tokenSlot(i));
         }
         group.children.forEach((token, i) => {
           token.visible = i < player.tokens;

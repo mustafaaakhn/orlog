@@ -102,18 +102,17 @@ function start(
     void nextTick(focusAction);
   }
 }
+const sceneGeneration = ref(0);
 function restart() {
-  if (!busy.value) {
-    audio.stopEffects();
-    session.restart();
-    preparing.value = true;
-    setupScreen.value = "welcome";
-    closeView.value = false;
-    overlay.value = null;
-    void nextTick(() =>
-      document.querySelector<HTMLElement>(".welcome-play")?.focus(),
-    );
-  }
+  audio.stopEffects();
+  session.recover();
+  session.restart();
+  sceneGeneration.value++;
+  preparing.value = true;
+  setupScreen.value = "welcome";
+  closeView.value = false;
+  overlay.value = null;
+  void nextTick(() => document.querySelector<HTMLElement>(".welcome-play")?.focus());
 }
 const closeView = ref(false);
 const sceneReady = ref(false);
@@ -169,7 +168,7 @@ const instruction = computed(() => {
   if (phase.value.name === "ended")
     return `${names.value[phase.value.winnerId]} kazandı. Yeni bir maç için yeniden başlat.`;
   if (phase.value.name === "round-complete")
-    return "Tur tamamlandı. Sonraki turda ilk oyuncu değişecek; canlar ve jetonlar korunur.";
+    return "Zarlar toplanıyor. Sonraki tur otomatik başlayacak.";
   if (phase.value.name === "resolution")
     return "İki güç seçimi de tamamlandı. Savaşı başlat.";
   if (phase.value.name === "favor")
@@ -232,22 +231,24 @@ function skip() {
 }
 function advance() {
   if (busy.value) return;
-  if (
-    phase.value.name === "resolution" ||
-    phase.value.name === "round-complete"
-  )
+  if (phase.value.name === "resolution")
     session.dispatch({
-      type: phase.value.name === "resolution" ? "ResolveRound" : "NextRound",
+      type: "ResolveRound",
       playerId: state.value.firstPlayerId,
     });
 }
 function availability(ready: boolean) {
+  if (ready) session.resume();
   sceneReady.value = ready;
   if (!ready) {
     audio.stopEffects();
     session.recover();
   }
 }
+watch([state, pending, sceneReady, paused, preparing, overlay], () => {
+  if (!preparing.value && !busy.value && !paused.value && !overlay.value)
+    session.advanceRound();
+});
 function roll() {
   if (!busy.value && !computerTurn.value && phase.value.name === "roll")
     session.dispatch({
@@ -319,12 +320,13 @@ function confirm() {
       :inert="preparing"
     >
       <TablePreview
+        :key="sceneGeneration"
         :audio="audio"
         :reduced="reduced"
         :paused="paused || !!overlay"
         :quality="settings.quality"
         :speed="speed"
-        :close-view="closeView"
+        :close-view="closeView && phase.name === 'roll'"
         :state="state"
         :batch="pending"
         :viewer-id="viewerId"
@@ -335,6 +337,7 @@ function confirm() {
         "
         @availability="availability"
         @presented="session.present"
+        @progress="session.progress"
         @settled="session.settle($event)"
         @select="selectDie"
       />
@@ -474,15 +477,12 @@ function confirm() {
               }}<UiIcon name="check" />
             </button>
             <button
-              v-if="
-                phase.name === 'resolution' || phase.name === 'round-complete'
-              "
+              v-if="phase.name === 'resolution'"
               class="primary-action"
               :disabled="busy"
               @click="advance"
             >
-              {{ phase.name === "resolution" ? "Savaşı başlat" : "Sonraki tur"
-              }}<UiIcon name="arrow" />
+              Savaşı başlat<UiIcon name="arrow" />
             </button>
             <button
               v-if="phase.name === 'ended'"
@@ -546,7 +546,7 @@ function confirm() {
           </li>
           <li>
             <strong>Savaşı izle.</strong> Güçler, oklar, baltalar ve çalma
-            sırasıyla çözülür. Sonraki turda ilk oyuncu değişir.
+            sırasıyla çözülür. Zarlar toplandıktan sonra yeni tur otomatik başlar; ilk oyuncu değişir.
           </li>
         </ol>
         <div class="symbol-guide">
@@ -593,10 +593,9 @@ function confirm() {
         </p>
         <button class="primary-action" @click="overlay = null">
           Oyuna dön <UiIcon name="arrow" /></button
-        ><button class="secondary-action" :disabled="busy" @click="restart">
+        ><button class="secondary-action" @click="restart">
           Ana menüye dön
         </button>
-        <p v-if="busy">Oyuna dönüp masa hareketinin tamamlanmasını bekle.</p>
       </div>
     </dialog>
   </main>

@@ -1,240 +1,227 @@
-import { gsap } from "gsap";
-import { Vector3 } from "three";
-import type { GameEvent } from "../core";
-import type { createBoard } from "../scene/board";
+import { gsap } from 'gsap'
+import { Vector3 } from 'three'
+import type { GameEvent, DieId, DieSymbol, GameState, PlayerId } from '../core'
+import type { createBoard } from '../scene/board'
+import { collectionSlot } from '../scene/tableLayout'
+import { eventDice } from './resolutionPlan'
+import { eventText } from './eventText'
+import { resourceSteps } from './resources'
 
+export interface PresentationCue {
+  title?: string
+  text?: string
+  symbol?: DieSymbol
+  targetSymbol?: DieSymbol
+  progress?: string
+}
+
+type Board = ReturnType<typeof createBoard>
 export function createCombatPresenter(
-  board: ReturnType<typeof createBoard>,
+  board: Board,
   invalidate: () => void,
   speed: () => number,
   reduced: () => boolean = () => false,
+  feedback: {
+    progress?: (event: GameEvent, step: number) => void
+    cue?: (cue: PresentationCue | null) => void
+  } = {},
 ) {
-  let active: gsap.core.Timeline | undefined;
-  let finish: (() => void) | undefined;
-  let closed = false;
-  let paused = false;
+  let active: gsap.core.Timeline | undefined
+  let finish: (() => void) | undefined
+  let closed = false
+  let paused = false
+  const collected = new Set<DieId>()
+  const counts: Record<PlayerId, number> = { 'player-1': 0, 'player-2': 0 }
   function animate(build: (timeline: gsap.core.Timeline) => void) {
-    if (closed) return Promise.resolve();
-    return new Promise<void>((resolve) => {
-      finish = () => {
-        active = undefined;
-        finish = undefined;
-        resolve();
-      };
-      active = gsap.timeline({
-        onUpdate: invalidate,
-        onComplete: () => finish?.(),
-      });
-      build(active);
-      active.timeScale(speed());
-      if (reduced()) active.progress(1);
-      else if (paused) active.pause();
-      if (active && !active.duration()) {
-        active.kill();
-        finish?.();
-      }
-    });
+    if (closed) return Promise.resolve()
+    return new Promise<void>(resolve => {
+      const done = () => { active = undefined; finish = undefined; resolve() }
+      finish = done
+      active = gsap.timeline({ onUpdate: invalidate, onComplete: done })
+      build(active)
+      active.timeScale(speed())
+      if (paused) active.pause()
+      if (active && !active.duration()) { active.kill(); done() }
+    })
   }
-  async function flight(
-    from: Vector3,
-    to: Vector3,
-    blocked = false,
-    token = false,
-    color = "#ffda7b",
-  ) {
-    const orb = token ? board.tokenEffect : board.effect;
-    if (!token) {
-      board.effect.material.color.set(color);
-      board.effect.material.emissive.set(color);
+  function wait(t: gsap.core.Timeline, duration: number) { t.to({}, { duration }) }
+  function contact(event: GameEvent, step: number) {
+    if (!closed && !paused) feedback.progress?.(event, step)
+  }
+  function markers(ids: readonly DieId[], visible: boolean) {
+    for (const id of ids) {
+      const marker = board.dice.get(id)?.getObjectByName('activity-marker')
+      if (marker) marker.visible = visible
     }
-    orb.visible = true;
-    orb.position.copy(from);
-    orb.scale.setScalar(blocked ? 0.8 : 1);
-    await animate((t) => {
-      t.to(orb.position, {
-        x: to.x,
-        z: to.z,
-        y: to.y + 0.4,
-        duration: 0.4,
-        ease: "power2.in",
-      });
-      t.to(orb.scale, {
-        x: blocked ? 2.8 : 1.8,
-        y: blocked ? 0.3 : 1.8,
-        z: blocked ? 2.8 : 1.8,
-        duration: 0.13,
-      });
-    });
-    orb.visible = false;
-    invalidate();
+    invalidate()
+  }
+  async function flight(from: Vector3, to: Vector3, options: {
+    token?: boolean; blocked?: boolean; color?: string; symbol?: 'axe' | 'arrow'; contact?: () => void
+  } = {}) {
+    if (closed) return
+    const orb = options.token ? board.tokenEffect : options.symbol ? board.attackEffects[options.symbol] : board.effect
+    if (!options.token && !options.symbol) {
+      board.effect.material.color.set(options.color ?? '#ffc08c')
+      board.effect.material.emissive.set(options.color ?? '#ffc08c')
+    }
+    orb.visible = !reduced()
+    if (options.symbol) orb.rotation.z = Math.atan2(-(to.z - from.z), to.x - from.x) - Math.PI / 4
+    orb.position.copy(from).add(new Vector3(0, 0.55, 0))
+    orb.scale.setScalar(options.token ? 1.4 : 1)
+    await animate(t => {
+      if (reduced()) wait(t, 0.14)
+      else t.to(orb.position, { x: to.x, z: to.z, y: to.y + (options.blocked ? 0.5 : 0.1), duration: 0.34, ease: 'power2.in' })
+      t.call(() => { if (!closed && !paused) options.contact?.() })
+      if (reduced()) wait(t, 0.08)
+      else t.to(orb.scale, { x: options.blocked ? 1.8 : 0.2, y: 0.2, z: options.blocked ? 1.8 : 0.2, duration: 0.12 })
+    })
+    orb.visible = false
+    invalidate()
+  }
+  async function stoneContact(event: GameEvent, player: PlayerId, index: number, step: number, from: Vector3, healing = false, symbol?: 'axe' | 'arrow') {
+    const stone = board.lifeStone(player, index)
+    const original = stone.material.emissive.clone()
+    const intensity = stone.material.emissiveIntensity
+    const to = board.lifePosition(player, index)
+    await flight(from, to, { symbol, color: healing ? '#9dd68a' : '#ef6472', contact: () => {
+      stone.visible = true
+      if (healing) contact(event, step)
+      stone.material.emissive.set(healing ? '#9dd68a' : '#e52d46')
+      stone.material.emissiveIntensity = 1.7
+      invalidate()
+    } })
+    if (closed) return
+    await animate(t => {
+      wait(t, reduced() ? 0.1 : 0.16)
+      t.call(() => { if (!healing) contact(event, step) })
+      t.to(stone.material, { emissiveIntensity: intensity, duration: reduced() ? 0.04 : 0.1 })
+    })
+    stone.material.emissive.copy(original)
+    stone.material.emissiveIntensity = intensity
+    invalidate()
+  }
+  function source(event: GameEvent) {
+    if ('dieId' in event && event.dieId) return board.dice.get(event.dieId)!.position.clone()
+    if ('playerId' in event) return board.totem(event.playerId, 'favorId' in event ? event.favorId ?? '' : '').position.clone().add(new Vector3(0, 0.65, 0))
+    return new Vector3()
+  }
+  async function collect(ids: readonly DieId[]) {
+    if (closed || !ids.length) return
+    const moves = ids.filter(id => !collected.has(id) && board.dice.get(id)?.visible).map(id => {
+      collected.add(id)
+      const player = id.startsWith('player-1/') ? 'player-1' : 'player-2'
+      return { object: board.dice.get(id)!, slot: collectionSlot(player, counts[player]++) }
+    })
+    if (!moves.length) return
+    await animate(t => {
+      moves.forEach(({ object, slot }, i) => {
+        const [x, y, z] = slot
+        const marker = object.getObjectByName('selection-marker')
+        if (marker) marker.visible = false
+        if (reduced()) t.call(() => object.position.set(x, y, z), [], 0)
+        else {
+          t.to(object.position, { y: 1.45, duration: 0.1, ease: 'power2.out' }, i * 0.025)
+          t.to(object.position, { x, z, duration: 0.28, ease: 'power2.inOut' }, i * 0.025 + 0.08)
+          t.to(object.position, { y, duration: 0.13, ease: 'power2.in' }, i * 0.025 + 0.32)
+        }
+      })
+      if (reduced()) wait(t, 0.08)
+    })
   }
   return {
+    collected,
+    collect,
+    async cleanup(state: GameState) {
+      feedback.cue?.({ text: 'Zarlar kendi kenarlarında toplanıyor.' })
+      await collect(Object.values(state.players).flatMap(player => player.dice.map(die => die.id)))
+      if (!closed) feedback.cue?.(null)
+    },
+    reset() { collected.clear(); counts['player-1'] = 0; counts['player-2'] = 0 },
+    async title(title: string) {
+      if (closed) return
+      feedback.cue?.({ title })
+      await animate(t => wait(t, reduced() ? 0.45 : 0.9))
+      if (!closed) feedback.cue?.(null)
+    },
     async play(event: GameEvent) {
-      if (closed) return;
-      if (event.type === "FavorInvoked") {
-        const totem = board.totem(event.playerId, event.favorId);
-        const restingAngle = totem.rotation.y;
-        await animate((t) => {
-          t.to(totem.position, { y: 0.65, duration: 0.23 });
-          t.to(
-            totem.rotation,
-            { y: restingAngle + Math.PI * 2, duration: 0.4 },
-            0,
-          );
-          t.to(totem.position, { y: 0, duration: 0.23 });
-        });
-        totem.rotation.y = restingAngle;
-      } else if (
-        event.type === "AttackBlocked" ||
-        event.type === "DamageDealt"
-      ) {
-        const from = event.dieId
-          ? board.dice.get(event.dieId)!.position.clone()
-          : board
-              .totem(
-                event.playerId,
-                event.type === "DamageDealt" ? event.favorId! : "",
-              )
-              .position.clone()
-              .add(new Vector3(0, 1.5, 0));
-        const to =
-          event.type === "AttackBlocked"
-            ? board.dice.get(event.defenderDieId)!.position.clone()
-            : board.resourcePosition(event.targetId);
-        await flight(
-          from,
-          to,
-          event.type === "AttackBlocked",
-          false,
-          event.type === "AttackBlocked"
-            ? "#8bc7da"
-            : event.favorId
-              ? "#c1b8ff"
-              : "#ffc08c",
-        );
-      } else if (event.type === "TokensGained") {
-        for (const id of event.dieIds)
-          await flight(
-            board.dice.get(id)!.position.clone(),
-            board.resourcePosition(event.playerId, true),
-            false,
-            true,
-          );
-      } else if (event.type === "TokensStolen" && event.amount) {
-        await flight(
-          board.resourcePosition(event.targetId, true),
-          board.resourcePosition(event.playerId, true),
-          false,
-          true,
-        );
-      } else if (event.type === "HealthRestored") {
-        await flight(
-          board
-            .totem(event.playerId, event.favorId ?? "iduns-rejuvenation")
-            .position.clone()
-            .add(new Vector3(0, 1.5, 0)),
-          board.resourcePosition(event.playerId),
-          false,
-          false,
-          "#9dd68a",
-        );
-      } else if (event.type === "TokensGranted") {
-        await flight(
-          board
-            .totem(event.playerId, event.favorId)
-            .position.clone()
-            .add(new Vector3(0, 1.5, 0)),
-          board.resourcePosition(event.playerId, true),
-          false,
-          true,
-        );
-      } else if (event.type === "TokensDestroyed" && event.amount) {
-        await flight(
-          board.resourcePosition(event.targetId, true),
-          board
-            .totem(event.playerId, event.favorId)
-            .position.clone()
-            .add(new Vector3(0, 1.5, 0)),
-          false,
-          false,
-          "#e292ae",
-        );
-      } else if (event.type === "HealthSacrificed" && event.amount) {
-        await flight(
-          board.resourcePosition(event.playerId),
-          board
-            .totem(event.playerId, event.favorId)
-            .position.clone()
-            .add(new Vector3(0, 1.5, 0)),
-          false,
-          false,
-          "#ed8594",
-        );
-      } else if (event.type === "DiceValuesChanged") {
-        for (const value of event.values)
-          await flight(
-            board
-              .totem(event.playerId, event.favorId)
-              .position.clone()
-              .add(new Vector3(0, 1.5, 0)),
-            board.dice.get(value.dieId)!.position.clone(),
-            true,
-            false,
-            "#aee5c5",
-          );
-      } else if (event.type === "FavorReduced") {
-        await flight(
-          board.resourcePosition(event.playerId, true),
-          board
-            .totem(event.targetId, event.favorId)
-            .position.clone()
-            .add(new Vector3(0, 1.5, 0)),
-          true,
-          false,
-          "#e292ae",
-        );
-      } else if (
-        event.type === "FavorEffectApplied" ||
-        event.type === "FavorFailed"
-      ) {
-        await flight(
-          board
-            .totem(event.playerId, event.favorId)
-            .position.clone()
-            .add(new Vector3(0, 1.5, 0)),
-          board.resourcePosition(event.playerId),
-          true,
-          false,
-          event.type === "FavorFailed" ? "#db8494" : "#b3d8f0",
-        );
-      } else if (
-        event.type === "HelmetsRemoved" ||
-        event.type === "DiceRemoved"
-      ) {
-        for (const id of event.dieIds) {
-          const die = board.dice.get(id)!;
-          await animate((t) => {
-            t.to(die.position, { y: 1.6, duration: 0.22 });
-            t.to(die.scale, { x: 0, y: 0, z: 0, duration: 0.2 });
-          });
-          die.visible = false;
-          die.scale.setScalar(1);
+      if (closed) return
+      const text = eventText(event)
+      if (text) feedback.cue?.({ text,
+        symbol: event.type === 'AttackBlocked' || event.type === 'DamageDealt' ? event.symbol : event.type === 'TokensStolen' ? 'hand' : undefined,
+        targetSymbol: event.type === 'AttackBlocked' ? event.symbol === 'arrow' ? 'shield' : 'helmet' : undefined,
+      })
+      const ids = eventDice(event)
+      markers(ids, true)
+      try {
+        if (event.type === 'AttackBlocked') {
+          await flight(source(event), board.dice.get(event.defenderDieId)!.position.clone(), { symbol: event.symbol, blocked: true })
+        } else if (event.type === 'DamageDealt' || event.type === 'HealthRestored' || event.type === 'HealthSacrificed') {
+          const player = event.type === 'DamageDealt' ? event.targetId : event.playerId
+          for (let step = 1; step <= event.amount && !closed; step++) {
+            const healing = event.type === 'HealthRestored'
+            const index = healing ? event.health - event.amount + step - 1 : event.health + event.amount - step
+            await stoneContact(event, player, index, step, source(event), healing, event.type === 'DamageDealt' ? event.symbol : undefined)
+          }
+        } else if (event.type === 'TokensGained' || event.type === 'TokensGranted' || event.type === 'TokensStolen' || event.type === 'TokensDestroyed' || event.type === 'FavorInvoked') {
+          const count = resourceSteps(event)
+          if (event.type === 'TokensGained') markers(ids, false)
+          for (let step = 1; step <= count && !closed; step++) {
+            if (event.type === 'TokensGained') {
+              markers(ids, false)
+              markers([event.dieIds[step - 1]!], true)
+            }
+            const outgoing = event.type === 'TokensDestroyed' || event.type === 'FavorInvoked'
+            const tokenOwner = event.type === 'TokensDestroyed' ? event.targetId : event.playerId
+            const tokenIndex = outgoing ? event.tokens + count - step : event.tokens - count + step - 1
+            const pile = board.tokenPosition(tokenOwner, tokenIndex)
+            const from = event.type === 'TokensGained' ? board.dice.get(event.dieIds[step - 1]!)!.position.clone()
+              : event.type === 'TokensStolen' ? board.tokenPosition(event.targetId, event.targetTokens + count - step)
+              : outgoing ? pile : source(event)
+            const to = outgoing ? source(event) : pile
+            feedback.cue?.({ text, symbol: event.type === 'TokensStolen' ? 'hand' : undefined, progress: `${step} / ${count}` })
+            await flight(from, to, { token: true, contact: () => contact(event, step) })
+          }
+          if (event.type === 'FavorInvoked' && !closed) {
+            const totem = board.totem(event.playerId, event.favorId)
+            const y = totem.position.y
+            await animate(t => {
+              if (reduced()) wait(t, 0.12)
+              else { t.to(totem.position, { y: y + 0.45, duration: 0.18 }); t.to(totem.position, { y, duration: 0.18 }) }
+            })
+          }
+        } else if (event.type === 'HelmetsRemoved' || event.type === 'DiceRemoved') {
+          for (const id of event.dieIds) {
+            if (closed) return
+            const die = board.dice.get(id)!
+            await animate(t => {
+              if (reduced()) wait(t, 0.1)
+              else t.to(die.scale, { x: 0, y: 0, z: 0, duration: 0.22 })
+            })
+            die.visible = false
+            die.scale.setScalar(1)
+          }
+        } else if (event.type === 'DiceValuesChanged') {
+          for (const value of event.values) {
+            if (closed) return
+            await flight(source(event), board.dice.get(value.dieId)!.position.clone(), { blocked: true, color: '#aee5c5' })
+          }
+        } else if (event.type === 'FavorReduced' || event.type === 'FavorEffectApplied' || event.type === 'FavorFailed') {
+          await flight(source(event), event.type === 'FavorReduced' ? board.totem(event.targetId, event.favorId).position.clone() : source(event), { blocked: true, color: '#c1b8ff' })
         }
+      } finally {
+        markers(ids, false)
       }
     },
-    setSpeed(value: number) {
-      active?.timeScale(value);
-    },
-    setPaused(value: boolean) {
-      paused = value;
-      if (active) active.paused(value);
-    },
+    setSpeed(value: number) { active?.timeScale(value) },
+    setPaused(value: boolean) { paused = value; active?.paused(value) },
     dispose() {
-      closed = true;
-      active?.kill();
-      finish?.();
-      board.effect.visible = false;
-      board.tokenEffect.visible = false;
+      closed = true
+      active?.kill()
+      finish?.()
+      feedback.cue?.(null)
+      board.effect.visible = false
+      board.tokenEffect.visible = false
+      Object.values(board.attackEffects).forEach(effect => { effect.visible = false })
     },
-  };
+  }
 }
