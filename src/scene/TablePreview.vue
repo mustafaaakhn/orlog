@@ -5,9 +5,10 @@ import type { TresContext } from '@tresjs/core'
 import TableScene from './TableScene.vue'
 import { initializePhysics } from '../presentation/rollSimulation'
 import type { PresentationBatch } from '../app/rollSession'
-import type { DieId, GameState } from '../core'
+import type { DieId, GameState, GameEvent } from '../core'
 
 defineProps<{
+  speed: number
   closeView: boolean
   state: GameState
   batch: PresentationBatch | null
@@ -15,6 +16,7 @@ defineProps<{
 const emit = defineEmits<{
   availability: [ready: boolean]
   settled: [batchId: number]
+  presented: [batchId: number, event: GameEvent]
   select: [dieId: DieId]
 }>()
 const status = ref<'checking' | 'loading' | 'ready' | 'unsupported' | 'error'>(
@@ -110,9 +112,11 @@ onErrorCaptured(() => {
       @error="failed"
     >
       <TableScene
+        :speed="speed"
         :close-view="closeView"
         :state="state"
         :batch="batch"
+        @presented="(id, event) => emit('presented', id, event)"
         @settled="emit('settled', $event)"
         @select="emit('select', $event)"
         @failed="failed"

@@ -3,28 +3,50 @@ import { onMounted, onUnmounted, watch, watchEffect } from 'vue'
 import { useTres } from '@tresjs/core'
 import { PerspectiveCamera, Vector3, Raycaster, Vector2, Object3D } from 'three'
 import { createBoard } from './board'
+import { createEventQueue } from '../presentation/eventQueue'
+import { createCombatPresenter } from '../presentation/combatPresenter'
+import { applyResourceEvent } from '../presentation/resources'
 import { createDicePresenter } from '../presentation/dicePresenter'
 import type { PresentationBatch } from '../app/rollSession'
-import type { DieId, GameState } from '../core'
+import type { DieId, GameState, GameEvent } from '../core'
 
 const props = defineProps<{
+  speed: number
   closeView: boolean
   state: GameState
   batch: PresentationBatch | null
 }>()
 const emit = defineEmits<{
   settled: [batchId: number]
+  presented: [batchId: number, event: GameEvent]
   select: [dieId: DieId]
   failed: []
 }>()
 const { sizes, invalidate, renderer } = useTres()
 const board = createBoard()
 board.syncDice(props.state)
+board.syncResources(props.state)
 let sceneClosed = false
 const presenter = createDicePresenter(board.dice, invalidate)
+const combat = createCombatPresenter(board, invalidate, () => props.speed)
+let shown = props.state
+const queue = createEventQueue(async event => {
+  const batch = props.batch
+  if (!batch) return
+  await presenter.play({ ...batch, events: [event] })
+  await combat.play(event)
+  if (event.type === 'RoundStarted') board.syncDice(batch.state)
+}, event => {
+  shown = applyResourceEvent(shown, event)
+  board.syncResources(shown)
+  invalidate()
+  if (props.batch) emit('presented', props.batch.id, event)
+})
 watch(
   () => props.state,
   (state) => {
+    shown = state
+    board.syncResources(state)
     if (state.revision === 0 && !props.batch) {
       board.syncDice(state)
       invalidate()
@@ -36,7 +58,7 @@ watch(
   async (batch) => {
     if (!batch) return
     try {
-      await presenter.play(batch)
+      await queue.play(batch.events)
       if (!sceneClosed) emit('settled', batch.id)
     } catch (error) {
       console.error('Dice presentation failed', error)
@@ -121,6 +143,8 @@ onMounted(() => {
 })
 onUnmounted(() => {
   sceneClosed = true
+  queue.dispose()
+  combat.dispose()
   presenter.dispose()
   const canvas = renderer.domElement
   canvas.removeEventListener('pointerdown', pointerDown)

@@ -15,7 +15,7 @@ import {
 } from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { DICE_DEFINITIONS } from '../core'
-import type { DieId, GameState } from '../core'
+import type { DieId, GameState, PlayerId } from '../core'
 import {
   FACE_NORMALS,
   faceUpRotation,
@@ -222,6 +222,12 @@ export function createBoard() {
   const stoneGroups: Group[] = []
   const totemGroups: Group[] = []
   const labels: Mesh[] = []
+  const tokenGroups: Group[] = []
+  const tokenShape = geometry(new CylinderGeometry(0.17, 0.17, 0.08, 12))
+  const effect = mesh(root, geometry(new SphereGeometry(0.18, 12, 8)), material({ color: '#ffda7b', emissive: '#e9b746', emissiveIntensity: 1.3 }), [0, 0, 0])
+  effect.visible = false
+  const tokenEffect = mesh(root, tokenShape, brass, [0, 0, 0])
+  tokenEffect.visible = false
 
   for (const side of [-1, 1]) {
     const stones = new Group()
@@ -238,6 +244,10 @@ export function createBoard() {
     stones.position.set(side * 6.8, 0, -0.3)
     root.add(stones)
     stoneGroups.push(stones)
+    const tokens = new Group()
+    root.add(tokens)
+    tokenGroups.push(tokens)
+
     for (let i = 0; i < 3; i++) {
       const totem = new Group()
       totem.name = `${totemNames[i]} placeholder`
@@ -303,11 +313,32 @@ export function createBoard() {
   return {
     object: root,
     dice,
+    effect,
+    tokenEffect,
+    totem(playerId: PlayerId, favorId: string) {
+      const index = ['thors-strike', 'iduns-rejuvenation', 'vidars-might'].indexOf(favorId)
+      return totemGroups[(playerId === 'player-1' ? 0 : 3) + index]!
+    },
+    resourcePosition(playerId: PlayerId, tokens = false) {
+      return (tokens ? tokenGroups : stoneGroups)[playerId === 'player-1' ? 0 : 1]!.position.clone().add(new Vector3(0, 0.5, 0))
+    },
+    syncResources(state: GameState) {
+      Object.values(state.players).forEach((player, index) => {
+        stoneGroups[index]!.children.forEach((stone, i) => { stone.visible = i < player.health })
+        const group = tokenGroups[index]!
+        // Stack real token counts; counters remain readable for large reserves.
+        while (group.children.length < player.tokens) {
+          const i = group.children.length
+          mesh(group, tokenShape, brass, [((i % 5) - 2) * 0.36, 0.1 + Math.floor(i / 10) * 0.09, Math.floor((i % 10) / 5) * 0.36])
+        }
+        group.children.forEach((token, i) => { token.visible = i < player.tokens })
+      })
+    },
     syncDice(state: GameState) {
       for (const player of Object.values(state.players)) {
         player.dice.forEach((value, index) => {
           const die = dice.get(value.id)!
-          die.visible = value.faceId !== null
+          die.visible = value.faceId !== null && !value.removed
           if (value.faceId) die.quaternion.copy(faceUpRotation(value.faceId))
           const inBowl =
             state.phase.name === 'roll' &&
@@ -349,6 +380,10 @@ export function createBoard() {
           0.055,
           compact ? -side * 5 : 3.25,
         )
+      })
+      tokenGroups.forEach((group, index) => {
+        const side = index === 0 ? -1 : 1
+        group.position.set(compact ? 1.6 : side * 6.8, 0, compact ? -side * 5 : 1.65)
       })
       totemGroups.forEach((totem, index) => {
         const side = index < 3 ? -1 : 1

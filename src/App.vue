@@ -4,6 +4,10 @@ import SymbolIcon from './ui/SymbolIcon.vue'
 import { SYMBOL_GUIDE } from './scene/symbols'
 import SceneLoaderState from './ui/SceneLoaderState.vue'
 import DiceTray from './ui/DiceTray.vue'
+import MatchSetup from './ui/MatchSetup.vue'
+import FavorPicker from './ui/FavorPicker.vue'
+import { eventText, playerLabel } from './presentation/eventText'
+import type { GameOptions, PlayerId, FavorId, FavorLevel } from './core'
 import { createRollSession } from './app/rollSession'
 
 const TablePreview = defineAsyncComponent({
@@ -13,14 +17,22 @@ const TablePreview = defineAsyncComponent({
   delay: 0,
   timeout: 30000,
 })
+const preparing = ref(true)
+const speed = ref(1)
+const names = ref<Record<PlayerId, string>>({ 'player-1': 'Oyuncu I', 'player-2': 'Oyuncu II' })
+function start(options: GameOptions, playerNames: Record<PlayerId, string>) {
+  if (session.start(options)) { names.value = playerNames; preparing.value = false }
+}
+function restart() { if (!busy.value) { session.restart(); preparing.value = true } }
 const closeView = ref(false)
 const guideOpen = ref(false)
 const sceneReady = ref(false)
 const session = createRollSession()
-const { state, pending, error } = session
+const { state, pending, error, lastEvent, history } = session
+const combatLog = computed(() => history.value.map(event => ({ id: event.id, text: eventText(event) })).filter(event => event.text).slice(-16))
 const phase = computed(() => state.value.phase)
 const activePlayer = computed(() =>
-  phase.value.name === 'roll'
+  phase.value.name === 'roll' || phase.value.name === 'favor'
     ? state.value.players[phase.value.activePlayerId]
     : null,
 )
@@ -28,15 +40,27 @@ const busy = computed(() => !!pending.value || !sceneReady.value)
 const instruction = computed(() => {
   if (pending.value?.events.some((event) => event.type === 'DiceRolled'))
     return 'Zarlar kâsede yatışıyor…'
-  if (pending.value) return 'Zarlar yerini alıyor…'
-  if (phase.value.name !== 'roll')
-    return 'İki tarafın zarları hazır. Güç seçimi ve savaş Aşama 4’te açılacak.'
+  if (pending.value) return eventText(lastEvent.value) || 'Olaylar masada çözülüyor…'
+  if (phase.value.name === 'ended') return `${names.value[phase.value.winnerId]} kazandı. Yeni bir maç için yeniden başlat.`
+  if (phase.value.name === 'round-complete') return 'Tur tamamlandı. Sonraki turda ilk oyuncu değişecek; canlar ve jetonlar korunur.'
+  if (phase.value.name === 'resolution') return 'İki güç seçimi de tamamlandı. Savaşı başlat.'
+  if (phase.value.name === 'favor') return `${names.value[phase.value.activePlayerId]} bir güç seçebilir veya pas geçebilir.`
   if (phase.value.step === 'awaiting-roll')
     return 'Saklanmayan zarları at. Her oyuncunun en fazla üç atış hakkı var.'
   if (activePlayer.value?.rollsUsed === 3)
     return 'Son atışın zarları otomatik saklandı. Sonucu onayla.'
   return 'Saklamak istediğin zarlara dokun; geri almak için tekrar dokun. Ardından seçimi onayla.'
 })
+function choose(favorId: FavorId, level: FavorLevel) {
+  if (!busy.value && phase.value.name === 'favor') session.dispatch({ type: 'ChooseFavor', playerId: phase.value.activePlayerId, favorId, level })
+}
+function skip() {
+  if (!busy.value && phase.value.name === 'favor') session.dispatch({ type: 'SkipFavor', playerId: phase.value.activePlayerId })
+}
+function advance() {
+  if (busy.value) return
+  if (phase.value.name === 'resolution' || phase.value.name === 'round-complete') session.dispatch({ type: phase.value.name === 'resolution' ? 'ResolveRound' : 'NextRound', playerId: state.value.firstPlayerId })
+}
 function availability(ready: boolean) {
   sceneReady.value = ready
   if (!ready) session.recover()
@@ -65,7 +89,7 @@ function confirm() {
       >
       <span class="edition">KUZEYİN ZAR OYUNU</span>
       <span class="prototype"
-        ><span aria-hidden="true"></span> ATIŞ VE SEÇİM</span
+        ><span aria-hidden="true"></span> YEREL TAM MAÇ</span
       >
     </header>
     <section class="table-section" aria-labelledby="table-title">
@@ -78,6 +102,7 @@ function confirm() {
           Altı zar. Üç atış.<br />Kaderinden hangisini saklayacaksın?
         </p>
       </div>
+      <MatchSetup v-if="preparing" @start="start" />
       <div class="table-frame">
         <div class="frame-corner top-left" aria-hidden="true"></div>
         <div class="frame-corner bottom-right" aria-hidden="true"></div>
@@ -86,10 +111,12 @@ function confirm() {
           {{ closeView ? 'KEMİK ZARLAR' : 'MASA YERLEŞİMİ' }}
         </div>
         <TablePreview
+          :speed="speed"
           :close-view="closeView"
           :state="state"
           :batch="pending"
           @availability="availability"
+          @presented="session.present"
           @settled="session.settle($event)"
           @select="!busy && session.select($event)"
         />
@@ -126,28 +153,15 @@ function confirm() {
         </button>
       </div>
       <section
+        v-if="!preparing"
         class="roll-panel"
         aria-label="Zar atışı ve seçim"
         :aria-busy="!!pending"
       >
         <div class="turn-heading">
           <div>
-            <p class="eyebrow">
-              {{
-                activePlayer
-                  ? `OYUNCU ${activePlayer.id === 'player-1' ? 'I' : 'II'} · ATIŞ ${Math.min(activePlayer.rollsUsed + (phase.name === 'roll' && phase.step === 'awaiting-roll' ? 1 : 0), 3)} / 3`
-                  : 'ZARLAR HAZIR'
-              }}
-            </p>
-            <h2>
-              {{
-                activePlayer
-                  ? phase.name === 'roll' && phase.step === 'awaiting-roll'
-                    ? 'Kaderini at'
-                    : 'Payına düşeni seç'
-                  : 'Atışlar tamamlandı'
-              }}
-            </h2>
+            <p class="eyebrow">TUR {{ state.round }} · İLK SIRA {{ names[state.firstPlayerId] }}</p>
+            <h2>{{ phase.name === 'ended' ? `${names[phase.winnerId]} kazandı` : activePlayer ? `${names[activePlayer.id]} · ${phase.name === 'favor' ? 'Güç seçimi' : `Atış ${Math.min(activePlayer.rollsUsed + (phase.name === 'roll' && phase.step === 'awaiting-roll' ? 1 : 0), 3)} / 3`}` : phase.name === 'resolution' ? 'Savaş zamanı' : 'Tur tamamlandı' }}</h2>
           </div>
           <div class="roll-actions">
             <button
@@ -171,10 +185,12 @@ function confirm() {
               }}
               <span aria-hidden="true">→</span>
             </button>
+            <button v-if="phase.name === 'resolution' || phase.name === 'round-complete'" class="primary-action" :disabled="busy" @click="advance">{{ phase.name === 'resolution' ? 'Savaşı başlat' : 'Sonraki tur' }} →</button>
+            <label class="speed-control"><input v-model="speed" type="checkbox" :true-value="4" :false-value="1" :disabled="busy" /> Hızlı çözümleme</label>
             <button
               class="restart-action"
               :disabled="busy"
-              @click="session.restart()"
+              @click="restart"
             >
               Yeniden başlat
             </button>
@@ -184,6 +200,11 @@ function confirm() {
           {{ instruction }}
         </p>
         <p v-if="error" role="alert">{{ error }}</p>
+        <div class="resource-scores" aria-label="Oyuncu kaynakları">
+          <p v-for="player in state.players" :key="player.id"><strong>{{ names[player.id] }}</strong><span>{{ playerLabel(player.id) }} · {{ player.health }} can · {{ player.tokens }} jeton</span></p>
+        </div>
+        <FavorPicker v-if="phase.name === 'favor'" :player="state.players[phase.activePlayerId]" :disabled="busy" @choose="choose" @skip="skip" />
+        <details v-if="combatLog.length" class="combat-log"><summary>Tur olayları</summary><ol><li v-for="event in combatLog" :key="event.id">{{ event.text }}</li></ol></details>
         <div class="dice-trays">
           <DiceTray
             v-for="player in state.players"
@@ -251,7 +272,7 @@ function confirm() {
     </section>
     <footer>
       <span>VALHALLA’DAN İLHAM ALAN BİR MASA DENEYİMİ</span
-      ><span>AŞAMA 03 <span aria-hidden="true">/</span> ATIŞ VE SEÇİM</span>
+      ><span>AŞAMA 04 <span aria-hidden="true">/</span> YEREL TAM MAÇ</span>
     </footer>
   </main>
 </template>

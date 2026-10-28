@@ -1,7 +1,7 @@
 import { deepFreeze } from '../immutable'
 import type { FavorDefinition, FavorId, FavorLevel } from '../types'
 
-// Data only in Stage 1. Payment, effects and combat are implemented in Stage 4.
+// Shared data for rule execution and the favor picker.
 export const FAVOR_CATALOG: Readonly<Record<FavorId, FavorDefinition>> = deepFreeze({
   'thors-strike': {
     id: 'thors-strike',

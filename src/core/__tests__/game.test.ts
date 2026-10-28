@@ -205,7 +205,7 @@ describe('favor selection and the Stage 1 resolution boundary', () => {
 describe('commands and ordered presentation events', () => {
   it('rejects malformed command types and unknown actors at the public boundary', () => {
     const game = new Game()
-    for (const command of [null, {}, { type: 'ResolveRound', playerId: 'player-1' }]) {
+    for (const command of [null, {}, { type: 'UnknownCommand', playerId: 'player-1' }]) {
       rejected(game, command as GameCommand, 'INVALID_COMMAND')
     }
     rejected(game, { type: 'RollDice', playerId: 'unknown' } as unknown as GameCommand, 'INVALID_PLAYER')

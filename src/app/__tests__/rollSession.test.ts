@@ -87,3 +87,42 @@ describe('roll session presentation boundary', () => {
     ).toBe(true)
   })
 })
+
+describe('match resource presentation', () => {
+  it('applies only matching, ordered event acknowledgements and recovers the final outcome after interruption', () => {
+    const session = createRollSession({ random: () => 0 })
+    while (session.state.value.phase.name === 'roll') {
+      const phase = session.state.value.phase
+      session.dispatch({ type: phase.step === 'awaiting-roll' ? 'RollDice' : 'ConfirmRoll', playerId: phase.activePlayerId })
+      settle(session)
+    }
+    for (const playerId of ['player-1', 'player-2'] as const) { session.dispatch({ type: 'SkipFavor', playerId }); settle(session) }
+    session.dispatch({ type: 'ResolveRound', playerId: 'player-1' })
+    const batch = session.pending.value!, hit = batch.events.find(event => event.type === 'DamageDealt')!
+    expect(session.state.value.players['player-2'].health).toBe(15)
+    session.present(batch.id + 1, hit)
+    expect(session.state.value.players['player-2'].health).toBe(15)
+    session.present(batch.id, hit)
+    expect(session.state.value.players['player-2'].health).toBe(14)
+    session.present(batch.id, hit)
+    expect(session.history.value).toHaveLength(1)
+    session.recover()
+    expect(session.state.value.players['player-2'].health).toBe(9)
+    session.present(batch.id, hit)
+    expect(session.state.value).toBe(batch.state)
+    session.restart()
+    expect(session.history.value).toHaveLength(0)
+    expect(session.state.value.players['player-2'].health).toBe(15)
+  })
+  it('starts with the chosen loadout/coin result and gives each restarted match distinct event identities', () => {
+    const session = createRollSession()
+    expect(session.start({ firstPlayerId: 'player-2', loadouts: { 'player-2': ['vidars-might'] } })).toBe(true)
+    const first = roll(session)
+    expect(first.events[0]).toMatchObject({ playerId: 'player-2' })
+    expect(session.start({})).toBe(false)
+    settle(session)
+    session.restart()
+    const second = roll(session)
+    expect(second.events[0]!.id).not.toBe(first.events[0]!.id)
+  })
+})

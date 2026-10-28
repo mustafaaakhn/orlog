@@ -1,6 +1,7 @@
 import { DICE_DEFINITIONS, rollFace } from './dice/definitions'
 import { DEFAULT_FAVORS, isFavorId, isFavorLevel } from './favors/catalog'
 import { deepFreeze } from './immutable'
+import { resolveRound } from './resolution'
 import { mathRandom } from './random'
 import type { RandomSource } from './random'
 import { INITIAL_HEALTH, MAX_FAVORS, MAX_ROLLS } from './rules'
@@ -16,7 +17,7 @@ type Mutable<T> = T extends readonly (infer Item)[]
 
 export interface GameOptions {
   readonly gameId?: string
-  // The setup/coin-toss UI supplies this value in Stage 4.
+  // The setup/coin-toss UI supplies this value.
   readonly firstPlayerId?: PlayerId
   readonly random?: RandomSource
   readonly loadouts?: Readonly<Partial<Record<PlayerId, readonly FavorId[]>>>
@@ -62,6 +63,7 @@ function createPlayer(id: PlayerId, loadout: readonly FavorId[]): PlayerState {
       faceId: null,
       kept: false,
       selected: false,
+      removed: false,
     })),
     favors: [...loadout],
     favorChoice: { status: 'pending' },
@@ -108,6 +110,21 @@ export class Game {
     const player = next.players[command.playerId]
 
     switch (command.type) {
+      case 'ResolveRound':
+        resolveRound(next, events)
+        break
+      case 'NextRound':
+        next.round++
+        next.firstPlayerId = otherPlayer(next.firstPlayerId)
+        for (const id of PLAYER_IDS) {
+          const current = next.players[id]
+          current.rollsUsed = 0
+          current.favorChoice = { status: 'pending' }
+          current.dice = current.dice.map(die => ({ ...die, faceId: null, kept: false, selected: false, removed: false }))
+        }
+        next.phase = { name: 'roll', activePlayerId: next.firstPlayerId, step: 'awaiting-roll' }
+        events.push({ type: 'RoundStarted', firstPlayerId: next.firstPlayerId }, { type: 'PhaseChanged', phase: next.phase })
+        break
       case 'RollDice': {
         const rolled = player.dice.filter(die => !die.kept).map(die => ({
           dieId: die.id,
@@ -189,11 +206,18 @@ export class Game {
   #validate(command: GameCommand): { code: CommandErrorCode; message: string } | null {
     const fail = (code: CommandErrorCode, message: string) => ({ code, message })
     if (!command || typeof command !== 'object' || ![
-      'RollDice', 'SetDieSelection', 'ConfirmRoll', 'ChooseFavor', 'SkipFavor',
+      'RollDice', 'SetDieSelection', 'ConfirmRoll', 'ChooseFavor', 'SkipFavor', 'ResolveRound', 'NextRound',
     ].includes(command.type)) return fail('INVALID_COMMAND', 'Unknown command.')
     if (!PLAYER_IDS.includes(command.playerId)) return fail('INVALID_PLAYER', 'Unknown player.')
     const phase = this.#state.phase
-    if (phase.name === 'resolution') return fail('WRONG_PHASE', 'Round resolution is not implemented in Stage 1.')
+    if (command.type === 'ResolveRound' || command.type === 'NextRound') {
+      const required = command.type === 'ResolveRound' ? 'resolution' : 'round-complete'
+      if (phase.name !== required) return fail('WRONG_PHASE', 'This command is unavailable in the current phase.')
+      if (command.playerId !== this.#state.firstPlayerId) return fail('WRONG_PLAYER', 'The first player advances the round.')
+      return null
+    }
+    if (phase.name === 'resolution' || phase.name === 'round-complete' || phase.name === 'ended')
+      return fail('WRONG_PHASE', 'This command is unavailable in the current phase.')
     if (command.playerId !== phase.activePlayerId) return fail('WRONG_PLAYER', 'It is not this player’s turn.')
     const player = this.#state.players[command.playerId]
 

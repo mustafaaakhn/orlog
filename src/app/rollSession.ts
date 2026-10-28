@@ -1,6 +1,7 @@
 import { shallowRef } from 'vue'
+import { applyResourceEvent } from '../presentation/resources'
 import { Game } from '../core'
-import type { DieId, GameCommand, GameEvent, GameState } from '../core'
+import type { DieId, GameCommand, GameEvent, GameState, GameOptions } from '../core'
 
 export interface PresentationBatch {
   readonly id: number
@@ -9,9 +10,14 @@ export interface PresentationBatch {
   readonly state: GameState
 }
 
-// Core stays outside Vue's deep proxies. Only settled snapshots are published.
-export function createRollSession() {
-  let game = new Game()
+// Core stays outside deep proxies. Resource events publish at contact; phases
+// and roll results publish only when the entire presentation batch settles.
+export function createRollSession(options: GameOptions = {}) {
+  let matchSequence = 0
+  let game = new Game(options)
+  let appliedSequence = 0
+  const history = shallowRef<readonly GameEvent[]>([])
+  const lastEvent = shallowRef<GameEvent | null>(null)
   let batchSequence = 0
   const state = shallowRef(game.state)
   const pending = shallowRef<PresentationBatch | null>(null)
@@ -41,6 +47,25 @@ export function createRollSession() {
     state,
     pending,
     error,
+    lastEvent,
+    history,
+    present(batchId: number, event: GameEvent) {
+      if (pending.value?.id !== batchId || event.sequence <= appliedSequence || !pending.value.events.includes(event)) return
+      appliedSequence = event.sequence
+      state.value = applyResourceEvent(state.value, event)
+      lastEvent.value = event
+      history.value = [...history.value, event].slice(-120)
+    },
+    start(options: GameOptions) {
+      if (pending.value) return false
+      game = new Game({ ...options, gameId: `local-match-${++matchSequence}` })
+      state.value = game.state
+      appliedSequence = 0
+      lastEvent.value = null
+      history.value = []
+      error.value = ''
+      return true
+    },
     dispatch,
     settle,
     select(dieId: DieId) {
@@ -64,7 +89,10 @@ export function createRollSession() {
     },
     restart() {
       if (pending.value) return
-      game = new Game()
+      game = new Game({ ...options, gameId: `local-match-${++matchSequence}` })
+      appliedSequence = 0
+      lastEvent.value = null
+      history.value = []
       state.value = game.state
       error.value = ''
     },

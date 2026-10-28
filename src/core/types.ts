@@ -25,6 +25,7 @@ export interface DieState {
   readonly faceId: FaceId | null
   readonly kept: boolean
   readonly selected: boolean
+  readonly removed: boolean
 }
 
 export type FavorId = 'thors-strike' | 'iduns-rejuvenation' | 'vidars-might'
@@ -64,6 +65,8 @@ export type GamePhase =
   | { readonly name: 'roll'; readonly activePlayerId: PlayerId; readonly step: 'awaiting-roll' | 'selecting-dice' }
   | { readonly name: 'favor'; readonly activePlayerId: PlayerId }
   | { readonly name: 'resolution' }
+  | { readonly name: 'round-complete' }
+  | { readonly name: 'ended'; readonly winnerId: PlayerId }
 
 export interface GameState {
   readonly gameId: string
@@ -76,6 +79,8 @@ export interface GameState {
 }
 
 export type GameCommand =
+  | { readonly type: 'ResolveRound'; readonly playerId: PlayerId }
+  | { readonly type: 'NextRound'; readonly playerId: PlayerId }
   | { readonly type: 'RollDice'; readonly playerId: PlayerId }
   | { readonly type: 'SetDieSelection'; readonly playerId: PlayerId; readonly dieId: DieId; readonly selected: boolean }
   | { readonly type: 'ConfirmRoll'; readonly playerId: PlayerId }
@@ -88,6 +93,17 @@ export interface RolledDie {
 }
 
 export type GameEventPayload =
+  | { readonly type: 'TokensGained'; readonly playerId: PlayerId; readonly dieIds: readonly DieId[]; readonly tokens: number }
+  | { readonly type: 'AttackBlocked'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly dieId: DieId; readonly defenderDieId: DieId; readonly symbol: 'axe' | 'arrow' }
+  | { readonly type: 'DamageDealt'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly amount: number; readonly health: number; readonly dieId?: DieId; readonly favorId?: FavorId }
+  | { readonly type: 'TokensStolen'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly amount: number; readonly tokens: number; readonly targetTokens: number; readonly dieIds: readonly DieId[] }
+  | { readonly type: 'FavorInvoked'; readonly playerId: PlayerId; readonly favorId: FavorId; readonly level: FavorLevel; readonly cost: number; readonly tokens: number }
+  | { readonly type: 'FavorFailed'; readonly playerId: PlayerId; readonly favorId: FavorId; readonly cost: number }
+  | { readonly type: 'HealthRestored'; readonly playerId: PlayerId; readonly amount: number; readonly health: number }
+  | { readonly type: 'HelmetsRemoved'; readonly playerId: PlayerId; readonly targetId: PlayerId; readonly dieIds: readonly DieId[] }
+  | { readonly type: 'GameEnded'; readonly winnerId: PlayerId; readonly loserId: PlayerId }
+  | { readonly type: 'RoundStarted'; readonly firstPlayerId: PlayerId }
+
   | { readonly type: 'DiceRolled'; readonly playerId: PlayerId; readonly rollNumber: number; readonly dice: readonly RolledDie[] }
   | { readonly type: 'DieSelectionChanged'; readonly playerId: PlayerId; readonly dieId: DieId; readonly selected: boolean }
   | { readonly type: 'DiceKept'; readonly playerId: PlayerId; readonly dieIds: readonly DieId[]; readonly reason: 'confirmed' | 'last-roll' }

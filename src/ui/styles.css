@@ -701,3 +701,32 @@ footer span span {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+.setup-panel { margin: 0 0 24px; }
+.setup-panel h2 { margin: 8px 0 12px; }
+.setup-players, .resource-scores { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; margin: 20px 0; }
+.setup-players fieldset { min-width: 0; border: 1px solid #b09b6955; padding: 18px; }
+.setup-players legend { color: #e5d0a6; padding: 0 8px; }
+.setup-players label { display: flex; gap: 10px; align-items: center; margin: 12px 0; }
+.setup-players input:not([type=checkbox]) { width: 100%; min-width: 0; background: #18251e; color: #eee2cc; border: 1px solid #b09b6977; border-radius: 3px; padding: 10px; font: inherit; }
+.loadout-option { font-size: 14px; }
+input[type=checkbox] { accent-color: #d3ae6a; width: 18px; height: 18px; flex-shrink: 0; }
+.coin-result { display: flex; gap: 16px; align-items: center; margin: 16px 0; }
+.toss-coin { display: grid; place-items: center; width: 54px; height: 54px; border: 3px double #d3ae6a; border-radius: 50%; color: #ebce8d; background: #725329; animation: coin-toss 0.8s ease-out; }
+@keyframes coin-toss { from { transform: rotateX(1080deg) translateY(-30px); } to { transform: rotateX(0deg) translateY(0); } }
+.resource-scores p { margin: 0; border-left: 2px solid #608d8a; padding: 12px 16px; background: #17231d; }
+.resource-scores p + p { border-color: #b67458; }
+.resource-scores span { display: block; font-size: 14px; margin-top: 7px; color: #cdbfa4; }
+.favor-picker { margin: 20px 0; }
+.favor-picker > p { line-height: 1.7; color: #cdbfa4; }
+.favor-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 16px 0; }
+.favor-cards article { border: 1px solid #b09b6955; padding: 16px; }
+.favor-cards h3 { font-size: 18px; margin: 0 0 8px; }
+.favor-cards p { font-size: 12px; color: #cdbfa4; }
+.favor-cards button { width: 100%; text-align: left; background: #25352b; color: #e6d6b6; border: 1px solid #b09b6966; padding: 12px; margin-top: 8px; line-height: 1.6; cursor: pointer; }
+.favor-cards button:hover:not(:disabled) { background: #3b4932; border-color: #d3ae6a; }
+.speed-control { display: flex; gap: 8px; align-items: center; font-size: 13px; color: #cdbfa4; }
+@media (max-width: 650px) { .setup-players, .favor-cards { grid-template-columns: 1fr; } .resource-scores { gap: 8px; } .resource-scores p { padding: 10px; overflow-wrap: anywhere; } }
+.combat-log { margin: 18px 0; color: #d7c7a9; font-size: 14px; line-height: 1.8; }
+.combat-log summary { cursor: pointer; padding: 8px 0; }
+.dice-buttons button.removed { opacity: 0.35; border-style: dashed; }
