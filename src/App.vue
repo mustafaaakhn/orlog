@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { defineAsyncComponent, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import SymbolIcon from './ui/SymbolIcon.vue'
 import { SYMBOL_GUIDE } from './scene/symbols'
 import SceneLoaderState from './ui/SceneLoaderState.vue'
+import DiceTray from './ui/DiceTray.vue'
+import { createRollSession } from './app/rollSession'
 
 const TablePreview = defineAsyncComponent({
   loader: () => import('./scene/TablePreview.vue'),
@@ -14,6 +16,45 @@ const TablePreview = defineAsyncComponent({
 const closeView = ref(false)
 const guideOpen = ref(false)
 const sceneReady = ref(false)
+const session = createRollSession()
+const { state, pending, error } = session
+const phase = computed(() => state.value.phase)
+const activePlayer = computed(() =>
+  phase.value.name === 'roll'
+    ? state.value.players[phase.value.activePlayerId]
+    : null,
+)
+const busy = computed(() => !!pending.value || !sceneReady.value)
+const instruction = computed(() => {
+  if (pending.value?.events.some((event) => event.type === 'DiceRolled'))
+    return 'Zarlar kâsede yatışıyor…'
+  if (pending.value) return 'Zarlar yerini alıyor…'
+  if (phase.value.name !== 'roll')
+    return 'İki tarafın zarları hazır. Güç seçimi ve savaş Aşama 4’te açılacak.'
+  if (phase.value.step === 'awaiting-roll')
+    return 'Saklanmayan zarları at. Her oyuncunun en fazla üç atış hakkı var.'
+  if (activePlayer.value?.rollsUsed === 3)
+    return 'Son atışın zarları otomatik saklandı. Sonucu onayla.'
+  return 'Saklamak istediğin zarlara dokun; geri almak için tekrar dokun. Ardından seçimi onayla.'
+})
+function availability(ready: boolean) {
+  sceneReady.value = ready
+  if (!ready) session.recover()
+}
+function roll() {
+  if (!busy.value && phase.value.name === 'roll')
+    session.dispatch({
+      type: 'RollDice',
+      playerId: phase.value.activePlayerId,
+    })
+}
+function confirm() {
+  if (!busy.value && phase.value.name === 'roll')
+    session.dispatch({
+      type: 'ConfirmRoll',
+      playerId: phase.value.activePlayerId,
+    })
+}
 </script>
 
 <template>
@@ -24,7 +65,7 @@ const sceneReady = ref(false)
       >
       <span class="edition">KUZEYİN ZAR OYUNU</span>
       <span class="prototype"
-        ><span aria-hidden="true"></span> GÖRSEL PROTOTİP</span
+        ><span aria-hidden="true"></span> ATIŞ VE SEÇİM</span
       >
     </header>
     <section class="table-section" aria-labelledby="table-title">
@@ -34,7 +75,7 @@ const sceneReady = ref(false)
           <h1 id="table-title">Tanrıların masası</h1>
         </div>
         <p class="intro">
-          Altı zar. Kadim güçler.<br />Henüz yazılmamış bir destan.
+          Altı zar. Üç atış.<br />Kaderinden hangisini saklayacaksın?
         </p>
       </div>
       <div class="table-frame">
@@ -46,18 +87,22 @@ const sceneReady = ref(false)
         </div>
         <TablePreview
           :close-view="closeView"
-          @availability="sceneReady = $event"
+          :state="state"
+          :batch="pending"
+          @availability="availability"
+          @settled="session.settle($event)"
+          @select="!busy && session.select($event)"
         />
         <div class="view-controls" aria-label="Sahne görünümü">
           <button
-            :disabled="!sceneReady"
+            :disabled="busy"
             :aria-pressed="!closeView"
             @click="closeView = false"
           >
             Masa
           </button>
           <button
-            :disabled="!sceneReady"
+            :disabled="busy"
             :aria-pressed="closeView"
             @click="closeView = true"
           >
@@ -67,8 +112,8 @@ const sceneReady = ref(false)
       </div>
       <div class="table-meta">
         <p>
-          <span class="small-diamond" aria-hidden="true">◇</span> Yerleşim
-          örneği <span class="meta-divider">/</span> Maç başlamadı
+          <span class="small-diamond" aria-hidden="true">◇</span> Yerel iki
+          oyuncu <span class="meta-divider">/</span> 15 can · 0 jeton
         </p>
         <button
           class="guide-toggle"
@@ -80,6 +125,81 @@ const sceneReady = ref(false)
           <span aria-hidden="true">{{ guideOpen ? '−' : '+' }}</span>
         </button>
       </div>
+      <section
+        class="roll-panel"
+        aria-label="Zar atışı ve seçim"
+        :aria-busy="!!pending"
+      >
+        <div class="turn-heading">
+          <div>
+            <p class="eyebrow">
+              {{
+                activePlayer
+                  ? `OYUNCU ${activePlayer.id === 'player-1' ? 'I' : 'II'} · ATIŞ ${Math.min(activePlayer.rollsUsed + (phase.name === 'roll' && phase.step === 'awaiting-roll' ? 1 : 0), 3)} / 3`
+                  : 'ZARLAR HAZIR'
+              }}
+            </p>
+            <h2>
+              {{
+                activePlayer
+                  ? phase.name === 'roll' && phase.step === 'awaiting-roll'
+                    ? 'Kaderini at'
+                    : 'Payına düşeni seç'
+                  : 'Atışlar tamamlandı'
+              }}
+            </h2>
+          </div>
+          <div class="roll-actions">
+            <button
+              v-if="phase.name === 'roll' && phase.step === 'awaiting-roll'"
+              class="primary-action"
+              :disabled="busy"
+              @click="roll"
+            >
+              Zarları at <span aria-hidden="true">↗</span>
+            </button>
+            <button
+              v-else-if="phase.name === 'roll'"
+              class="primary-action"
+              :disabled="busy"
+              @click="confirm"
+            >
+              {{
+                activePlayer?.rollsUsed === 3
+                  ? 'Sonucu onayla'
+                  : 'Seçimi onayla'
+              }}
+              <span aria-hidden="true">→</span>
+            </button>
+            <button
+              class="restart-action"
+              :disabled="busy"
+              @click="session.restart()"
+            >
+              Yeniden başlat
+            </button>
+          </div>
+        </div>
+        <p class="roll-instruction" role="status" aria-live="polite">
+          {{ instruction }}
+        </p>
+        <p v-if="error" role="alert">{{ error }}</p>
+        <div class="dice-trays">
+          <DiceTray
+            v-for="player in state.players"
+            :key="player.id"
+            :player="player"
+            :active="activePlayer?.id === player.id"
+            :selectable="
+              !busy &&
+              phase.name === 'roll' &&
+              phase.step === 'selecting-dice' &&
+              phase.activePlayerId === player.id
+            "
+            @select="session.select($event)"
+          />
+        </div>
+      </section>
       <section
         v-if="guideOpen"
         id="symbol-guide"
@@ -115,7 +235,7 @@ const sceneReady = ref(false)
           <span class="inventory-number">02</span>
           <div>
             <h2>Can &amp; kudret</h2>
-            <p>Her yanda 15 taş · 4 örnek jeton</p>
+            <p>Her yanda 15 taş · başlangıçta 0 jeton</p>
           </div>
           <span class="inventory-glyph" aria-hidden="true">◇</span>
         </article>
@@ -131,7 +251,7 @@ const sceneReady = ref(false)
     </section>
     <footer>
       <span>VALHALLA’DAN İLHAM ALAN BİR MASA DENEYİMİ</span
-      ><span>AŞAMA 02 <span aria-hidden="true">/</span> GÖRSEL YÖN</span>
+      ><span>AŞAMA 03 <span aria-hidden="true">/</span> ATIŞ VE SEÇİM</span>
     </footer>
   </main>
 </template>

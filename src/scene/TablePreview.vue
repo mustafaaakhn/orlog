@@ -3,9 +3,20 @@ import { onErrorCaptured, onMounted, onUnmounted, ref, watch } from 'vue'
 import { TresCanvas } from '@tresjs/core'
 import type { TresContext } from '@tresjs/core'
 import TableScene from './TableScene.vue'
+import { initializePhysics } from '../presentation/rollSimulation'
+import type { PresentationBatch } from '../app/rollSession'
+import type { DieId, GameState } from '../core'
 
-defineProps<{ closeView: boolean }>()
-const emit = defineEmits<{ availability: [ready: boolean] }>()
+defineProps<{
+  closeView: boolean
+  state: GameState
+  batch: PresentationBatch | null
+}>()
+const emit = defineEmits<{
+  availability: [ready: boolean]
+  settled: [batchId: number]
+  select: [dieId: DieId]
+}>()
 const status = ref<'checking' | 'loading' | 'ready' | 'unsupported' | 'error'>(
   'checking',
 )
@@ -32,7 +43,7 @@ function contextLost(event: Event) {
   event.preventDefault()
   failed()
 }
-function initialize() {
+async function initialize() {
   clearLoadingTimeout()
   detachCanvas()
   const probe = document.createElement('canvas')
@@ -48,9 +59,14 @@ function initialize() {
     status.value = 'unsupported'
     return
   }
-  sceneKey.value++
   status.value = 'loading'
   loadingTimeout = setTimeout(failed, 20000)
+  try {
+    await initializePhysics()
+    sceneKey.value++
+  } catch {
+    failed()
+  }
 }
 function ready(context: TresContext) {
   activeCanvas = context.renderer.instance.domElement
@@ -80,20 +96,27 @@ onErrorCaptured(() => {
     :aria-busy="status === 'checking' || status === 'loading'"
   >
     <TresCanvas
-      v-if="status === 'loading' || status === 'ready'"
+      v-if="sceneKey > 0 && (status === 'loading' || status === 'ready')"
       :key="sceneKey"
       shadows
       render-mode="on-demand"
       clear-color="#28332b"
       :dpr="[1, 1.75]"
       :tone-mapping-exposure="1.05"
-      aria-label="Üç boyutlu Orlog masası: ahşap kâsede altı zar, iki yanda can taşları, örnek jetonlar ve tanrı totemleri."
+      aria-label="Üç boyutlu Orlog masası: ahşap kâsede altı zar, iki yanda can taşları, tanrı totemleri. Zarları seçmek için dokun veya aşağıdaki zar düğmelerini kullan."
       role="img"
       @ready="ready"
       @render="rendered"
       @error="failed"
     >
-      <TableScene :close-view="closeView" />
+      <TableScene
+        :close-view="closeView"
+        :state="state"
+        :batch="batch"
+        @settled="emit('settled', $event)"
+        @select="emit('select', $event)"
+        @failed="failed"
+      />
     </TresCanvas>
     <div
       v-if="status !== 'ready'"

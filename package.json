@@ -16,6 +16,7 @@
     "test:ci": "vitest run"
   },
   "dependencies": {
+    "@dimforge/rapier3d-compat": "0.20.0",
     "@tresjs/cientos": "5.10.0",
     "@tresjs/core": "5.10.0",
     "@tresjs/rapier": "1.2.0",

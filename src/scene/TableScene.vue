@@ -1,12 +1,49 @@
 <script setup lang="ts">
-import { onUnmounted, watchEffect } from 'vue'
+import { onMounted, onUnmounted, watch, watchEffect } from 'vue'
 import { useTres } from '@tresjs/core'
-import { PerspectiveCamera, Vector3 } from 'three'
+import { PerspectiveCamera, Vector3, Raycaster, Vector2, Object3D } from 'three'
 import { createBoard } from './board'
+import { createDicePresenter } from '../presentation/dicePresenter'
+import type { PresentationBatch } from '../app/rollSession'
+import type { DieId, GameState } from '../core'
 
-const props = defineProps<{ closeView: boolean }>()
-const { sizes, invalidate } = useTres()
+const props = defineProps<{
+  closeView: boolean
+  state: GameState
+  batch: PresentationBatch | null
+}>()
+const emit = defineEmits<{
+  settled: [batchId: number]
+  select: [dieId: DieId]
+  failed: []
+}>()
+const { sizes, invalidate, renderer } = useTres()
 const board = createBoard()
+board.syncDice(props.state)
+let sceneClosed = false
+const presenter = createDicePresenter(board.dice, invalidate)
+watch(
+  () => props.state,
+  (state) => {
+    if (state.revision === 0 && !props.batch) {
+      board.syncDice(state)
+      invalidate()
+    }
+  },
+)
+watch(
+  () => props.batch,
+  async (batch) => {
+    if (!batch) return
+    try {
+      await presenter.play(batch)
+      if (!sceneClosed) emit('settled', batch.id)
+    } catch (error) {
+      console.error('Dice presentation failed', error)
+      if (!sceneClosed) emit('failed')
+    }
+  },
+)
 const camera = new PerspectiveCamera(42, 1, 0.1, 100)
 const direction = new Vector3(0, 0.83, 0.56).normalize()
 const up = new Vector3(0, direction.z, -direction.y)
@@ -17,8 +54,8 @@ watchEffect(() => {
   board.setCompact(compact)
   const target = new Vector3(0, props.closeView ? 0.5 : 0.2, 0)
   // Fit all corners of the presentation bounds in the camera's frustum.
-  const halfWidth = props.closeView ? 3.5 : compact ? 4.5 : 9.5
-  const halfDepth = props.closeView ? 3.4 : compact ? 7.2 : 6.1
+  const halfWidth = props.closeView ? 3.7 : compact ? 4.5 : 9.5
+  const halfDepth = props.closeView ? 4.6 : compact ? 7.6 : 6.1
   const tangent = Math.tan((camera.fov * Math.PI) / 360)
   let distance = 0
   for (const x of [-halfWidth, halfWidth]) {
@@ -41,7 +78,56 @@ watchEffect(() => {
   invalidate()
 })
 
-onUnmounted(() => board.dispose())
+const raycaster = new Raycaster()
+let pointer: { x: number; y: number; id: number } | undefined
+function pointerDown(event: PointerEvent) {
+  if (!props.batch && event.isPrimary && event.button === 0)
+    pointer = { x: event.clientX, y: event.clientY, id: event.pointerId }
+}
+function pointerUp(event: PointerEvent) {
+  const start = pointer
+  pointer = undefined
+  if (
+    !start ||
+    start.id !== event.pointerId ||
+    props.batch ||
+    Math.hypot(start.x - event.clientX, start.y - event.clientY) > 12
+  )
+    return
+  const bounds = renderer.domElement.getBoundingClientRect()
+  raycaster.setFromCamera(
+    new Vector2(
+      ((event.clientX - bounds.left) / bounds.width) * 2 - 1,
+      (-(event.clientY - bounds.top) / bounds.height) * 2 + 1,
+    ),
+    camera,
+  )
+  const hit = raycaster.intersectObjects(
+    [...board.dice.values()].filter((die) => die.visible),
+    true,
+  )[0]
+  let object: Object3D | undefined = hit?.object
+  while (object && !object.userData.dieId) object = object.parent ?? undefined
+  if (object) emit('select', object.userData.dieId as DieId)
+}
+function pointerCancel() {
+  pointer = undefined
+}
+onMounted(() => {
+  const canvas = renderer.domElement
+  canvas.addEventListener('pointerdown', pointerDown)
+  canvas.addEventListener('pointerup', pointerUp)
+  canvas.addEventListener('pointercancel', pointerCancel)
+})
+onUnmounted(() => {
+  sceneClosed = true
+  presenter.dispose()
+  const canvas = renderer.domElement
+  canvas.removeEventListener('pointerdown', pointerDown)
+  canvas.removeEventListener('pointerup', pointerUp)
+  canvas.removeEventListener('pointercancel', pointerCancel)
+  board.dispose()
+})
 </script>
 
 <template>

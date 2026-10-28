@@ -7,7 +7,6 @@ import {
   Mesh,
   MeshStandardMaterial,
   PlaneGeometry,
-  Quaternion,
   SphereGeometry,
   Texture,
   TorusGeometry,
@@ -16,7 +15,13 @@ import {
 } from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
 import { DICE_DEFINITIONS } from '../core'
-import type { FaceId } from '../core'
+import type { DieId, GameState } from '../core'
+import {
+  FACE_NORMALS,
+  faceUpRotation,
+  reserveSlot,
+  bowlSlot,
+} from './diceGeometry'
 import {
   createClothTexture,
   createFaceTexture,
@@ -24,20 +29,9 @@ import {
   createWoodTexture,
 } from './textures'
 
-// Explicit adaptation, independent of the core's logical array order.
-// These are our cube axes, not a reconstruction of Valhalla's original cubes.
-export const FACE_NORMALS: Record<FaceId, [number, number, number]> = {
-  arrow: [0, 1, 0],
-  'axe-2': [0, -1, 0],
-  helmet: [1, 0, 0],
-  shield: [-1, 0, 0],
-  hand: [0, 0, 1],
-  'axe-1': [0, 0, -1],
-}
-
 export function createBoard() {
   const root = new Group()
-  root.name = 'Orlog visual prototype (not a match)'
+  root.name = 'Orlog table'
   const textures = new Set<Texture>()
   const geometries = new Set<BufferGeometry>()
   const materials = new Set<MeshStandardMaterial>()
@@ -75,7 +69,11 @@ export function createBoard() {
     roughness: 0.78,
   })
   const darkWood = material({ color: '#37291f', roughness: 0.9 })
-  const brass = material({ color: '#b9914e', metalness: 0.64, roughness: 0.42 })
+  const brass = material({
+    color: '#b9914e',
+    metalness: 0.64,
+    roughness: 0.42,
+  })
   const cloth = material({
     map: keepTexture(createClothTexture()),
     roughness: 1,
@@ -163,68 +161,50 @@ export function createBoard() {
   const dieShape = geometry(new RoundedBoxGeometry(0.88, 0.88, 0.88, 3, 0.075))
   const faceShape = geometry(new PlaneGeometry(0.735, 0.735))
   const faceMaterials = new Map<string, MeshStandardMaterial>()
-  const displayFaces: FaceId[] = [
-    'arrow',
-    'helmet',
-    'hand',
-    'shield',
-    'axe-1',
-    'axe-2',
-  ]
-  DICE_DEFINITIONS.forEach((definition, index) => {
-    const die = new Group()
-    die.name = `Preview ${definition.id}: ${displayFaces[index]}`
-    mesh(die, dieShape, bone, [0, 0, 0])
-    definition.faces.forEach((face) => {
-      const cacheKey = `${face.symbol}-${face.grantsToken}`
-      let surface = faceMaterials.get(cacheKey)
-      if (!surface) {
-        surface = material({
-          map: keepTexture(createFaceTexture(face)),
-          roughness: 0.7,
-        })
-        faceMaterials.set(cacheKey, surface)
-      }
-      const normal = new Vector3(...FACE_NORMALS[face.id])
-      const plaque = mesh(
+  const dice = new Map<DieId, Group>()
+  for (const player of ['player-1', 'player-2'] as const) {
+    DICE_DEFINITIONS.forEach((definition) => {
+      const die = new Group()
+      const dieId: DieId = `${player}/${definition.id}`
+      die.name = dieId
+      die.userData.dieId = dieId
+      dice.set(dieId, die)
+      mesh(die, dieShape, bone, [0, 0, 0])
+      definition.faces.forEach((face) => {
+        const cacheKey = `${face.symbol}-${face.grantsToken}`
+        let surface = faceMaterials.get(cacheKey)
+        if (!surface) {
+          surface = material({
+            map: keepTexture(createFaceTexture(face)),
+            roughness: 0.7,
+          })
+          faceMaterials.set(cacheKey, surface)
+        }
+        const normal = new Vector3(...FACE_NORMALS[face.id])
+        const plaque = mesh(
+          die,
+          faceShape,
+          surface,
+          normal.clone().multiplyScalar(0.441).toArray(),
+        )
+        plaque.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), normal)
+        plaque.castShadow = false
+      })
+      const marker = mesh(
         die,
-        faceShape,
-        surface,
-        normal.clone().multiplyScalar(0.441).toArray(),
+        geometry(new BoxGeometry(0.98, 0.98, 0.98)),
+        material({ color: '#d8b76e', wireframe: true }),
+        [0, 0, 0],
       )
-      plaque.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), normal)
-      plaque.castShadow = false
+      marker.visible = false
+      marker.name = 'selection-marker'
+      die.visible = false
+      root.add(die)
     })
-    const normal = new Vector3(...FACE_NORMALS[displayFaces[index]!])
-    die.quaternion.setFromUnitVectors(normal, new Vector3(0, 1, 0))
-    const faceRotation = new Quaternion().setFromUnitVectors(
-      new Vector3(0, 0, 1),
-      normal,
-    )
-    const faceUp = new Vector3(0, 1, 0)
-      .applyQuaternion(faceRotation)
-      .applyQuaternion(die.quaternion)
-    const upright = Math.atan2(faceUp.x, -faceUp.z)
-    die.quaternion.premultiply(
-      new Quaternion().setFromAxisAngle(
-        new Vector3(0, 1, 0),
-        upright + [-0.18, 0.12, -0.13, 0.14, -0.15, 0.1][index]!,
-      ),
-    )
-    die.position.set(((index % 3) - 1) * 1.18, 0.77, index < 3 ? -0.72 : 0.72)
-    root.add(die)
-  })
+  }
 
   const pebble = geometry(new SphereGeometry(0.22, 16, 10))
-  const tokenShape = geometry(new CylinderGeometry(0.29, 0.29, 0.1, 28))
-  const tokenInset = geometry(new TorusGeometry(0.22, 0.012, 5, 24))
   const inscriptionShape = geometry(new PlaneGeometry(0.8, 0.8))
-  const tokenRune = material({
-    map: keepTexture(createInscriptionTexture('ᛟ')),
-    transparent: true,
-    roughness: 0.5,
-    metalness: 0.4,
-  })
   const totemRunes = ['ᛏ', 'ᛃ', 'ᛉ']
   const totemNames = ['Thor', 'Iðunn', 'Víðarr']
   const totemColors = ['#c7a36c', '#a4bc91', '#92b7bb']
@@ -240,7 +220,6 @@ export function createBoard() {
   const green = material({ color: '#82936a', roughness: 0.65 })
   const shieldShape = geometry(new CylinderGeometry(0.27, 0.27, 0.08, 6))
   const stoneGroups: Group[] = []
-  const tokenGroups: Group[] = []
   const totemGroups: Group[] = []
   const labels: Mesh[] = []
 
@@ -259,21 +238,6 @@ export function createBoard() {
     stones.position.set(side * 6.8, 0, -0.3)
     root.add(stones)
     stoneGroups.push(stones)
-    const tokens = new Group()
-    tokens.position.set(side * 6.8, 0, 1.65)
-    root.add(tokens)
-    tokenGroups.push(tokens)
-    for (let i = 0; i < 4; i++) {
-      const x = ((i % 2) - 0.5) * 0.7
-      const z = Math.floor(i / 2) * 0.66
-      mesh(tokens, tokenShape, brass, [x, 0.12, z])
-      mesh(tokens, tokenInset, darkWood, [x, 0.179, z]).rotation.x =
-        -Math.PI / 2
-      const rune = mesh(tokens, inscriptionShape, tokenRune, [x, 0.183, z])
-      rune.scale.setScalar(0.47)
-      rune.rotation.x = -Math.PI / 2
-      rune.castShadow = false
-    }
     for (let i = 0; i < 3; i++) {
       const totem = new Group()
       totem.name = `${totemNames[i]} placeholder`
@@ -338,6 +302,29 @@ export function createBoard() {
 
   return {
     object: root,
+    dice,
+    syncDice(state: GameState) {
+      for (const player of Object.values(state.players)) {
+        player.dice.forEach((value, index) => {
+          const die = dice.get(value.id)!
+          die.visible = value.faceId !== null
+          if (value.faceId) die.quaternion.copy(faceUpRotation(value.faceId))
+          const inBowl =
+            state.phase.name === 'roll' &&
+            state.phase.activePlayerId === player.id &&
+            !value.kept &&
+            !value.selected
+          die.position.set(
+            ...(inBowl
+              ? bowlSlot(index)
+              : reserveSlot(player.id, index, value.selected)),
+          )
+          die.getObjectByName('selection-marker')!.visible =
+            value.selected || value.kept
+          die.userData.kept = value.kept
+        })
+      }
+    },
     setCompact(compact: boolean) {
       table.scale.set(compact ? 0.49 : 1, 1, compact ? 1.21 : 1)
       fabric.scale.copy(table.scale)
@@ -347,7 +334,7 @@ export function createBoard() {
         group.position.set(
           compact ? -0.4 : side * 6.8,
           0,
-          compact ? side * 4 : -0.3,
+          compact ? -side * 5 : -0.3,
         )
         group.children.forEach((stone, i) => {
           stone.position.x = compact
@@ -357,15 +344,10 @@ export function createBoard() {
             ? (Math.floor(i / 5) - 1) * 0.42
             : (Math.floor(i / 3) - 2) * 0.47
         })
-        tokenGroups[index]!.position.set(
-          compact ? 2 : side * 6.8,
-          0,
-          compact ? side * 4 - 0.3 : 1.65,
-        )
         labels[index]!.position.set(
           compact ? -2.6 : side * 6.8,
           0.055,
-          compact ? side * 4 : 3.25,
+          compact ? -side * 5 : 3.25,
         )
       })
       totemGroups.forEach((totem, index) => {
@@ -374,7 +356,7 @@ export function createBoard() {
         totem.position.set(
           compact ? (i - 1) * 1.25 : side * (4.45 + i * 1.3),
           0,
-          compact ? side * 5.65 : -3.55,
+          compact ? -side * 6.5 : -3.55,
         )
       })
     },
