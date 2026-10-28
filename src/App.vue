@@ -7,7 +7,7 @@ import DiceTray from './ui/DiceTray.vue'
 import MatchSetup from './ui/MatchSetup.vue'
 import FavorPicker from './ui/FavorPicker.vue'
 import { eventText, playerLabel } from './presentation/eventText'
-import type { GameOptions, PlayerId, FavorId, FavorLevel } from './core'
+import type { GameOptions, PlayerId, FavorId, FavorLevel, FavorInput } from './core'
 import { createRollSession } from './app/rollSession'
 
 const TablePreview = defineAsyncComponent({
@@ -51,8 +51,8 @@ const instruction = computed(() => {
     return 'Son atışın zarları otomatik saklandı. Sonucu onayla.'
   return 'Saklamak istediğin zarlara dokun; geri almak için tekrar dokun. Ardından seçimi onayla.'
 })
-function choose(favorId: FavorId, level: FavorLevel) {
-  if (!busy.value && phase.value.name === 'favor') session.dispatch({ type: 'ChooseFavor', playerId: phase.value.activePlayerId, favorId, level })
+function choose(favorId: FavorId, level: FavorLevel, input?: FavorInput) {
+  if (!busy.value && phase.value.name === 'favor') session.dispatch({ type: 'ChooseFavor', playerId: phase.value.activePlayerId, favorId, level, input })
 }
 function skip() {
   if (!busy.value && phase.value.name === 'favor') session.dispatch({ type: 'SkipFavor', playerId: phase.value.activePlayerId })
@@ -203,7 +203,7 @@ function confirm() {
         <div class="resource-scores" aria-label="Oyuncu kaynakları">
           <p v-for="player in state.players" :key="player.id"><strong>{{ names[player.id] }}</strong><span>{{ playerLabel(player.id) }} · {{ player.health }} can · {{ player.tokens }} jeton</span></p>
         </div>
-        <FavorPicker v-if="phase.name === 'favor'" :player="state.players[phase.activePlayerId]" :disabled="busy" @choose="choose" @skip="skip" />
+        <FavorPicker v-if="phase.name === 'favor'" :key="phase.activePlayerId" :state="state" :player="state.players[phase.activePlayerId]" :disabled="busy" @choose="choose" @skip="skip" />
         <details v-if="combatLog.length" class="combat-log"><summary>Tur olayları</summary><ol><li v-for="event in combatLog" :key="event.id">{{ event.text }}</li></ol></details>
         <div class="dice-trays">
           <DiceTray
@@ -264,7 +264,7 @@ function confirm() {
           <span class="inventory-number">03</span>
           <div>
             <h2>Tanrı totemleri</h2>
-            <p>Thor · Iðunn · Víðarr</p>
+            <p>20 güç · oyuncu başına üç totem</p>
           </div>
           <span class="inventory-glyph" aria-hidden="true">ᛉ</span>
         </article>
@@ -272,7 +272,7 @@ function confirm() {
     </section>
     <footer>
       <span>VALHALLA’DAN İLHAM ALAN BİR MASA DENEYİMİ</span
-      ><span>AŞAMA 04 <span aria-hidden="true">/</span> YEREL TAM MAÇ</span>
+      ><span>AŞAMA 05 <span aria-hidden="true">/</span> YEREL TAM MAÇ</span>
     </footer>
   </main>
 </template>

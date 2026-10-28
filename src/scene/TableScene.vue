@@ -33,7 +33,7 @@ let shown = props.state
 const queue = createEventQueue(async event => {
   const batch = props.batch
   if (!batch) return
-  await presenter.play({ ...batch, events: [event] })
+  await presenter.play({ ...batch, state: event.type === 'DiceRecast' ? applyResourceEvent(shown, event) : batch.state, events: [event] })
   await combat.play(event)
   if (event.type === 'RoundStarted') board.syncDice(batch.state)
 }, event => {
@@ -47,7 +47,7 @@ watch(
   (state) => {
     shown = state
     board.syncResources(state)
-    if (state.revision === 0 && !props.batch) {
+    if (!props.batch && (state.revision === 0 || state.phase.name === 'round-complete' || state.phase.name === 'ended')) {
       board.syncDice(state)
       invalidate()
     }
@@ -77,7 +77,7 @@ watchEffect(() => {
   const target = new Vector3(0, props.closeView ? 0.5 : 0.2, 0)
   // Fit all corners of the presentation bounds in the camera's frustum.
   const halfWidth = props.closeView ? 3.7 : compact ? 4.5 : 9.5
-  const halfDepth = props.closeView ? 4.6 : compact ? 7.6 : 6.1
+  const halfDepth = props.closeView ? 5.7 : compact ? 9.2 : 6.1
   const tangent = Math.tan((camera.fov * Math.PI) / 360)
   let distance = 0
   for (const x of [-halfWidth, halfWidth]) {

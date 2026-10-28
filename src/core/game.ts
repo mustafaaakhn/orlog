@@ -1,5 +1,6 @@
 import { DICE_DEFINITIONS, rollFace } from './dice/definitions'
 import { DEFAULT_FAVORS, isFavorId, isFavorLevel } from './favors/catalog'
+import { validFavorInput } from './favors/targets'
 import { deepFreeze } from './immutable'
 import { resolveRound } from './resolution'
 import { mathRandom } from './random'
@@ -7,7 +8,7 @@ import type { RandomSource } from './random'
 import { INITIAL_HEALTH, MAX_FAVORS, MAX_ROLLS } from './rules'
 import { PLAYER_IDS } from './types'
 import type {
-  CommandErrorCode, CommandResult, DieState, FavorId, GameCommand, GameEvent,
+  CommandErrorCode, CommandResult, DieState, FavorId, FavorInput, GameCommand, GameEvent,
   GameEventPayload, GameState, PlayerId, PlayerState,
 } from './types'
 
@@ -31,12 +32,20 @@ function rollComplete(player: PlayerState): boolean {
   return player.rollsUsed === MAX_ROLLS || player.dice.every(die => die.kept)
 }
 
+function copyInput(input: FavorInput): Mutable<FavorInput> {
+  const copy = { ...input } as Mutable<FavorInput>
+  if (input.dieIds) copy.dieIds = [...input.dieIds]
+  return copy
+}
+
 function cloneState(state: GameState): Mutable<GameState> {
   const clonePlayer = (player: PlayerState): Mutable<PlayerState> => ({
     ...player,
     dice: player.dice.map(die => ({ ...die })),
     favors: [...player.favors],
-    favorChoice: { ...player.favorChoice },
+    favorChoice: player.favorChoice.status === 'chosen'
+      ? { status: 'chosen', favorId: player.favorChoice.favorId, level: player.favorChoice.level, ...(player.favorChoice.input ? { input: copyInput(player.favorChoice.input) } : {}) }
+      : { ...player.favorChoice },
   })
   return {
     ...state,
@@ -64,6 +73,7 @@ function createPlayer(id: PlayerId, loadout: readonly FavorId[]): PlayerState {
       kept: false,
       selected: false,
       removed: false,
+      value: 1,
     })),
     favors: [...loadout],
     favorChoice: { status: 'pending' },
@@ -111,7 +121,7 @@ export class Game {
 
     switch (command.type) {
       case 'ResolveRound':
-        resolveRound(next, events)
+        resolveRound(next, events, this.#random)
         break
       case 'NextRound':
         next.round++
@@ -120,7 +130,7 @@ export class Game {
           const current = next.players[id]
           current.rollsUsed = 0
           current.favorChoice = { status: 'pending' }
-          current.dice = current.dice.map(die => ({ ...die, faceId: null, kept: false, selected: false, removed: false }))
+          current.dice = current.dice.filter(die => !die.id.includes('/bonus-')).map(die => ({ ...die, faceId: null, kept: false, selected: false, removed: false, value: 1 }))
         }
         next.phase = { name: 'roll', activePlayerId: next.firstPlayerId, step: 'awaiting-roll' }
         events.push({ type: 'RoundStarted', firstPlayerId: next.firstPlayerId }, { type: 'PhaseChanged', phase: next.phase })
@@ -168,7 +178,7 @@ export class Game {
         break
       }
       case 'ChooseFavor':
-        player.favorChoice = { status: 'chosen', favorId: command.favorId, level: command.level }
+        player.favorChoice = { status: 'chosen', favorId: command.favorId, level: command.level, ...(command.input ? { input: copyInput(command.input) } : {}) }
         events.push({ type: 'FavorChosen', playerId: player.id, favorId: command.favorId, level: command.level })
         this.#advanceFavor(next, player.id, events)
         break
@@ -228,6 +238,7 @@ export class Game {
           return fail('FAVOR_NOT_EQUIPPED', 'The player has not equipped this favor.')
         }
         if (!isFavorLevel(command.level)) return fail('INVALID_FAVOR_LEVEL', 'Favor level must be 1, 2 or 3.')
+        if (!validFavorInput(this.#state, command.playerId, command.favorId, command.level, command.input)) return fail('INVALID_FAVOR_TARGET', 'Choose valid targets for this favor.')
       }
       // Selection is an intention. Cost is checked/paid on invocation, never here.
       return null

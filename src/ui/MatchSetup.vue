@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { DEFAULT_FAVORS, FAVOR_CATALOG, PLAYER_IDS, mathRandom, randomIndex } from '../core'
+import { DEFAULT_FAVORS, FAVOR_CATALOG, describeFavorTier, PLAYER_IDS, mathRandom, randomIndex } from '../core'
 import type { FavorId, GameOptions, PlayerId } from '../core'
 const emit = defineEmits<{ start: [options: GameOptions, names: Record<PlayerId, string>] }>()
 const names = ref({ 'player-1': 'Oyuncu I', 'player-2': 'Oyuncu II' })
@@ -15,12 +15,13 @@ function start() {
 <template>
   <section class="roll-panel setup-panel" aria-label="Maç hazırlığı">
     <p class="eyebrow">AYNI MASADA İKİ OYUNCU</p><h2>Masaya yerleşin</h2>
-    <p>Her oyuncu üç farklı güç kuşanır. Bu aşamada üç temel güç kullanılabilir.</p>
+    <p>Her oyuncu üç farklı güç kuşanır. 20 güç arasından seçim yapabilirsin.</p>
     <div class="setup-players">
       <fieldset v-for="id in PLAYER_IDS" :key="id" :disabled="!!firstPlayer">
         <legend>{{ id === 'player-1' ? 'Oyuncu I' : 'Oyuncu II' }}</legend>
+        <p>{{ loadouts[id].length }} / 3 güç seçili · Değiştirmek için seçili gücü kaldır.</p>
         <label>Oyuncu adı <input v-model="names[id]" maxlength="28" /></label>
-        <label v-for="favor in DEFAULT_FAVORS" :key="favor" class="loadout-option"><input v-model="loadouts[id]" type="checkbox" :value="favor" />{{ FAVOR_CATALOG[favor].name }}</label>
+        <label v-for="favor in Object.keys(FAVOR_CATALOG) as FavorId[]" :key="favor" class="loadout-option"><input v-model="loadouts[id]" type="checkbox" :value="favor" :disabled="!loadouts[id].includes(favor) && loadouts[id].length >= 3" /><span>{{ FAVOR_CATALOG[favor].name }}<small>{{ describeFavorTier(favor, 1) }}</small></span></label>
       </fieldset>
     </div>
     <p v-if="!valid" role="status">İki oyuncu için ad ve üçer güç seçin.</p>

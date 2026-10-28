@@ -43,8 +43,8 @@ export function reserveSlot(
   selected = false,
 ): [number, number, number] {
   return [
-    (index - 2.5) * 0.98,
+    (index < 6 ? index - 2.5 : index - 7) * 0.98,
     selected ? 0.76 : 0.49,
-    player === 'player-1' ? 3.9 : -3.9,
+    (player === 'player-1' ? 1 : -1) * (index < 6 ? 3.9 : 5.0),
   ]
 }

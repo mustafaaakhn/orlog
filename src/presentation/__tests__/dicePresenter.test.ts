@@ -117,3 +117,30 @@ describe('dice presentation ownership', () => {
     }
   })
 })
+
+it.each([false, true])('presents a favor recast (added=%s) without moving other kept dice or reviving removed dice', async added => {
+  const state = JSON.parse(JSON.stringify(new Game().state)) as Parameters<typeof import('../../core/resolution').resolveRound>[0]
+  state.phase = { name: 'resolution' }
+  Object.values(state.players).forEach(p => p.dice.forEach(d => { d.faceId = 'helmet'; d.kept = true }))
+  state.players['player-2'].dice[0]!.removed = true
+  const changed = added
+    ? { ...state.players['player-1'].dice[0]!, id: 'player-1/bonus-1' as DieId, faceId: 'arrow' as const }
+    : { ...state.players['player-1'].dice[0]!, faceId: 'arrow' as const }
+  if (added) state.players['player-1'].dice.push(changed)
+  else state.players['player-1'].dice[0] = changed
+  const dice = pieces(state), still = dice.get('player-1/die-2')!, removed = dice.get('player-2/die-1')!
+  removed.visible = false
+  const position = still.position.toArray(), rotation = still.quaternion.toArray()
+  let movedStationary = false
+  const presenter = createDicePresenter(dice, () => {
+    movedStationary ||= JSON.stringify(still.position.toArray()) !== JSON.stringify(position) || JSON.stringify(still.quaternion.toArray()) !== JSON.stringify(rotation)
+  })
+  try {
+    await presenter.play({ id: 1, revision: 1, state, events: [{ type: 'DiceRecast', id: 'favor/1', revision: 1, round: 1, sequence: 1, favorId: added ? 'freyjas-plenty' : 'friggs-sight', playerId: 'player-1', added, dice: [changed] }] })
+    const object = dice.get(changed.id)!
+    expect(object.position.toArray()).toEqual(reserveSlot('player-1', added ? 6 : 0))
+    expect(Math.abs(object.quaternion.dot(faceUpRotation('arrow')))).toBeCloseTo(1)
+    expect(removed.visible).toBe(false)
+    expect(movedStationary).toBe(false)
+  } finally { presenter.dispose() }
+}, 10000)

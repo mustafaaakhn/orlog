@@ -49,8 +49,20 @@ export function createCombatPresenter(board: ReturnType<typeof createBoard>, inv
       } else if (event.type === 'TokensStolen' && event.amount) {
         await flight(board.resourcePosition(event.targetId, true), board.resourcePosition(event.playerId, true), false, true)
       } else if (event.type === 'HealthRestored') {
-        await flight(board.totem(event.playerId, 'iduns-rejuvenation').position.clone().add(new Vector3(0, 1.5, 0)), board.resourcePosition(event.playerId), false, false, '#9dd68a')
-      } else if (event.type === 'HelmetsRemoved') {
+        await flight(board.totem(event.playerId, event.favorId ?? 'iduns-rejuvenation').position.clone().add(new Vector3(0, 1.5, 0)), board.resourcePosition(event.playerId), false, false, '#9dd68a')
+      } else if (event.type === 'TokensGranted') {
+        await flight(board.totem(event.playerId, event.favorId).position.clone().add(new Vector3(0, 1.5, 0)), board.resourcePosition(event.playerId, true), false, true)
+      } else if (event.type === 'TokensDestroyed' && event.amount) {
+        await flight(board.resourcePosition(event.targetId, true), board.totem(event.playerId, event.favorId).position.clone().add(new Vector3(0, 1.5, 0)), false, false, '#e292ae')
+      } else if (event.type === 'HealthSacrificed' && event.amount) {
+        await flight(board.resourcePosition(event.playerId), board.totem(event.playerId, event.favorId).position.clone().add(new Vector3(0, 1.5, 0)), false, false, '#ed8594')
+      } else if (event.type === 'DiceValuesChanged') {
+        for (const value of event.values) await flight(board.totem(event.playerId, event.favorId).position.clone().add(new Vector3(0, 1.5, 0)), board.dice.get(value.dieId)!.position.clone(), true, false, '#aee5c5')
+      } else if (event.type === 'FavorReduced') {
+        await flight(board.resourcePosition(event.playerId, true), board.totem(event.targetId, event.favorId).position.clone().add(new Vector3(0, 1.5, 0)), true, false, '#e292ae')
+      } else if (event.type === 'FavorEffectApplied' || event.type === 'FavorFailed') {
+        await flight(board.totem(event.playerId, event.favorId).position.clone().add(new Vector3(0, 1.5, 0)), board.resourcePosition(event.playerId), true, false, event.type === 'FavorFailed' ? '#db8494' : '#b3d8f0')
+      } else if (event.type === 'HelmetsRemoved' || event.type === 'DiceRemoved') {
         for (const id of event.dieIds) {
           const die = board.dice.get(id)!
           await animate(t => { t.to(die.position, { y: 1.6, duration: 0.22 }); t.to(die.scale, { x: 0, y: 0, z: 0, duration: 0.2 }) })

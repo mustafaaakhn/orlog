@@ -7,6 +7,7 @@ import {
   Mesh,
   MeshStandardMaterial,
   PlaneGeometry,
+  Quaternion,
   SphereGeometry,
   Texture,
   TorusGeometry,
@@ -14,8 +15,8 @@ import {
   Vector3,
 } from 'three'
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js'
-import { DICE_DEFINITIONS } from '../core'
-import type { DieId, GameState, PlayerId } from '../core'
+import { DICE_DEFINITIONS, DEFAULT_FAVORS, FAVOR_CATALOG } from '../core'
+import type { DieId, GameState, PlayerId, FavorId } from '../core'
 import {
   FACE_NORMALS,
   faceUpRotation,
@@ -163,9 +164,9 @@ export function createBoard() {
   const faceMaterials = new Map<string, MeshStandardMaterial>()
   const dice = new Map<DieId, Group>()
   for (const player of ['player-1', 'player-2'] as const) {
-    DICE_DEFINITIONS.forEach((definition) => {
+    [...DICE_DEFINITIONS, ...DICE_DEFINITIONS.slice(0, 3)].forEach((definition, index) => {
       const die = new Group()
-      const dieId: DieId = `${player}/${definition.id}`
+      const dieId: DieId = `${player}/${index < 6 ? definition.id : `bonus-${index - 5}`}` as DieId
       die.name = dieId
       die.userData.dieId = dieId
       dice.set(dieId, die)
@@ -221,6 +222,8 @@ export function createBoard() {
   const shieldShape = geometry(new CylinderGeometry(0.27, 0.27, 0.08, 6))
   const stoneGroups: Group[] = []
   const totemGroups: Group[] = []
+  let loadouts: Record<PlayerId, readonly FavorId[]> = { 'player-1': DEFAULT_FAVORS, 'player-2': DEFAULT_FAVORS }
+  const valueSurfaces = new Map<number, MeshStandardMaterial>()
   const labels: Mesh[] = []
   const tokenGroups: Group[] = []
   const tokenShape = geometry(new CylinderGeometry(0.17, 0.17, 0.08, 12))
@@ -263,14 +266,17 @@ export function createBoard() {
       brow.rotation.z = i === 2 ? -0.15 : 0
       for (const x of [-0.12, 0.12])
         mesh(totem, eyeShape, darkWood, [x, 1.43, 0.27])
+      const emblem = new Group()
+      emblem.name = 'favor-emblem'
+      totem.add(emblem)
       if (i === 0) {
-        mesh(totem, hammerHandle, darkWood, [0.45, 0.78, 0.08])
-        mesh(totem, hammerHead, brass, [0.45, 1.1, 0.08])
+        mesh(emblem, hammerHandle, darkWood, [0.45, 0.78, 0.08])
+        mesh(emblem, hammerHead, brass, [0.45, 1.1, 0.08])
       } else if (i === 1) {
-        mesh(totem, apple, green, [0.38, 0.9, 0.17])
-        mesh(totem, leaf, green, [0.06, 1.73, 0]).scale.set(1.8, 0.5, 0.6)
+        mesh(emblem, apple, green, [0.38, 0.9, 0.17])
+        mesh(emblem, leaf, green, [0.06, 1.73, 0]).scale.set(1.8, 0.5, 0.6)
       } else {
-        const shield = mesh(totem, shieldShape, brass, [0.35, 0.73, 0.14])
+        const shield = mesh(emblem, shieldShape, brass, [0.35, 0.73, 0.14])
         shield.rotation.x = Math.PI / 2
       }
       const runeSurface = material({
@@ -281,7 +287,8 @@ export function createBoard() {
         roughness: 0.9,
       })
       const rune = mesh(totem, inscriptionShape, runeSurface, [0, 0.77, 0.36])
-      rune.scale.setScalar(0.6)
+      rune.scale.set(1, 0.65, 1)
+      rune.name = 'favor-rune'
       rune.castShadow = false
       totem.position.set(side * (4.45 + i * 1.3), 0, -3.55)
       root.add(totem)
@@ -316,13 +323,49 @@ export function createBoard() {
     effect,
     tokenEffect,
     totem(playerId: PlayerId, favorId: string) {
-      const index = ['thors-strike', 'iduns-rejuvenation', 'vidars-might'].indexOf(favorId)
+      const index = Math.max(0, loadouts[playerId].indexOf(favorId as FavorId))
       return totemGroups[(playerId === 'player-1' ? 0 : 3) + index]!
     },
     resourcePosition(playerId: PlayerId, tokens = false) {
       return (tokens ? tokenGroups : stoneGroups)[playerId === 'player-1' ? 0 : 1]!.position.clone().add(new Vector3(0, 0.5, 0))
     },
     syncResources(state: GameState) {
+      loadouts = { 'player-1': state.players['player-1'].favors, 'player-2': state.players['player-2'].favors }
+      Object.values(state.players).forEach((player, side) => {
+        for (let i = 0; i < 3; i++) {
+          const totem = totemGroups[side * 3 + i]!, id = player.favors[i]
+          totem.visible = !!id
+          if (id && totem.userData.favorId !== id) {
+            totem.userData.favorId = id
+            totem.name = FAVOR_CATALOG[id].name
+            totem.getObjectByName('favor-emblem')!.visible = id === DEFAULT_FAVORS[i]
+            const rune = totem.getObjectByName('favor-rune') as Mesh<PlaneGeometry, MeshStandardMaterial>
+            const old = rune.material.map
+            if (old) { old.dispose(); textures.delete(old) }
+            rune.material.map = keepTexture(createInscriptionTexture(FAVOR_CATALOG[id].name.split("'")[0]!, totemColors[i]))
+            rune.material.needsUpdate = true
+          }
+        }
+        for (const value of player.dice) {
+          const object = dice.get(value.id)!
+          let badge = object.getObjectByName('value-badge') as Mesh | undefined
+          if (value.value > 1) {
+            let surface = valueSurfaces.get(value.value)
+            if (!surface) {
+              surface = material({ map: keepTexture(createInscriptionTexture(`×${value.value}`, '#ffe4a0')), transparent: true, depthTest: false })
+              valueSurfaces.set(value.value, surface)
+            }
+            if (!badge) { badge = mesh(object, inscriptionShape, surface, [0, 0.85, 0]); badge.name = 'value-badge' }
+            badge.material = surface
+          }
+          if (badge) {
+            badge.visible = value.value > 1 && !value.removed
+            // Keep the badge horizontal in world space above the upper face.
+            badge.quaternion.copy(object.quaternion).invert().multiply(new Quaternion().setFromAxisAngle(new Vector3(1, 0, 0), -Math.PI / 2))
+            badge.position.set(0, 0.85, 0).applyQuaternion(object.quaternion.clone().invert())
+          }
+        }
+      })
       Object.values(state.players).forEach((player, index) => {
         stoneGroups[index]!.children.forEach((stone, i) => { stone.visible = i < player.health })
         const group = tokenGroups[index]!
@@ -335,6 +378,7 @@ export function createBoard() {
       })
     },
     syncDice(state: GameState) {
+      dice.forEach(d => { d.visible = false })
       for (const player of Object.values(state.players)) {
         player.dice.forEach((value, index) => {
           const die = dice.get(value.id)!
@@ -357,7 +401,7 @@ export function createBoard() {
       }
     },
     setCompact(compact: boolean) {
-      table.scale.set(compact ? 0.49 : 1, 1, compact ? 1.21 : 1)
+      table.scale.set(compact ? 0.49 : 1, 1, compact ? 1.5 : 1)
       fabric.scale.copy(table.scale)
       borders.scale.copy(table.scale)
       stoneGroups.forEach((group, index) => {
@@ -365,7 +409,7 @@ export function createBoard() {
         group.position.set(
           compact ? -0.4 : side * 6.8,
           0,
-          compact ? -side * 5 : -0.3,
+          compact ? -side * 6.3 : -0.3,
         )
         group.children.forEach((stone, i) => {
           stone.position.x = compact
@@ -378,12 +422,12 @@ export function createBoard() {
         labels[index]!.position.set(
           compact ? -2.6 : side * 6.8,
           0.055,
-          compact ? -side * 5 : 3.25,
+          compact ? -side * 6.3 : 3.25,
         )
       })
       tokenGroups.forEach((group, index) => {
         const side = index === 0 ? -1 : 1
-        group.position.set(compact ? 1.6 : side * 6.8, 0, compact ? -side * 5 : 1.65)
+        group.position.set(compact ? 1.6 : side * 6.8, 0, compact ? -side * 6.3 : 1.65)
       })
       totemGroups.forEach((totem, index) => {
         const side = index < 3 ? -1 : 1
@@ -391,7 +435,7 @@ export function createBoard() {
         totem.position.set(
           compact ? (i - 1) * 1.25 : side * (4.45 + i * 1.3),
           0,
-          compact ? -side * 6.5 : -3.55,
+          compact ? -side * 7.8 : -3.55,
         )
       })
     },

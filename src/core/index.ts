@@ -1,8 +1,10 @@
 export { Game } from './game'
 export type { GameOptions } from './game'
 export { DICE_DEFINITIONS, getDieDefinition, getDieFace, rollFace } from './dice/definitions'
-export { DEFAULT_FAVORS, FAVOR_CATALOG } from './favors/catalog'
+export { DEFAULT_FAVORS, FAVOR_CATALOG, describeFavorTier } from './favors/catalog'
 export { createSeededRandom, mathRandom, randomIndex } from './random'
 export type { RandomSource } from './random'
 export { INITIAL_HEALTH, MAX_HEALTH, MAX_ROLLS, MAX_FAVORS } from './rules'
 export * from './types'
+
+export { majoritySymbols, validFavorInput } from './favors/targets'

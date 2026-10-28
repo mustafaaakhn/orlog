@@ -44,7 +44,7 @@ export function createDicePresenter(
       for (const player of Object.values(state.players)) {
         player.dice.forEach((value, index) => {
           const object = dice.get(value.id)!
-          object.visible = !!value.faceId
+          object.visible = !!value.faceId && !value.removed
           if (!value.faceId) return
           const inBowl =
             state.phase.name === 'roll' &&
@@ -110,13 +110,14 @@ export function createDicePresenter(
     async play(batch: PresentationBatch) {
       for (const event of batch.events) {
         if (disposed) return
-        if (event.type === 'DiceRolled') {
+        if (event.type === 'DiceRolled' || event.type === 'DiceRecast') {
           const recording = await recordRoll(
-            event.dice,
-            event.sequence * 307 + event.rollNumber,
+            event.type === 'DiceRolled' ? event.dice : event.dice.map(d => ({ dieId: d.id, faceId: d.faceId! })),
+            event.sequence * 307 + (event.type === 'DiceRolled' ? event.rollNumber : 0),
           )
           if (disposed) return
-          event.dice.forEach((value) => {
+          const rolledDice = event.type === 'DiceRolled' ? event.dice : event.dice.map(d => ({ dieId: d.id, faceId: d.faceId! }))
+          rolledDice.forEach((value) => {
             owners.set(value.dieId, 'recording')
             const object = dice.get(value.dieId)!
             object.visible = true
@@ -129,7 +130,7 @@ export function createDicePresenter(
               recording.frames.length - 1,
             )
             const alpha = cursor.frame - index
-            event.dice.forEach((value, i) => {
+            rolledDice.forEach((value, i) => {
               const object = dice.get(value.dieId)!
               if (owners.get(value.dieId) !== 'recording') return
               const pose = recording.frames[index]![i]!,
@@ -161,7 +162,7 @@ export function createDicePresenter(
           })
           // The offline world has already been freed. Hand recorded transforms
           // to the kinematic presenter only after playback completes.
-          event.dice.forEach((value, i) => {
+          rolledDice.forEach((value, i) => {
             owners.set(value.dieId, 'kinematic')
             bowlPositions.set(
               value.dieId,
@@ -172,6 +173,7 @@ export function createDicePresenter(
               new Quaternion(...recording.frames.at(-1)![i]!.rotation),
             )
           })
+          if (event.type === 'DiceRecast') await arrange(batch.state)
         } else if (
           event.type === 'DieSelectionChanged' ||
           event.type === 'DiceKept' ||

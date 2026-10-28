@@ -730,3 +730,19 @@ input[type=checkbox] { accent-color: #d3ae6a; width: 18px; height: 18px; flex-sh
 .combat-log { margin: 18px 0; color: #d7c7a9; font-size: 14px; line-height: 1.8; }
 .combat-log summary { cursor: pointer; padding: 8px 0; }
 .dice-buttons button.removed { opacity: 0.35; border-style: dashed; }
+
+.loadout-option { align-items: start; }
+.loadout-option small { display: block; font-size: 0.75rem; color: var(--muted, #b5b6a3); margin-top: 0.2rem; }
+.setup-players fieldset { max-height: 26rem; overflow-y: auto; }
+.favor-cards button[aria-pressed='true'] { outline: 2px solid #d8b76e; background: #354039; }
+.favor-targets { border: 1px solid #7d7855; padding: 1rem; margin: 1rem 0; min-width: 0; }
+.favor-targets legend { color: #e8d8af; }
+.favor-targets label { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.favor-targets input[type='number'], .favor-targets select { max-width: 100%; padding: 0.6rem; color: #f0e6cc; background: #17251f; border: 1px solid #7d7855; }
+.favor-targets input[type='number'] { width: 5rem; }
+.favor-targets label span { flex-basis: 100%; font-size: 0.85rem; }
+.target-dice { display: flex; gap: 0.6rem; flex-wrap: wrap; margin: 1rem 0; }
+.target-dice p { flex-basis: 100%; margin: 0; }
+.target-dice label { padding: 0.5rem; border: 1px solid #66715d; cursor: pointer; }
+.target-dice svg { width: 1.5rem; height: 1.5rem; }
+.die-value { position: absolute; top: 0.1rem; left: 0.15rem; font-size: 0.8rem; color: #ffdf8f; background: #22362d; padding: 0.1rem; border-radius: 0.2rem; }

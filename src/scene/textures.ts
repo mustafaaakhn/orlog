@@ -102,6 +102,8 @@ export function createInscriptionTexture(text: string, color = '#d9bd7d') {
   const { element, context: ctx } = canvas(256)
   ctx.fillStyle = color
   ctx.font = 'bold 110px Georgia, serif'
+  const width = ctx.measureText(text).width
+  if (width > 216) ctx.font = `bold ${Math.floor(110 * 216 / width)}px Georgia, serif`
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
   ctx.fillText(text, 128, 136)
