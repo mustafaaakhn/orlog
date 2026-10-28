@@ -190,7 +190,7 @@ watch(
   async (value, old) => {
     if (value) {
       const element = document.activeElement as HTMLElement | null;
-      previousFocus = element?.closest(".match-screen, .scene-die-controls")
+      previousFocus = element?.closest(".match-screen, .scene-die-controls, .scene-favor-controls, .table-favor-menu")
         ? element
         : null;
     } else if (old) {

@@ -206,6 +206,7 @@ describe('automatic round completion boundary', () => {
       session.settle(final.id)
     }
     expect(session.advanceRound()).toBe(false)
+    expect(session.resolveReady()).toBe(false)
     session.recover(); session.resume()
     settle(session)
     expect(session.advanceRound()).toBe(false)

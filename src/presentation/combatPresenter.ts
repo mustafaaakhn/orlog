@@ -87,11 +87,12 @@ export function createCombatPresenter(
     const effect = board.steal.object
     const points = board.steal.prepare(event.targetId, event.targetTokens, event.amount)
     const pickup = points.reduce((sum, point) => sum.add(point), new Vector3()).multiplyScalar(1 / points.length)
-    const destinations = points.map((_, i) => board.tokenPosition(event.playerId, event.tokens - event.amount + i))
+    const destinations = points.map((_, i) => board.tokenPosition(event.playerId, event.tokens - event.amount + i, event.tokens))
     const arrival = destinations.reduce((sum, point) => sum.add(point), new Vector3()).multiplyScalar(1 / destinations.length)
     const offsets = points.map(point => point.clone().sub(pickup))
     const finalOffsets = destinations.map(point => point.clone().sub(arrival))
-    board.steal.cargo(offsets)
+    const startScale = board.tokenScale(event.targetId), endScale = board.tokenScale(event.playerId, event.tokens)
+    board.steal.cargo(offsets, startScale)
     effect.position.copy(source(event)).add(new Vector3(0, 1, 0))
     if (reduced()) effect.position.copy(pickup)
     effect.visible = true
@@ -107,7 +108,7 @@ export function createCombatPresenter(
           t.to(effect.position, { y: arrival.y, duration: 0.18, ease: 'power2.in' })
           // Settle every real plate into its destination slot in the same trip.
           const morph = { value: 0 }
-          t.to(morph, { value: 1, duration: 0.16, onUpdate: () => board.steal.cargo(offsets.map((point, i) => point.clone().lerp(finalOffsets[i]!, morph.value))) })
+          t.to(morph, { value: 1, duration: 0.16, onUpdate: () => board.steal.cargo(offsets.map((point, i) => point.clone().lerp(finalOffsets[i]!, morph.value)), startScale + (endScale - startScale) * morph.value) })
         }
         t.call(() => {
           if (closed || paused) return

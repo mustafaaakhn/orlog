@@ -408,10 +408,14 @@ export function createBoard(invalidate: () => void = () => {}) {
   stealObject.add(cargo);
   let stolen: { owner: PlayerId; indices: number[] } | null = null;
   const white = new Color('#ffffff'), selectedGold = new Color(2.6, 2.1, 1.4);
-  function tokenPosition(playerId: PlayerId, index: number) {
+  function tokenScale(playerId: PlayerId, total?: number) {
+    if (total === undefined) return tokenGroups[playerId === 'player-1' ? 0 : 1]!.scale.x;
+    return Math.min(1, 2 / Math.max(2, Math.ceil(total / 25) * 0.57));
+  }
+  function tokenPosition(playerId: PlayerId, index: number, total?: number) {
     const group = tokenGroups[playerId === 'player-1' ? 0 : 1]!;
     group.updateMatrixWorld(true);
-    return group.localToWorld(new Vector3(...tokenSlot(index)));
+    return group.localToWorld(new Vector3(...tokenSlot(index)).multiplyScalar(tokenScale(playerId, total) / group.scale.x));
   }
   function clearSteal() {
     stealObject.visible = false;
@@ -451,9 +455,10 @@ export function createBoard(invalidate: () => void = () => {}) {
       cargo.visible = false;
       return stolen.indices.map(index => tokenPosition(owner, index));
     },
-    cargo(points: Vector3[]) {
+    cargo(points: Vector3[], scale = 1) {
       for (const [i, point] of points.entries()) {
-        tokenMatrix.makeTranslation(point.x, point.y, point.z);
+        tokenMatrix.makeScale(scale, scale, scale);
+        tokenMatrix.setPosition(point);
         cargo.setMatrixAt(i, tokenMatrix);
       }
       cargo.instanceMatrix.needsUpdate = true;
@@ -489,6 +494,7 @@ export function createBoard(invalidate: () => void = () => {}) {
       return group.children[Math.max(0, Math.min(index, 14))]!.getWorldPosition(new Vector3());
     },
     tokenPosition,
+    tokenScale,
     totem(playerId: PlayerId, favorId: string) {
       const index = Math.max(0, loadouts[playerId].indexOf(favorId as FavorId));
       return totemGroups[(playerId === "player-1" ? 0 : 3) + index]!;
@@ -599,8 +605,7 @@ export function createBoard(invalidate: () => void = () => {}) {
           plates.computeBoundingSphere();
           group.userData.count = player.tokens;
           // Very large reserves still fit their assigned area; no rule limit.
-          const rows = Math.ceil(player.tokens / 25);
-          group.scale.setScalar(Math.min(1, 2 / Math.max(2, rows * 0.57)));
+          group.scale.setScalar(tokenScale(player.id, player.tokens));
         }
       });
     },
