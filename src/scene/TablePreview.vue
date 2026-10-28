@@ -1,13 +1,17 @@
 <script setup lang="ts">
-import { onErrorCaptured, onMounted, onUnmounted, ref, watch } from 'vue'
+import { onErrorCaptured, onMounted, onUnmounted, onBeforeUnmount, ref, watch } from 'vue'
 import { TresCanvas } from '@tresjs/core'
 import type { TresContext } from '@tresjs/core'
 import TableScene from './TableScene.vue'
-import { initializePhysics } from '../presentation/rollSimulation'
+import type { AudioPort } from '../audio/catalog'
 import type { PresentationBatch } from '../app/rollSession'
 import type { DieId, GameState, GameEvent } from '../core'
 
 defineProps<{
+  audio: AudioPort
+  reduced: boolean
+  paused: boolean
+  quality: string
   speed: number
   closeView: boolean
   state: GameState
@@ -26,6 +30,7 @@ watch(status, (value) => emit('availability', value === 'ready'), {
   immediate: true,
 })
 const sceneKey = ref(0)
+const sceneComponent = ref<{ dispose(): void } | null>(null)
 let activeCanvas: HTMLCanvasElement | undefined
 let loadingTimeout: ReturnType<typeof setTimeout> | undefined
 
@@ -37,6 +42,7 @@ function detachCanvas() {
   activeCanvas = undefined
 }
 function failed() {
+  sceneComponent.value?.dispose()
   clearLoadingTimeout()
   detachCanvas()
   status.value = 'error'
@@ -45,7 +51,7 @@ function contextLost(event: Event) {
   event.preventDefault()
   failed()
 }
-async function initialize() {
+function initialize() {
   clearLoadingTimeout()
   detachCanvas()
   const probe = document.createElement('canvas')
@@ -64,7 +70,6 @@ async function initialize() {
   status.value = 'loading'
   loadingTimeout = setTimeout(failed, 20000)
   try {
-    await initializePhysics()
     sceneKey.value++
   } catch {
     failed()
@@ -82,6 +87,8 @@ function rendered() {
 }
 
 onMounted(initialize)
+// Tres owns a separate render tree; release its board before renderer disposal.
+onBeforeUnmount(() => sceneComponent.value?.dispose())
 onUnmounted(() => {
   clearLoadingTimeout()
   detachCanvas()
@@ -103,7 +110,7 @@ onErrorCaptured(() => {
       shadows
       render-mode="on-demand"
       clear-color="#28332b"
-      :dpr="[1, 1.75]"
+      :dpr="quality === 'high' ? 1.75 : quality === 'low' ? 1 : [1, 1.25]"
       :tone-mapping-exposure="1.05"
       aria-label="Üç boyutlu Orlog masası: ahşap kâse, oyuncuların zarları, can taşları ve kuşanılan tanrı totemleri. Zarları seçmek için dokun veya aşağıdaki zar düğmelerini kullan."
       role="img"
@@ -112,6 +119,11 @@ onErrorCaptured(() => {
       @error="failed"
     >
       <TableScene
+        ref="sceneComponent"
+        :audio="audio"
+        :reduced="reduced"
+        :paused="paused"
+        :quality="quality"
         :speed="speed"
         :close-view="closeView"
         :state="state"

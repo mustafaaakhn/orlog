@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from 'vue'
+import { computed, defineAsyncComponent, ref, watch, nextTick, onMounted, onUnmounted } from 'vue'
+import { usePreferences } from './app/preferences'
+import { createAudioPlayer } from './audio/player'
+import ExperienceSettings from './ui/ExperienceSettings.vue'
 import SymbolIcon from './ui/SymbolIcon.vue'
 import { SYMBOL_GUIDE } from './scene/symbols'
 import SceneLoaderState from './ui/SceneLoaderState.vue'
@@ -18,18 +21,38 @@ const TablePreview = defineAsyncComponent({
   timeout: 30000,
 })
 const preparing = ref(true)
-const speed = ref(1)
+const { settings, system } = usePreferences()
+const reduced = computed(() => settings.motion === 'reduce' || (settings.motion === 'system' && system.reduced))
+const speed = computed(() => settings.fast ? 4 : 1)
+const audioFailed = ref(false)
+const audio = createAudioPlayer(failed => { audioFailed.value = failed })
+const paused = ref(document.hidden)
+watch(settings, value => audio.configure(value), { immediate: true })
+const unlockAudio = () => audio.unlock()
+const visibility = () => { paused.value = document.hidden; audio.visibility(paused.value) }
+onMounted(() => {
+  audio.visibility(document.hidden)
+  document.addEventListener('pointerdown', unlockAudio, { capture: true })
+  document.addEventListener('keydown', unlockAudio, { capture: true })
+  document.addEventListener('visibilitychange', visibility)
+})
+onUnmounted(() => {
+  document.removeEventListener('pointerdown', unlockAudio, { capture: true })
+  document.removeEventListener('keydown', unlockAudio, { capture: true })
+  document.removeEventListener('visibilitychange', visibility)
+  audio.dispose()
+})
 const names = ref<Record<PlayerId, string>>({ 'player-1': 'Oyuncu I', 'player-2': 'Oyuncu II' })
 function start(options: GameOptions, playerNames: Record<PlayerId, string>) {
-  if (session.start(options)) { names.value = playerNames; preparing.value = false }
+  if (session.start(options)) { names.value = playerNames; preparing.value = false; void nextTick(focusAction) }
 }
-function restart() { if (!busy.value) { session.restart(); preparing.value = true } }
+function restart() { if (!busy.value) { audio.stopEffects(); session.restart(); preparing.value = true; void nextTick(() => document.querySelector<HTMLInputElement>('.setup-panel input')?.focus()) } }
 const closeView = ref(false)
 const guideOpen = ref(false)
 const sceneReady = ref(false)
 const session = createRollSession()
 const { state, pending, error, lastEvent, history } = session
-const combatLog = computed(() => history.value.map(event => ({ id: event.id, text: eventText(event) })).filter(event => event.text).slice(-16))
+const combatLog = computed(() => history.value.map(event => ({ id: event.id, text: eventText(event) })).filter(event => event.text).slice(reduced.value ? -120 : -16))
 const phase = computed(() => state.value.phase)
 const activePlayer = computed(() =>
   phase.value.name === 'roll' || phase.value.name === 'favor'
@@ -51,6 +74,29 @@ const instruction = computed(() => {
     return 'Son atışın zarları otomatik saklandı. Sonucu onayla.'
   return 'Saklamak istediğin zarlara dokun; geri almak için tekrar dokun. Ardından seçimi onayla.'
 })
+const phaseTitle = computed(() => preparing.value ? 'Maç hazırlığı · İki oyuncu güçlerini seçiyor' :
+  phase.value.name === 'ended' ? `${names.value[phase.value.winnerId]} kazandı` :
+  `Tur ${state.value.round} · ${activePlayer.value ? names.value[activePlayer.value.id] + ' · ' : ''}${phase.value.name === 'roll' ? 'Zar atışı ve seçim' : phase.value.name === 'favor' ? 'Güç seçimi' : phase.value.name === 'resolution' ? 'Savaş' : 'Tur tamamlandı'}`)
+function focusAction() {
+  const panel = document.querySelector('.roll-panel:not(.setup-panel)')
+  const action = panel?.querySelector<HTMLElement>('.primary-action:not(:disabled), .favor-picker button:not(:disabled)') ?? panel?.querySelector<HTMLElement>('.restart-action:not(:disabled)')
+  action?.focus({ preventScroll: true })
+}
+let previousFocus: HTMLElement | null = null
+watch(pending, async (value, old) => {
+  if (value) {
+    const element = document.activeElement as HTMLElement | null
+    previousFocus = element?.closest('.roll-panel') ? element : null
+  } else if (old) {
+    await nextTick()
+    const current = document.activeElement
+    if (previousFocus && (current === document.body || current === previousFocus)) {
+      if (previousFocus.isConnected && !previousFocus.matches(':disabled')) previousFocus.focus({ preventScroll: true })
+      else focusAction()
+    }
+    previousFocus = null
+  }
+}, { flush: 'sync' })
 function choose(favorId: FavorId, level: FavorLevel, input?: FavorInput) {
   if (!busy.value && phase.value.name === 'favor') session.dispatch({ type: 'ChooseFavor', playerId: phase.value.activePlayerId, favorId, level, input })
 }
@@ -63,7 +109,7 @@ function advance() {
 }
 function availability(ready: boolean) {
   sceneReady.value = ready
-  if (!ready) session.recover()
+  if (!ready) { audio.stopEffects(); session.recover() }
 }
 function roll() {
   if (!busy.value && phase.value.name === 'roll')
@@ -82,7 +128,8 @@ function confirm() {
 </script>
 
 <template>
-  <main class="experience">
+  <main class="experience" :data-reduced-motion="reduced">
+    <a v-if="!preparing" class="skip-link" href="#match-controls">Oyun kontrollerine geç</a>
     <header class="masthead">
       <a class="wordmark" href="./" aria-label="Orlog ana sayfa"
         ><span aria-hidden="true">ᛟ</span> ORLOG</a
@@ -102,6 +149,17 @@ function confirm() {
           Altı zar. Üç atış.<br />Kaderinden hangisini saklayacaksın?
         </p>
       </div>
+      <div class="phase-banner" role="status" aria-live="polite" aria-atomic="true">
+        <span aria-hidden="true">ᛟ</span><strong>{{ phaseTitle }}</strong><span v-if="pending">{{ paused ? 'Sekme arka planda · duraklatıldı' : 'Animasyon sürüyor' }}</span>
+      </div>
+      <ExperienceSettings :settings="settings" :audio-failed="audioFailed" @retry="audio.unlock()" />
+      <details class="rules-guide"><summary>Nasıl oynanır?</summary><ol>
+        <li>Her oyuncu 15 can, 0 jeton ve üç güçle başlar. Yazı tura ilk oyuncuyu seçer.</li>
+        <li>Dönüşümlü en fazla üç atış yap. Saklayacağın zarları seçip onayla; üçüncü atış otomatik saklanır.</li>
+        <li>Altın çerçeveler jeton verir. Ok kalkanla, balta miğferle engellenir. El, rakibin jetonlarını çalar.</li>
+        <li>Bir güç ve seviye seç veya pas geç. Bedel güç çalıştığında ödenir; yetmezse güç uygulanmaz.</li>
+        <li>Savaş: önce güçler → altın jetonlar → oklar → baltalar → çalma → son güçler. İlk 0 can maçı bitirir.</li>
+      </ol><p>Zar düğmelerinde Tab ile ilerle, Space veya Enter ile seç. Ok tuşları, Home ve End ile zarlar arasında gezinebilirsin. Seçimden sonra onay düğmesini kullan.</p></details>
       <MatchSetup v-if="preparing" @start="start" />
       <div class="table-frame">
         <div class="frame-corner top-left" aria-hidden="true"></div>
@@ -111,6 +169,10 @@ function confirm() {
           {{ closeView ? 'KEMİK ZARLAR' : 'MASA YERLEŞİMİ' }}
         </div>
         <TablePreview
+          :audio="audio"
+          :reduced="reduced"
+          :paused="paused"
+          :quality="settings.quality"
           :speed="speed"
           :close-view="closeView"
           :state="state"
@@ -154,6 +216,8 @@ function confirm() {
       </div>
       <section
         v-if="!preparing"
+        id="match-controls"
+        tabindex="-1"
         class="roll-panel"
         aria-label="Zar atışı ve seçim"
         :aria-busy="!!pending"
@@ -186,7 +250,6 @@ function confirm() {
               <span aria-hidden="true">→</span>
             </button>
             <button v-if="phase.name === 'resolution' || phase.name === 'round-complete'" class="primary-action" :disabled="busy" @click="advance">{{ phase.name === 'resolution' ? 'Savaşı başlat' : 'Sonraki tur' }} →</button>
-            <label class="speed-control"><input v-model="speed" type="checkbox" :true-value="4" :false-value="1" :disabled="busy" /> Hızlı çözümleme</label>
             <button
               class="restart-action"
               :disabled="busy"
@@ -204,7 +267,7 @@ function confirm() {
           <p v-for="player in state.players" :key="player.id"><strong>{{ names[player.id] }}</strong><span>{{ playerLabel(player.id) }} · {{ player.health }} can · {{ player.tokens }} jeton</span></p>
         </div>
         <FavorPicker v-if="phase.name === 'favor'" :key="phase.activePlayerId" :state="state" :player="state.players[phase.activePlayerId]" :disabled="busy" @choose="choose" @skip="skip" />
-        <details v-if="combatLog.length" class="combat-log"><summary>Tur olayları</summary><ol><li v-for="event in combatLog" :key="event.id">{{ event.text }}</li></ol></details>
+        <details v-if="combatLog.length" class="combat-log" :open="reduced"><summary>Tur olayları</summary><ol><li v-for="event in combatLog" :key="event.id">{{ event.text }}</li></ol></details>
         <div class="dice-trays">
           <DiceTray
             v-for="player in state.players"
@@ -272,7 +335,7 @@ function confirm() {
     </section>
     <footer>
       <span>VALHALLA’DAN İLHAM ALAN BİR MASA DENEYİMİ</span
-      ><span>AŞAMA 05 <span aria-hidden="true">/</span> YEREL TAM MAÇ</span>
+      ><span>AŞAMA 06 <span aria-hidden="true">/</span> YEREL TAM MAÇ</span>
     </footer>
   </main>
 </template>

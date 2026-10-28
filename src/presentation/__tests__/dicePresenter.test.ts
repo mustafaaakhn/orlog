@@ -4,6 +4,7 @@ import { Game, createSeededRandom } from '../../core'
 import type { CommandResult, DieId, GameState } from '../../core'
 import type { PresentationBatch } from '../../app/rollSession'
 import { bowlSlot, faceUpRotation, reserveSlot } from '../../scene/diceGeometry'
+import { recordRoll } from '../rollSimulation'
 import { createDicePresenter } from '../dicePresenter'
 
 function batch(result: CommandResult): PresentationBatch {
@@ -72,6 +73,7 @@ describe('dice presentation ownership', () => {
         kept: kept.position.toArray(),
         rotation: kept.quaternion.toArray(),
       }),
+      { record: recordRoll },
     )
     try {
       await presenter.play(
@@ -109,7 +111,7 @@ describe('dice presentation ownership', () => {
     const confirmed = batch(
       game.dispatch({ type: 'ConfirmRoll', playerId: 'player-1' }),
     )
-    const presenter = createDicePresenter(pieces(confirmed.state), () => {})
+    const presenter = createDicePresenter(pieces(confirmed.state), () => {}, { record: recordRoll })
     try {
       await presenter.play(confirmed)
     } finally {
@@ -134,7 +136,7 @@ it.each([false, true])('presents a favor recast (added=%s) without moving other 
   let movedStationary = false
   const presenter = createDicePresenter(dice, () => {
     movedStationary ||= JSON.stringify(still.position.toArray()) !== JSON.stringify(position) || JSON.stringify(still.quaternion.toArray()) !== JSON.stringify(rotation)
-  })
+  }, { record: recordRoll })
   try {
     await presenter.play({ id: 1, revision: 1, state, events: [{ type: 'DiceRecast', id: 'favor/1', revision: 1, round: 1, sequence: 1, favorId: added ? 'freyjas-plenty' : 'friggs-sight', playerId: 'player-1', added, dice: [changed] }] })
     const object = dice.get(changed.id)!
@@ -144,3 +146,15 @@ it.each([false, true])('presents a favor recast (added=%s) without moving other 
     expect(movedStationary).toBe(false)
   } finally { presenter.dispose() }
 }, 10000)
+
+it('reduced motion skips physical recording and shows the same core faces', async () => {
+  const game = new Game({ random: createSeededRandom(42) })
+  const result = batch(game.dispatch({ type: 'RollDice', playerId: 'player-1' }))
+  const dice = pieces(result.state)
+  const presenter = createDicePresenter(dice, () => {}, { reduced: () => true, record: async () => { throw new Error('Reduced motion must not simulate') } })
+  await presenter.play(result)
+  for (const die of result.state.players['player-1'].dice) {
+    expect(Math.abs(dice.get(die.id)!.quaternion.dot(faceUpRotation(die.faceId!)))).toBeCloseTo(1)
+  }
+  presenter.dispose()
+})

@@ -4,13 +4,15 @@ import { createSeededRandom } from '../core'
 import type { RolledDie } from '../core'
 import { bowlSlot, FACE_NORMALS, topFace } from '../scene/diceGeometry'
 
-export const PHYSICS_STEP = 1 / 60
+import { PHYSICS_STEP } from './physicsTiming'
+export { PHYSICS_STEP } from './physicsTiming'
 export interface Pose {
   position: [number, number, number]
   rotation: [number, number, number, number]
 }
 export interface RollRecording {
   frames: Pose[][]
+  impacts: { frame: number; strength: number }[]
   dice: readonly RolledDie[]
   attempts: number
   controlled: boolean
@@ -80,6 +82,7 @@ export function validLanding(poses: readonly Pose[]) {
 function simulate(count: number, seed: number, controlled: boolean) {
   const random = createSeededRandom(seed)
   const world = new RAPIER.World({ x: 0, y: -18, z: 0 })
+  const contacts = new RAPIER.EventQueue(true)
   world.timestep = PHYSICS_STEP
   try {
     addBowl(world)
@@ -121,12 +124,16 @@ function simulate(count: number, seed: number, controlled: boolean) {
       world.createCollider(
         RAPIER.ColliderDesc.roundCuboid(0.365, 0.365, 0.365, 0.075)
           .setRestitution(controlled ? 0.12 : 0.32)
-          .setFriction(0.85),
+          .setFriction(0.85)
+          .setActiveEvents(RAPIER.ActiveEvents.CONTACT_FORCE_EVENTS)
+          .setContactForceEventThreshold(8),
         body,
       )
       return body
     })
     const frames: Pose[][] = []
+    const impacts: RollRecording['impacts'] = []
+    let lastImpact = -10
     let stableSteps = 0
     for (let step = 0; step < 360; step++) {
       frames.push(
@@ -145,10 +152,18 @@ function simulate(count: number, seed: number, controlled: boolean) {
       })
       stableSteps = resting ? stableSteps + 1 : 0
       if (step > 90 && stableSteps >= 18) break
-      world.step()
+      world.step(contacts)
+      let force = 0
+      contacts.drainContactForceEvents(event => { force = Math.max(force, event.totalForceMagnitude()) })
+      // Suppress resting contact noise and limit the whole bowl to 10 contacts/s.
+      if (force > 8 && step - lastImpact >= 6 && bodies.some(body => Math.hypot(body.linvel().x, body.linvel().y, body.linvel().z) > .25)) {
+        impacts.push({ frame: step + 1, strength: Math.min(1, force / 100) })
+        lastImpact = step
+      }
     }
-    return { frames, settled: stableSteps >= 18 }
+    return { frames, impacts, settled: stableSteps >= 18 }
   } finally {
+    contacts.free()
     world.free()
   }
 }
@@ -170,6 +185,7 @@ export async function recordRoll(
   )
     throw new RangeError('Retry budget must be between zero and three.')
   let frames: Pose[][] = [],
+    impacts: RollRecording['impacts'] = [],
     attempts = 0,
     controlled = false,
     settled = false
@@ -177,6 +193,7 @@ export async function recordRoll(
     controlled = attempts === naturalAttempts
     const simulation = simulate(dice.length, seed + attempts * 997, controlled)
     frames = simulation.frames
+    impacts = simulation.impacts
     settled = simulation.settled
     if (settled && validLanding(frames.at(-1)!)) break
   }
@@ -195,5 +212,5 @@ export async function recordRoll(
         .toArray()
     })
   })
-  return { frames, dice, attempts: attempts + 1, controlled }
+  return { frames, impacts, dice, attempts: attempts + 1, controlled }
 }

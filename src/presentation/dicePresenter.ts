@@ -1,15 +1,19 @@
 import { gsap } from 'gsap'
 import { Group, Quaternion } from 'three'
+import type { AudioPort } from '../audio/catalog'
 import type { DieId, GameState } from '../core'
 import type { PresentationBatch } from '../app/rollSession'
 import { faceUpRotation, reserveSlot, bowlSlot } from '../scene/diceGeometry'
-import { recordRoll, PHYSICS_STEP } from './rollSimulation'
+import type { recordRoll } from './rollSimulation'
+import { PHYSICS_STEP } from './physicsTiming'
 
 export function createDicePresenter(
   dice: Map<DieId, Group>,
   invalidate: () => void,
+  options: { record: typeof recordRoll; reduced?: () => boolean; speed?: () => number; audio?: AudioPort },
 ) {
   let disposed = false
+  let paused = false
   let active: gsap.core.Timeline | undefined
   let cancelTween: (() => void) | undefined
   const bowlRotations = new Map<DieId, Quaternion>()
@@ -30,7 +34,10 @@ export function createDicePresenter(
       active = gsap.timeline({ onUpdate: invalidate, onComplete: finish })
       cancelTween = finish
       build(active)
-      if (active.duration() === 0) {
+      active.timeScale(options.speed?.() ?? 1)
+      if (options.reduced?.()) active.progress(1)
+      else if (paused) active.pause()
+      if (active?.duration() === 0) {
         active.kill()
         invalidate()
         finish()
@@ -111,7 +118,10 @@ export function createDicePresenter(
       for (const event of batch.events) {
         if (disposed) return
         if (event.type === 'DiceRolled' || event.type === 'DiceRecast') {
-          const recording = await recordRoll(
+          const rolled = event.type === 'DiceRolled' ? event.dice : event.dice.map(d => ({ dieId: d.id, faceId: d.faceId! }))
+          const recording = options.reduced?.()
+            ? { frames: [rolled.map((d, index) => ({ position: bowlSlot(index), rotation: faceUpRotation(d.faceId).toArray() as [number, number, number, number] }))], impacts: [] }
+            : await options.record(
             event.type === 'DiceRolled' ? event.dice : event.dice.map(d => ({ dieId: d.id, faceId: d.faceId! })),
             event.sequence * 307 + (event.type === 'DiceRolled' ? event.rollNumber : 0),
           )
@@ -124,12 +134,18 @@ export function createDicePresenter(
             object.getObjectByName('selection-marker')!.visible = false
           })
           const cursor = { frame: 0 }
+          let contact = 0
           const render = () => {
             const index = Math.min(
               Math.floor(cursor.frame),
               recording.frames.length - 1,
             )
             const alpha = cursor.frame - index
+            while (contact < recording.impacts.length && recording.impacts[contact]!.frame <= index) {
+              const impact = recording.impacts[contact]!
+              options.audio?.impact(event.sequence + contact, impact.strength)
+              contact++
+            }
             rolledDice.forEach((value, i) => {
               const object = dice.get(value.dieId)!
               if (owners.get(value.dieId) !== 'recording') return
@@ -183,6 +199,8 @@ export function createDicePresenter(
         }
       }
     },
+    setSpeed(value: number) { active?.timeScale(value) },
+    setPaused(value: boolean) { paused = value; if (active) active.paused(value) },
     dispose() {
       disposed = true
       active?.kill()

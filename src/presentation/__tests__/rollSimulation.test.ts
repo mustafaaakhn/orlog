@@ -96,3 +96,18 @@ describe('physical roll recordings', () => {
     expect(validLanding([{ ...safe, position: [NaN, 0, 0] }])).toBe(false)
   })
 })
+
+it('records bounded physical contact cues on the accepted trace, independent of the desired face', async () => {
+  const dice = [{ dieId: 'player-1/die-1', faceId: 'arrow' }] as const
+  const first = await recordRoll(dice, 123)
+  const remapped = await recordRoll([{ dieId: 'player-1/die-1', faceId: 'hand' }], 123)
+  expect(first.impacts.length).toBeGreaterThan(0)
+  expect(first.impacts).toEqual(remapped.impacts)
+  first.impacts.forEach((cue, i) => {
+    expect(cue.frame).toBeGreaterThan(0)
+    expect(cue.frame).toBeLessThan(first.frames.length)
+    expect(cue.strength).toBeGreaterThan(0)
+    expect(cue.strength).toBeLessThanOrEqual(1)
+    if (i) expect(cue.frame - first.impacts[i - 1]!.frame).toBeGreaterThanOrEqual(6)
+  })
+})

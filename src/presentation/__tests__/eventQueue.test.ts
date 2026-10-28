@@ -71,3 +71,34 @@ describe('sequential presentation', () => {
     expect(applied).toHaveLength(0)
   })
 })
+
+it('pauses before contact application and resumes in order; disposing a hidden queue releases its wait', async () => {
+  const { events } = resolution()
+  const applied: string[] = []
+  let release = () => {}
+  const queue = createEventQueue(() => new Promise<void>(r => { release = r }), event => applied.push(event.id))
+  const playing = queue.play([events[0]!])
+  queue.setPaused(true)
+  release()
+  await Promise.resolve()
+  expect(applied).toEqual([])
+  queue.setPaused(false)
+  await playing
+  expect(applied).toEqual([events[0]!.id])
+  queue.setPaused(true)
+  const hidden = queue.play(events)
+  queue.dispose()
+  await hidden
+  expect(applied).toHaveLength(1)
+})
+
+it('reduced combat preserves the complete resource result and leaves no visible effects', async () => {
+  const { before, events, state } = resolution()
+  const board = mockBoard(before), presenter = createCombatPresenter(board, () => {}, () => 1, () => true)
+  let shown = before
+  const queue = createEventQueue(presenter.play, event => { shown = applyResourceEvent(shown, event) })
+  await queue.play(events)
+  expect(shown.players).toEqual(state.players)
+  expect(board.effect.visible).toBe(false)
+  queue.dispose(); presenter.dispose()
+})

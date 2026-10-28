@@ -3,10 +3,11 @@ import { Vector3 } from 'three'
 import type { GameEvent } from '../core'
 import type { createBoard } from '../scene/board'
 
-export function createCombatPresenter(board: ReturnType<typeof createBoard>, invalidate: () => void, speed: () => number) {
+export function createCombatPresenter(board: ReturnType<typeof createBoard>, invalidate: () => void, speed: () => number, reduced: () => boolean = () => false) {
   let active: gsap.core.Timeline | undefined
   let finish: (() => void) | undefined
   let closed = false
+  let paused = false
   function animate(build: (timeline: gsap.core.Timeline) => void) {
     if (closed) return Promise.resolve()
     return new Promise<void>(resolve => {
@@ -14,7 +15,9 @@ export function createCombatPresenter(board: ReturnType<typeof createBoard>, inv
       active = gsap.timeline({ onUpdate: invalidate, onComplete: () => finish?.() })
       build(active)
       active.timeScale(speed())
-      if (!active.duration()) { active.kill(); finish?.() }
+      if (reduced()) active.progress(1)
+      else if (paused) active.pause()
+      if (active && !active.duration()) { active.kill(); finish?.() }
     })
   }
   async function flight(from: Vector3, to: Vector3, blocked = false, token = false, color = '#ffda7b') {
@@ -71,6 +74,8 @@ export function createCombatPresenter(board: ReturnType<typeof createBoard>, inv
         }
       }
     },
+    setSpeed(value: number) { active?.timeScale(value) },
+    setPaused(value: boolean) { paused = value; if (active) active.paused(value) },
     dispose() { closed = true; active?.kill(); finish?.(); board.effect.visible = false; board.tokenEffect.visible = false },
   }
 }

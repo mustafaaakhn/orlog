@@ -370,7 +370,7 @@ export function createBoard() {
         stoneGroups[index]!.children.forEach((stone, i) => { stone.visible = i < player.health })
         const group = tokenGroups[index]!
         // Stack real token counts; counters remain readable for large reserves.
-        while (group.children.length < player.tokens) {
+        while (group.children.length < Math.min(player.tokens, 40)) {
           const i = group.children.length
           mesh(group, tokenShape, brass, [((i % 5) - 2) * 0.36, 0.1 + Math.floor(i / 10) * 0.09, Math.floor((i % 10) / 5) * 0.36])
         }
