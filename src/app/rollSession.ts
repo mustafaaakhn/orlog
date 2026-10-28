@@ -92,6 +92,11 @@ export function createRollSession(options: GameOptions = {}) {
         phase.step !== 'selecting-dice' || current.players[phase.activePlayerId].rollsUsed !== 3) return false
       return dispatch({ type: 'ConfirmRoll', playerId: phase.activePlayerId })
     },
+    resolveReady(blocked = false) {
+      if (blocked || pending.value || state.value !== game.state || game.state.phase.name !== 'resolution' ||
+        Object.values(game.state.players).some(player => player.favorChoice.status === 'pending')) return false
+      return dispatch({ type: 'ResolveRound', playerId: game.state.firstPlayerId })
+    },
     advanceRound() {
       if (pending.value || state.value !== game.state || game.state.phase.name !== 'round-complete') return false
       return dispatch({ type: 'NextRound', playerId: game.state.firstPlayerId })

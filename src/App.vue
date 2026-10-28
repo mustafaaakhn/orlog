@@ -167,7 +167,7 @@ const instruction = computed(() => {
   if (phase.value.name === "round-complete")
     return "Zarlar toplanıyor. Sonraki tur otomatik başlayacak.";
   if (phase.value.name === "resolution")
-    return "İki güç seçimi de tamamlandı. Savaşı başlat.";
+    return "İki güç kararı tamamlandı. Savaş otomatik başlıyor.";
   if (phase.value.name === "favor")
     return `${names.value[phase.value.activePlayerId]} masadaki bir tanrıyı seçebilir veya Devam et ile geçebilir.`;
   if (phase.value.step === "awaiting-roll")
@@ -226,14 +226,6 @@ function skip() {
       playerId: phase.value.activePlayerId,
     });
 }
-function advance() {
-  if (busy.value) return;
-  if (phase.value.name === "resolution")
-    session.dispatch({
-      type: "ResolveRound",
-      playerId: state.value.firstPlayerId,
-    });
-}
 function availability(ready: boolean) {
   if (ready) session.resume();
   sceneReady.value = ready;
@@ -245,6 +237,7 @@ function availability(ready: boolean) {
 watch([state, pending, sceneReady, paused, preparing, overlay], () => {
   if (!preparing.value && !busy.value && !paused.value && !overlay.value) {
     session.finishLastRoll();
+    session.resolveReady();
     session.advanceRound();
   }
 });
@@ -376,9 +369,6 @@ function confirm() {
           <p class="favor-prompt">Bir tanrı seç veya devam et.</p>
           <button class="primary-action" @click="skip">Devam et <UiIcon name="arrow" /></button>
         </template>
-        <button v-if="!busy && phase.name === 'resolution'" class="primary-action" @click="advance">
-          Savaşı başlat <UiIcon name="arrow" />
-        </button>
         <template v-if="!busy && phase.name === 'ended'">
           <p class="match-winner">{{ names[phase.winnerId] }} kazandı.</p>
           <button class="primary-action" @click="restart">Yeni oyun <UiIcon name="arrow" /></button>

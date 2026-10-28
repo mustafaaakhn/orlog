@@ -272,3 +272,64 @@ describe('third roll automatic handoff', () => {
     expect(session.state.value.revision).toBe(0)
   })
 })
+
+describe('automatic battle after both favor decisions', () => {
+  for (const firstPlayerId of ['player-1', 'player-2'] as const) {
+    it(`waits for both decisions and their presentation, then resolves once with ${firstPlayerId} first`, () => {
+      const session = createRollSession({ firstPlayerId, random: () => 0.4 })
+      while (session.state.value.phase.name === 'roll') {
+        const phase = session.state.value.phase
+        session.dispatch({ type: phase.step === 'awaiting-roll' ? 'RollDice' : 'ConfirmRoll', playerId: phase.activePlayerId })
+        expect(session.resolveReady()).toBe(false)
+        settle(session)
+      }
+      expect(session.resolveReady()).toBe(false)
+      session.dispatch({ type: 'ChooseFavor', playerId: firstPlayerId, favorId: 'thors-strike', level: 3 })
+      expect(session.resolveReady()).toBe(false)
+      settle(session)
+      expect(session.resolveReady()).toBe(false)
+      const phase = session.state.value.phase
+      if (phase.name !== 'favor') throw new Error('Expected second decision')
+      session.dispatch({ type: 'SkipFavor', playerId: phase.activePlayerId })
+      const decision = session.pending.value!
+      session.settle(decision.id + 1)
+      expect(session.resolveReady()).toBe(false)
+      settle(session)
+      expect(session.resolveReady(true)).toBe(false)
+      expect(session.resolveReady()).toBe(true)
+      const battle = session.pending.value!
+      expect(battle.events).toContainEqual(expect.objectContaining({ type: 'FavorFailed', reason: 'tokens' }))
+      expect(session.resolveReady()).toBe(false)
+      session.settle(decision.id)
+      expect(session.pending.value).toBe(battle)
+      settle(session)
+      expect(session.resolveReady()).toBe(false)
+    })
+  }
+  it('recovers across a lost scene and rejects old completions after restart or match end', () => {
+    const session = createRollSession({ random: () => 0 })
+    while (session.state.value.phase.name === 'roll') {
+      const phase = session.state.value.phase
+      session.dispatch({ type: phase.step === 'awaiting-roll' ? 'RollDice' : 'ConfirmRoll', playerId: phase.activePlayerId }); settle(session)
+    }
+    session.dispatch({ type: 'SkipFavor', playerId: 'player-1' }); settle(session)
+    session.dispatch({ type: 'SkipFavor', playerId: 'player-2' })
+    const decision = session.pending.value!
+    session.recover()
+    expect(session.resolveReady(true)).toBe(false)
+    expect(session.resolveReady()).toBe(true)
+    const battle = session.pending.value!
+    session.settle(decision.id)
+    expect(session.pending.value).toBe(battle)
+    session.recover(); session.resume()
+    const cleanup = session.pending.value!
+    expect(cleanup.events).toEqual([])
+    expect(session.resolveReady()).toBe(false)
+    settle(session)
+    expect(session.resolveReady()).toBe(false)
+    session.restart()
+    session.settle(battle.id); session.settle(cleanup.id)
+    expect(session.state.value.revision).toBe(0)
+    expect(session.resolveReady()).toBe(false)
+  })
+})
