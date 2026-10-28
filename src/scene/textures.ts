@@ -174,11 +174,11 @@ export function createFaceTexture(face: DieFace) {
   ctx.lineJoin = "round";
   // A light lower edge and dark cut give the shared symbol an engraved face.
   ctx.translate(0, 0.65);
-  ctx.strokeStyle = "#fff1d4";
-  ctx.stroke(new Path2D(SYMBOL_PATHS[face.symbol]));
+  ctx.fillStyle = "#fff1d4";
+  ctx.fill(new Path2D(SYMBOL_PATHS[face.symbol]), "evenodd");
   ctx.translate(0, -0.65);
-  ctx.strokeStyle = "#3a3025";
-  ctx.stroke(new Path2D(SYMBOL_PATHS[face.symbol]));
+  ctx.fillStyle = "#29231d";
+  ctx.fill(new Path2D(SYMBOL_PATHS[face.symbol]), "evenodd");
   ctx.restore();
   return texture(element);
 }

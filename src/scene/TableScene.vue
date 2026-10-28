@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onBeforeUnmount, watch, computed } from "vue";
+import { onMounted, onBeforeUnmount, watch, computed, nextTick } from "vue";
 import { useTres } from "@tresjs/core";
 import {
   DirectionalLight,
@@ -17,7 +17,15 @@ import type { AudioPort } from "../audio/catalog";
 import { createRollRecorder } from "../presentation/rollRecorder";
 import { createDicePresenter } from "../presentation/dicePresenter";
 import type { PresentationBatch } from "../app/rollSession";
-import type { DieId, GameState, GameEvent } from "../core";
+import type { DieId, GameState, GameEvent, PlayerId } from "../core";
+
+import type { SceneDieTarget } from "./dieTargets";
+import {
+  TABLE_HALF_WIDTH,
+  TABLE_NARROW_HALF_WIDTH,
+  TABLE_HALF_DEPTH,
+  playerSide,
+} from "./tableLayout";
 
 const props = defineProps<{
   audio: AudioPort;
@@ -26,6 +34,7 @@ const props = defineProps<{
   quality: string;
   speed: number;
   closeView: boolean;
+  viewerId: PlayerId;
   state: GameState;
   batch: PresentationBatch | null;
 }>();
@@ -34,6 +43,7 @@ const emit = defineEmits<{
   presented: [batchId: number, event: GameEvent];
   select: [dieId: DieId];
   failed: [];
+  targets: [targets: SceneDieTarget[]];
 }>();
 const { sizes, invalidate, renderer, scene } = useTres();
 const board = createBoard(invalidate);
@@ -112,7 +122,11 @@ watch(
 watch(
   () => props.batch,
   async (batch) => {
-    if (!batch) return;
+    if (!batch) {
+      await nextTick();
+      publishTargets();
+      return;
+    }
     try {
       await queue.play(batch.events);
       if (!sceneClosed) emit("settled", batch.id);
@@ -146,27 +160,60 @@ watch(
   },
 );
 const camera = new PerspectiveCamera(42, 1, 0.1, 100);
-const direction = new Vector3(0, 0.9, 0.6).normalize();
-const up = new Vector3(0, direction.z, -direction.y);
+const direction = new Vector3();
+const up = new Vector3();
+function publishTargets() {
+  if (sceneClosed || props.batch || !sizes.width.value || !sizes.height.value)
+    return;
+  board.object.updateMatrixWorld(true);
+  camera.updateMatrixWorld(true);
+  const targets: SceneDieTarget[] = [];
+  for (const [id, die] of board.dice) {
+    if (!die.visible) continue;
+    const point = die.position
+      .clone()
+      .add(new Vector3(0, 0.18, 0))
+      .project(camera);
+    if (Math.abs(point.x) < 1.1 && Math.abs(point.y) < 1.1 && point.z < 1)
+      targets.push({ id, x: (point.x + 1) * 50, y: (1 - point.y) * 50 });
+  }
+  emit("targets", targets);
+}
 
 watch(
   [
     () => sizes.aspectRatio.value,
     () => sizes.width.value,
     () => props.closeView,
+    () => props.viewerId,
+    () => props.state.players[props.viewerId].dice.length,
   ],
   () => {
     const aspect = Math.max(sizes.aspectRatio.value, 0.25);
-    const compact = sizes.width.value < 620 && aspect < 1.1;
-    board.setCompact(compact);
-    const target = new Vector3(0, props.closeView ? 0.5 : 0.2, 0);
+    const side = playerSide(props.viewerId);
+    const narrow = sizes.width.value < 620 && aspect < 1.1;
+    board.setNarrow(narrow);
+    direction.set(0, 1.0, (narrow ? 0.36 : 0.62) * side).normalize();
+    up.set(0, Math.abs(direction.z), -direction.y * side);
+    const target = new Vector3(
+      0,
+      props.closeView ? 0.5 : 0.2,
+      props.closeView ? 3.4 * side : 0,
+    );
     // Fit all corners of the presentation bounds in the camera's frustum.
-    const halfWidth = props.closeView ? 3.7 : compact ? 4.5 : 9.5;
-    const halfDepth = props.closeView ? 5.7 : compact ? 9.2 : 6.1;
+    const halfWidth = props.closeView
+      ? props.state.players[props.viewerId].dice.length > 6
+        ? 5.2
+        : 3.6
+      : narrow
+        ? TABLE_NARROW_HALF_WIDTH
+        : TABLE_HALF_WIDTH;
+    const halfDepth = props.closeView ? 5.0 : TABLE_HALF_DEPTH;
+    const centerZ = props.closeView ? 3.4 * side : 0;
     const tangent = Math.tan((camera.fov * Math.PI) / 360);
     let distance = 0;
     for (const x of [-halfWidth, halfWidth]) {
-      for (const z of [-halfDepth, halfDepth]) {
+      for (const z of [centerZ - halfDepth, centerZ + halfDepth]) {
         for (const y of [0, 2]) {
           const point = new Vector3(x, y, z).sub(target);
           const depth = point.dot(direction);
@@ -183,6 +230,7 @@ watch(
     camera.lookAt(target);
     camera.updateProjectionMatrix();
     invalidate();
+    publishTargets();
   },
   { immediate: true },
 );
@@ -223,6 +271,7 @@ function pointerCancel() {
   pointer = undefined;
 }
 onMounted(() => {
+  publishTargets();
   const canvas = renderer.domElement;
   canvas.addEventListener("pointerdown", pointerDown);
   canvas.addEventListener("pointerup", pointerUp);

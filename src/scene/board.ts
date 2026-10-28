@@ -22,10 +22,16 @@ import { DICE_DEFINITIONS, DEFAULT_FAVORS, FAVOR_CATALOG } from "../core";
 import type { DieId, GameState, PlayerId, FavorId } from "../core";
 import {
   FACE_NORMALS,
-  faceUpRotation,
+  playerFaceRotation,
   reserveSlot,
-  bowlSlot,
+  bowlWorldSlot,
 } from "./diceGeometry";
+import {
+  bowlCenter,
+  lifeStoneSlot,
+  playerAngle,
+  seatPosition,
+} from "./tableLayout";
 import {
   createClothTexture,
   createFaceTexture,
@@ -115,43 +121,31 @@ export function createBoard(invalidate: () => void = () => {}) {
 
   const table = mesh(
     root,
-    geometry(new BoxGeometry(18.4, 0.42, 11.9)),
+    geometry(new BoxGeometry(18.4, 0.42, 18.2)),
     darkWood,
     [0, -0.3, 0],
   );
   const fabric = mesh(
     root,
-    geometry(new BoxGeometry(17.8, 0.12, 11.3)),
+    geometry(new BoxGeometry(17.8, 0.12, 17.6)),
     cloth,
     [0, -0.03, 0],
   );
 
   // Woven borders, corner diamonds and a simple compass inlay.
   const borderLong = geometry(new BoxGeometry(17.25, 0.012, 0.035));
-  const borderShort = geometry(new BoxGeometry(0.035, 0.012, 10.7));
+  const borderShort = geometry(new BoxGeometry(0.035, 0.012, 17.0));
   const borders = new Group();
   root.add(borders);
-  for (const z of [-5.3, 5.3]) {
+  for (const z of [-8.45, 8.45]) {
     mesh(borders, borderLong, inlay, [0, 0.038, z]);
     mesh(borders, borderLong, inlay, [0, 0.038, z + Math.sign(z) * 0.13]);
   }
   for (const x of [-8.5, 8.5]) mesh(borders, borderShort, inlay, [x, 0.038, 0]);
   const diamond = geometry(new BoxGeometry(0.22, 0.014, 0.22));
   for (const x of [-8, 8])
-    for (const z of [-4.85, 4.85])
+    for (const z of [-8.0, 8.0])
       mesh(borders, diamond, inlay, [x, 0.04, z]).rotation.y = Math.PI / 4;
-  const ring = geometry(new TorusGeometry(3.48, 0.016, 5, 96));
-  mesh(root, ring, inlay, [0, 0.045, 0]).rotation.x = -Math.PI / 2;
-  const dash = geometry(new BoxGeometry(0.035, 0.015, 0.2));
-  for (let i = 0; i < 48; i++) {
-    const angle = (i * Math.PI) / 24;
-    mesh(root, dash, inlay, [
-      Math.sin(angle) * 3.65,
-      0.045,
-      Math.cos(angle) * 3.65,
-    ]).rotation.y = angle;
-  }
-
   const bowlProfile = [
     [0.01, 0.08],
     [2.2, 0.08],
@@ -166,17 +160,20 @@ export function createBoard(invalidate: () => void = () => {}) {
     [2.35, 0.31],
     [0.01, 0.31],
   ].map(([x, y]) => new Vector2(x, y));
-  mesh(root, geometry(new LatheGeometry(bowlProfile, 96)), wood, [0, 0, 0]);
-  mesh(
-    root,
-    geometry(new CylinderGeometry(2.35, 2.35, 0.03, 96)),
-    bowlWood,
-    [0, 0.31, 0],
-  );
+  const bowlShape = geometry(new LatheGeometry(bowlProfile, 96));
+  const bowlFloor = geometry(new CylinderGeometry(2.35, 2.35, 0.03, 96));
   const rim = geometry(new TorusGeometry(3.065, 0.035, 8, 96));
-  mesh(root, rim, brass, [0, 1.035, 0]).rotation.x = -Math.PI / 2;
   const innerRing = geometry(new TorusGeometry(2.16, 0.012, 6, 96));
-  mesh(root, innerRing, darkWood, [0, 0.33, 0]).rotation.x = -Math.PI / 2;
+  for (const player of ["player-1", "player-2"] as const) {
+    const bowl = new Group();
+    bowl.name = `${player}: personal dice bowl`;
+    bowl.position.set(...bowlCenter(player));
+    root.add(bowl);
+    mesh(bowl, bowlShape, wood, [0, 0, 0]);
+    mesh(bowl, bowlFloor, bowlWood, [0, 0.31, 0]);
+    mesh(bowl, rim, brass, [0, 1.035, 0]).rotation.x = -Math.PI / 2;
+    mesh(bowl, innerRing, darkWood, [0, 0.33, 0]).rotation.x = -Math.PI / 2;
+  }
 
   const dieShape = geometry(new RoundedBoxGeometry(0.88, 0.88, 0.88, 3, 0.075));
   const faceShape = geometry(new PlaneGeometry(0.735, 0.735));
@@ -246,7 +243,7 @@ export function createBoard(invalidate: () => void = () => {}) {
   const portraitShapes = new Map<FavorId, PlaneGeometry>();
   for (const id of FAVOR_ART_IDS) {
     const index = favorArtIndex(id);
-    const shape = geometry(new PlaneGeometry(0.98, 1.27));
+    const shape = geometry(new PlaneGeometry(1.06, 1.4));
     const uv = shape.attributes.uv!;
     for (let vertex = 0; vertex < uv.count; vertex++) {
       uv.setXY(
@@ -257,9 +254,8 @@ export function createBoard(invalidate: () => void = () => {}) {
     }
     portraitShapes.set(id, shape);
   }
-  const totemBase = geometry(new CylinderGeometry(0.58, 0.64, 0.18, 12));
-  const totemBody = geometry(new RoundedBoxGeometry(1.05, 1.4, 0.3, 2, 0.08));
-  const nameShape = geometry(new PlaneGeometry(0.95, 0.24));
+  const totemBody = geometry(new RoundedBoxGeometry(1.18, 0.18, 1.95, 2, 0.06));
+  const nameShape = geometry(new PlaneGeometry(1.04, 0.24));
   const nameSurfaces = new Map<FavorId, MeshStandardMaterial>();
   const stoneGroups: Group[] = [];
   const totemGroups: Group[] = [];
@@ -268,7 +264,6 @@ export function createBoard(invalidate: () => void = () => {}) {
     "player-2": DEFAULT_FAVORS,
   };
   const valueSurfaces = new Map<number, MeshStandardMaterial>();
-  const labels: Mesh[] = [];
   const tokenGroups: Group[] = [];
   const tokenShape = geometry(new CylinderGeometry(0.17, 0.17, 0.08, 12));
   const effect = mesh(
@@ -281,83 +276,61 @@ export function createBoard(invalidate: () => void = () => {}) {
   const tokenEffect = mesh(root, tokenShape, brass, [0, 0, 0]);
   tokenEffect.visible = false;
 
-  for (const side of [-1, 1]) {
+  for (const [index, player] of (["player-1", "player-2"] as const).entries()) {
     const stones = new Group();
-    stones.name = `${side < 0 ? "Left" : "Right"}: 15 life stones`;
+    stones.name = `${player}: five columns, three rows of life stones`;
+    stones.position.set(...seatPosition(player, -5.7, 0, 5.15));
+    stones.rotation.y = playerAngle(player);
     for (let i = 0; i < 15; i++) {
-      const stone = mesh(stones, pebble, side < 0 ? blueStone : redStone, [
-        ((i % 3) - 1) * 0.5,
-        0.17,
-        (Math.floor(i / 3) - 2) * 0.47,
-      ]);
+      const stone = mesh(
+        stones,
+        pebble,
+        index === 0 ? blueStone : redStone,
+        lifeStoneSlot(i),
+      );
       stone.scale.set(1, 0.65 + (i % 3) * 0.08, 0.83);
       stone.rotation.y = i * 0.7;
     }
-    stones.position.set(side * 6.8, 0, -0.3);
     root.add(stones);
     stoneGroups.push(stones);
     const tokens = new Group();
+    tokens.position.set(...seatPosition(player, 3.9, 0, 3.3));
+    tokens.rotation.y = playerAngle(player);
     root.add(tokens);
     tokenGroups.push(tokens);
-
     for (let i = 0; i < 3; i++) {
       const totem = new Group();
       totem.name = FAVOR_CATALOG[DEFAULT_FAVORS[i]!].name;
-      mesh(totem, totemBase, darkWood, [0, 0.11, 0]);
-      const relief = new Group();
-      relief.position.y = 1.02;
-      relief.rotation.x = -0.38;
-      totem.add(relief);
-      mesh(relief, totemBody, wood, [0, 0, 0]);
+      totem.position.set(...seatPosition(player, 4.25 + i * 1.36, 0, 5.25));
+      totem.rotation.y = playerAngle(player);
+      mesh(totem, totemBody, wood, [0, 0.15, 0]);
       const portrait = mesh(
-        relief,
+        totem,
         portraitShapes.get(DEFAULT_FAVORS[i]!)!,
         portraitSurface,
-        [0, 0, 0.155],
+        [0, 0.246, -0.12],
       );
+      portrait.rotation.x = -Math.PI / 2;
       portrait.name = "favor-portrait";
       portrait.castShadow = false;
-      const trim = mesh(
-        relief,
-        geometry(new BoxGeometry(1.08, 0.045, 0.32)),
-        brass,
-        [0, -0.69, 0],
-      );
-      trim.castShadow = false;
       const name = mesh(
         totem,
         nameShape,
         material({ transparent: true }),
-        [0, 0.29, 0.4],
+        [0, 0.25, 0.75],
       );
-      name.rotation.x = -0.7;
+      name.rotation.x = -Math.PI / 2;
       name.name = "favor-name";
       name.castShadow = false;
-      totem.position.set(side * (4.45 + i * 1.3), 0, -3.55);
+      mesh(
+        totem,
+        geometry(new BoxGeometry(1.12, 0.025, 0.035)),
+        brass,
+        [0, 0.25, 0.94],
+      );
       root.add(totem);
       totemGroups.push(totem);
     }
-  }
-
-  // Flat woven labels keep the two resource areas grounded in the scene.
-  for (const side of [-1, 1]) {
-    const labelTexture = keepTexture(
-      createInscriptionTexture(side < 0 ? "I" : "II", "#bba77e"),
-    );
-    const labelSurface = material({
-      map: labelTexture,
-      transparent: true,
-      roughness: 1,
-    });
-    const label = mesh(
-      root,
-      geometry(new PlaneGeometry(0.85, 0.85)),
-      labelSurface,
-      [side * 6.8, 0.055, 3.25],
-    );
-    label.rotation.x = -Math.PI / 2;
-    label.castShadow = false;
-    labels.push(label);
   }
 
   return {
@@ -475,15 +448,12 @@ export function createBoard(invalidate: () => void = () => {}) {
         player.dice.forEach((value, index) => {
           const die = dice.get(value.id)!;
           die.visible = value.faceId !== null && !value.removed;
-          if (value.faceId) die.quaternion.copy(faceUpRotation(value.faceId));
-          const inBowl =
-            state.phase.name === "roll" &&
-            state.phase.activePlayerId === player.id &&
-            !value.kept &&
-            !value.selected;
+          if (value.faceId)
+            die.quaternion.copy(playerFaceRotation(value.faceId, player.id));
+          const inBowl = !value.kept && !value.selected;
           die.position.set(
             ...(inBowl
-              ? bowlSlot(index)
+              ? bowlWorldSlot(player.id, index)
               : reserveSlot(player.id, index, value.selected)),
           );
           die.getObjectByName("selection-marker")!.visible =
@@ -492,48 +462,30 @@ export function createBoard(invalidate: () => void = () => {}) {
         });
       }
     },
-    setCompact(compact: boolean) {
-      table.scale.set(compact ? 0.49 : 1, 1, compact ? 1.5 : 1);
-      fabric.scale.copy(table.scale);
-      borders.scale.copy(table.scale);
-      stoneGroups.forEach((group, index) => {
-        const side = index === 0 ? -1 : 1;
-        group.position.set(
-          compact ? -0.4 : side * 6.8,
-          0,
-          compact ? -side * 6.3 : -0.3,
+    setNarrow(narrow: boolean) {
+      // Keep both players facing each other at every width. Only the table's
+      // peripheral resources move inward; physics and battle lines stay fixed.
+      table.scale.x = narrow ? 14.8 / 18.4 : 1;
+      fabric.scale.x = table.scale.x;
+      borders.scale.x = table.scale.x;
+      for (const [index, player] of (
+        ["player-1", "player-2"] as const
+      ).entries()) {
+        stoneGroups[index]!.position.set(
+          ...seatPosition(player, narrow ? -5.2 : -5.7, 0, 5.15),
         );
-        group.children.forEach((stone, i) => {
-          stone.position.x = compact
-            ? ((i % 5) - 2) * 0.42
-            : ((i % 3) - 1) * 0.5;
-          stone.position.z = compact
-            ? (Math.floor(i / 5) - 1) * 0.42
-            : (Math.floor(i / 3) - 2) * 0.47;
-        });
-        labels[index]!.position.set(
-          compact ? -2.6 : side * 6.8,
-          0.055,
-          compact ? -side * 6.3 : 3.25,
-        );
-      });
-      tokenGroups.forEach((group, index) => {
-        const side = index === 0 ? -1 : 1;
-        group.position.set(
-          compact ? 1.6 : side * 6.8,
-          0,
-          compact ? -side * 6.3 : 1.65,
-        );
-      });
-      totemGroups.forEach((totem, index) => {
-        const side = index < 3 ? -1 : 1;
-        const i = index % 3;
-        totem.position.set(
-          compact ? (i - 1) * 1.25 : side * (4.45 + i * 1.3),
-          0,
-          compact ? -side * 7.8 : -3.55,
-        );
-      });
+        for (let i = 0; i < 3; i++) {
+          const totem = totemGroups[index * 3 + i]!;
+          const [x, , z] = seatPosition(
+            player,
+            (narrow ? 3.75 : 4.25) + i * (narrow ? 1.3 : 1.36),
+            0,
+            5.25,
+          );
+          totem.position.x = x;
+          totem.position.z = z;
+        }
+      }
     },
     dispose() {
       disposed = true;

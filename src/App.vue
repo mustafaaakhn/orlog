@@ -11,17 +11,14 @@ import {
 import { usePreferences } from "./app/preferences";
 import { createAudioPlayer } from "./audio/player";
 import ExperienceSettings from "./ui/ExperienceSettings.vue";
-import FavorPortrait from "./ui/FavorPortrait.vue";
 import GameMark from "./ui/GameMark.vue";
 import UiIcon from "./ui/UiIcon.vue";
-import { FAVOR_CATALOG } from "./core";
 import SymbolIcon from "./ui/SymbolIcon.vue";
 import { SYMBOL_GUIDE } from "./scene/symbols";
 import SceneLoaderState from "./ui/SceneLoaderState.vue";
-import DiceTray from "./ui/DiceTray.vue";
 import MatchSetup from "./ui/MatchSetup.vue";
 import FavorPicker from "./ui/FavorPicker.vue";
-import { eventText, playerLabel } from "./presentation/eventText";
+import { eventText } from "./presentation/eventText";
 import type {
   GameOptions,
   PlayerId,
@@ -45,7 +42,10 @@ const preparing = ref(true);
 const setupScreen = ref("welcome");
 const overlay = ref<"rules" | "settings" | "log" | "menu" | null>(null);
 const dialog = ref<HTMLDialogElement | null>(null);
-const inspectingPlayer = ref<PlayerId>("player-1");
+const localViewer = ref<PlayerId>("player-1");
+const viewerId = computed(() =>
+  opponent.value.mode === "computer" ? "player-1" : localViewer.value,
+);
 watch(overlay, async (value) => {
   await nextTick();
   if (value) dialog.value?.showModal();
@@ -95,6 +95,7 @@ function start(
   opponentOptions: OpponentOptions,
 ) {
   if (session.start(options)) {
+    localViewer.value = options.firstPlayerId ?? "player-1";
     names.value = playerNames;
     opponent.value = opponentOptions;
     preparing.value = false;
@@ -131,8 +132,8 @@ const activePlayer = computed(() =>
     : null,
 );
 const busy = computed(() => !!pending.value || !sceneReady.value);
-watch(activePlayer, (player) => {
-  if (player) inspectingPlayer.value = player.id;
+watch([activePlayer, opponent], ([player, options]) => {
+  if (options.mode === "local" && player) localViewer.value = player.id;
 });
 const computerTurn = computed(
   () =>
@@ -174,10 +175,10 @@ const instruction = computed(() => {
   if (phase.value.name === "favor")
     return `${names.value[phase.value.activePlayerId]} bir güç seçebilir veya pas geçebilir.`;
   if (phase.value.step === "awaiting-roll")
-    return "Saklanmayan zarları at. Her oyuncunun en fazla üç atış hakkı var.";
+    return "Kendi haznendeki zarları at.";
   if (activePlayer.value?.rollsUsed === 3)
     return "Son atışın zarları otomatik saklandı. Sonucu onayla.";
-  return "Saklamak istediğin zarlara dokun; geri almak için tekrar dokun. Ardından seçimi onayla.";
+  return "Saklayacağın zarlara dokun; merkezden geri almak için tekrar dokun.";
 });
 function focusAction() {
   const panel = document.querySelector(".match-screen");
@@ -193,7 +194,9 @@ watch(
   async (value, old) => {
     if (value) {
       const element = document.activeElement as HTMLElement | null;
-      previousFocus = element?.closest(".match-screen") ? element : null;
+      previousFocus = element?.closest(".match-screen, .scene-die-controls")
+        ? element
+        : null;
     } else if (old) {
       await nextTick();
       const current = document.activeElement;
@@ -324,6 +327,12 @@ function confirm() {
         :close-view="closeView"
         :state="state"
         :batch="pending"
+        :viewer-id="viewerId"
+        :control-player="
+          !preparing && !computerTurn && phase.name === 'roll'
+            ? phase.activePlayerId
+            : null
+        "
         @availability="availability"
         @presented="session.present"
         @settled="session.settle($event)"
@@ -341,14 +350,23 @@ function confirm() {
           v-for="player in state.players"
           :key="player.id"
           class="player-hud"
-          :class="[player.id, { 'has-turn': activePlayer?.id === player.id }]"
+          :class="[
+            player.id,
+            {
+              'has-turn': activePlayer?.id === player.id,
+              'is-self': player.id === viewerId,
+              'is-opponent': player.id !== viewerId,
+            },
+          ]"
         >
           <div class="player-identity">
             <span class="player-seal">{{
               player.id === "player-1" ? "I" : "II"
             }}</span>
             <div>
-              <span class="player-label">{{ playerLabel(player.id) }}</span
+              <span class="player-label">{{
+                player.id === viewerId ? "Senin tarafın" : "Karşı taraf"
+              }}</span
               ><strong>{{ names[player.id] }}</strong>
             </div>
           </div>
@@ -356,16 +374,6 @@ function confirm() {
             <b>{{ player.health }}</b> can <span></span
             ><b>{{ player.tokens }}</b> jeton
           </p>
-          <div class="resource-favors">
-            <span
-              v-for="id in player.favors"
-              :key="id"
-              :title="FAVOR_CATALOG[id].name"
-              ><FavorPortrait :id="id" /><span class="sr-only">{{
-                FAVOR_CATALOG[id].name
-              }}</span></span
-            >
-          </div>
         </article>
         <div class="match-round" role="status" aria-live="polite">
           <strong>Tur {{ state.round }}</strong
@@ -437,29 +445,6 @@ function confirm() {
           }}</span>
         </div>
         <div class="dock-main">
-          <div v-if="phase.name === 'roll'" class="dock-dice">
-            <div class="dice-owner-tabs" aria-label="Zarlarını gördüğün oyuncu">
-              <button
-                v-for="player in state.players"
-                :key="player.id"
-                :aria-pressed="inspectingPlayer === player.id"
-                @click="inspectingPlayer = player.id"
-              >
-                {{ names[player.id] }}
-              </button>
-            </div>
-            <DiceTray
-              :player="state.players[inspectingPlayer]"
-              :active="activePlayer?.id === inspectingPlayer"
-              :selectable="
-                !busy &&
-                !computerTurn &&
-                phase.step === 'selecting-dice' &&
-                phase.activePlayerId === inspectingPlayer
-              "
-              @select="selectDie"
-            />
-          </div>
           <p class="roll-instruction" role="status" aria-live="polite">
             {{ instruction }}
           </p>
@@ -578,7 +563,8 @@ function confirm() {
           </div>
         </div>
         <p>
-          Zarlarda Tab, Space/Enter, ok tuşları ve Home/End kullanabilirsin.
+          Masadaki zarlara Tab ile geçebilirsin. Space/Enter merkeze alır veya
+          geri koyar; yön tuşları ve Home/End zarlar arasında dolaşır.
         </p>
       </div>
       <ExperienceSettings
