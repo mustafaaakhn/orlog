@@ -13,6 +13,7 @@ import { createAudioPlayer } from "./audio/player";
 import ExperienceSettings from "./ui/ExperienceSettings.vue";
 import FavorPortrait from "./ui/FavorPortrait.vue";
 import GameMark from "./ui/GameMark.vue";
+import UiIcon from "./ui/UiIcon.vue";
 import { FAVOR_CATALOG } from "./core";
 import SymbolIcon from "./ui/SymbolIcon.vue";
 import { SYMBOL_GUIDE } from "./scene/symbols";
@@ -41,6 +42,15 @@ const TablePreview = defineAsyncComponent({
   timeout: 30000,
 });
 const preparing = ref(true);
+const setupScreen = ref("welcome");
+const overlay = ref<"rules" | "settings" | "log" | "menu" | null>(null);
+const dialog = ref<HTMLDialogElement | null>(null);
+const inspectingPlayer = ref<PlayerId>("player-1");
+watch(overlay, async (value) => {
+  await nextTick();
+  if (value) dialog.value?.showModal();
+  else dialog.value?.close();
+});
 const { settings, system } = usePreferences();
 const reduced = computed(
   () =>
@@ -96,13 +106,15 @@ function restart() {
     audio.stopEffects();
     session.restart();
     preparing.value = true;
+    setupScreen.value = "welcome";
+    closeView.value = false;
+    overlay.value = null;
     void nextTick(() =>
-      document.querySelector<HTMLInputElement>(".setup-panel input")?.focus(),
+      document.querySelector<HTMLElement>(".welcome-play")?.focus(),
     );
   }
 }
 const closeView = ref(false);
-const guideOpen = ref(false);
 const sceneReady = ref(false);
 const session = createRollSession();
 const { state, pending, error, lastEvent, history } = session;
@@ -119,6 +131,9 @@ const activePlayer = computed(() =>
     : null,
 );
 const busy = computed(() => !!pending.value || !sceneReady.value);
+watch(activePlayer, (player) => {
+  if (player) inspectingPlayer.value = player.id;
+});
 const computerTurn = computed(
   () =>
     !preparing.value &&
@@ -127,13 +142,13 @@ const computerTurn = computed(
 );
 const driver = createComputerDriver((command) => session.dispatch(command));
 watch(
-  [state, pending, preparing, sceneReady, paused, opponent],
+  [state, pending, preparing, sceneReady, paused, opponent, overlay],
   () => {
     driver.update({
       state: state.value,
       playerId: opponent.value.mode === "computer" ? "player-2" : null,
       difficulty: opponent.value.difficulty,
-      blocked: preparing.value || busy.value || paused.value,
+      blocked: preparing.value || busy.value || paused.value || !!overlay.value,
     });
   },
   { immediate: true, flush: "sync" },
@@ -164,15 +179,8 @@ const instruction = computed(() => {
     return "Son atışın zarları otomatik saklandı. Sonucu onayla.";
   return "Saklamak istediğin zarlara dokun; geri almak için tekrar dokun. Ardından seçimi onayla.";
 });
-const phaseTitle = computed(() =>
-  preparing.value
-    ? "Maç hazırlığı · Mod ve güç seçimi"
-    : phase.value.name === "ended"
-      ? `${names.value[phase.value.winnerId]} kazandı`
-      : `Tur ${state.value.round} · ${activePlayer.value ? names.value[activePlayer.value.id] + " · " : ""}${phase.value.name === "roll" ? "Zar atışı ve seçim" : phase.value.name === "favor" ? "Güç seçimi" : phase.value.name === "resolution" ? "Savaş" : "Tur tamamlandı"}`,
-);
 function focusAction() {
-  const panel = document.querySelector(".roll-panel:not(.setup-panel)");
+  const panel = document.querySelector(".match-screen");
   const action =
     panel?.querySelector<HTMLElement>(
       ".primary-action:not(:disabled), .favor-picker button:not(:disabled)",
@@ -185,7 +193,7 @@ watch(
   async (value, old) => {
     if (value) {
       const element = document.activeElement as HTMLElement | null;
-      previousFocus = element?.closest(".roll-panel") ? element : null;
+      previousFocus = element?.closest(".match-screen") ? element : null;
     } else if (old) {
       await nextTick();
       const current = document.activeElement;
@@ -254,320 +262,357 @@ function confirm() {
 </script>
 
 <template>
-  <main class="experience" :data-reduced-motion="reduced">
+  <main
+    class="experience"
+    :class="{
+      'in-match': !preparing,
+      'at-welcome': preparing && setupScreen === 'welcome',
+    }"
+    :data-reduced-motion="reduced"
+  >
     <a v-if="!preparing" class="skip-link" href="#match-controls"
       >Oyun kontrollerine geç</a
     >
     <header class="masthead">
-      <a class="wordmark" href="./" aria-label="Orlog ana sayfa"
+      <a
+        class="wordmark"
+        href="./"
+        aria-label="Orlog ana sayfa"
+        @click="
+          (event) => {
+            if (!preparing) {
+              event.preventDefault();
+              overlay = 'menu';
+            }
+          }
+        "
         ><GameMark />ORLOG</a
       >
       <span class="edition">Kuzeyin zar oyunu</span>
       <nav class="header-tools" aria-label="Yardımcı alanlar">
-        <a href="#rules">Oyun rehberi</a><a href="#settings">Ayarlar</a>
+        <button v-if="!preparing" class="text-button" @click="overlay = 'log'">
+          <UiIcon name="log" /><span>Tur olayları</span>
+        </button>
+        <button class="text-button" @click="overlay = 'rules'">
+          <UiIcon name="book" /><span>Oyun rehberi</span>
+        </button>
+        <button class="text-button" @click="overlay = 'settings'">
+          <UiIcon name="settings" /><span>Ayarlar</span>
+        </button>
+        <button
+          v-if="!preparing"
+          class="icon-button"
+          aria-label="Oyun menüsü"
+          @click="overlay = 'menu'"
+        >
+          <UiIcon name="menu" />
+        </button>
       </nav>
     </header>
-    <section class="table-section" aria-labelledby="table-title">
-      <div class="table-heading">
-        <div>
-          <h1 id="table-title">Tanrıların masası</h1>
-          <p>Altı zar. Üç atış. Kaderinden hangisini saklayacaksın?</p>
-        </div>
-        <span class="game-mode">{{
-          preparing
-            ? "Yeni bir mücadele"
-            : opponent.mode === "computer"
-              ? `Bilgisayara karşı · ${DIFFICULTIES[opponent.difficulty].label}`
-              : "Aynı masada iki kişi"
-        }}</span>
-      </div>
-      <div class="game-layout" :class="{ preparing }">
-        <div class="board-column">
-          <div
-            class="phase-banner"
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            <strong>{{ phaseTitle }}</strong
-            ><span v-if="pending">{{
-              paused
-                ? "Duraklatıldı · Sekme arka planda"
-                : "Olaylar masada oynanıyor…"
+    <div
+      v-show="!preparing || setupScreen === 'welcome'"
+      class="scene-layer"
+      :aria-hidden="preparing"
+      :inert="preparing"
+    >
+      <TablePreview
+        :audio="audio"
+        :reduced="reduced"
+        :paused="paused || !!overlay"
+        :quality="settings.quality"
+        :speed="speed"
+        :close-view="closeView"
+        :state="state"
+        :batch="pending"
+        @availability="availability"
+        @presented="session.present"
+        @settled="session.settle($event)"
+        @select="selectDie"
+      />
+    </div>
+    <MatchSetup
+      v-if="preparing"
+      @start="start"
+      @screen="setupScreen = $event"
+    />
+    <section v-else class="match-screen" aria-label="Orlog oyun masası">
+      <div class="match-hud">
+        <article
+          v-for="player in state.players"
+          :key="player.id"
+          class="player-hud"
+          :class="[player.id, { 'has-turn': activePlayer?.id === player.id }]"
+        >
+          <div class="player-identity">
+            <span class="player-seal">{{
+              player.id === "player-1" ? "I" : "II"
             }}</span>
-          </div>
-          <div
-            v-if="!preparing"
-            class="resource-scores"
-            aria-label="Oyuncu kaynakları"
-          >
-            <article
-              v-for="player in state.players"
-              :key="player.id"
-              :class="player.id"
-            >
-              <div>
-                <span class="player-label">{{ playerLabel(player.id) }}</span
-                ><strong>{{ names[player.id] }}</strong>
-              </div>
-              <p>
-                <b>{{ player.health }}</b> can <span>/</span>
-                <b>{{ player.tokens }}</b> jeton
-              </p>
-              <div class="resource-favors">
-                <span
-                  v-for="id in player.favors"
-                  :key="id"
-                  :title="FAVOR_CATALOG[id].name"
-                  ><FavorPortrait :id="id" /><span class="sr-only">{{
-                    FAVOR_CATALOG[id].name
-                  }}</span></span
-                >
-              </div>
-            </article>
-          </div>
-          <div class="table-frame">
-            <div class="scene-caption">
-              {{ closeView ? "Zar görünümü" : "Orlog · Oyun masası" }}
-            </div>
-            <TablePreview
-              :audio="audio"
-              :reduced="reduced"
-              :paused="paused"
-              :quality="settings.quality"
-              :speed="speed"
-              :close-view="closeView"
-              :state="state"
-              :batch="pending"
-              @availability="availability"
-              @presented="session.present"
-              @settled="session.settle($event)"
-              @select="selectDie"
-            />
-            <div class="view-controls" aria-label="Sahne görünümü">
-              <button
-                :disabled="busy"
-                :aria-pressed="!closeView"
-                @click="closeView = false"
-              >
-                Masa</button
-              ><button
-                :disabled="busy"
-                :aria-pressed="closeView"
-                @click="closeView = true"
-              >
-                Zarlara yaklaş <span aria-hidden="true">↗</span>
-              </button>
+            <div>
+              <span class="player-label">{{ playerLabel(player.id) }}</span
+              ><strong>{{ names[player.id] }}</strong>
             </div>
           </div>
-          <div class="table-meta">
-            <p>
-              {{
-                preparing
-                  ? "Kemik zarlar, oyma tanrılar ve bir avuç kader."
-                  : "Altın çerçeveli her zar, bir tanrı jetonu."
-              }}
-            </p>
-            <button
-              class="guide-toggle"
-              :aria-expanded="guideOpen"
-              aria-controls="symbol-guide"
-              @click="guideOpen = !guideOpen"
+          <p class="player-resources">
+            <b>{{ player.health }}</b> can <span></span
+            ><b>{{ player.tokens }}</b> jeton
+          </p>
+          <div class="resource-favors">
+            <span
+              v-for="id in player.favors"
+              :key="id"
+              :title="FAVOR_CATALOG[id].name"
+              ><FavorPortrait :id="id" /><span class="sr-only">{{
+                FAVOR_CATALOG[id].name
+              }}</span></span
             >
-              Zar yüzlerini tanı
-              <span aria-hidden="true">{{ guideOpen ? "−" : "+" }}</span>
-            </button>
           </div>
-          <section
-            v-if="guideOpen"
-            id="symbol-guide"
-            class="symbol-guide"
-            aria-label="Zar yüzleri ve anlamları"
-          >
-            <div
-              v-for="symbol in SYMBOL_GUIDE"
-              :key="symbol.id"
-              class="symbol-description"
-            >
-              <SymbolIcon :symbol="symbol.id" />
-              <div>
-                <h2>{{ symbol.name }}</h2>
-                <p>{{ symbol.description }}</p>
-              </div>
-            </div>
-            <p class="gold-note">
-              Altın çerçeve, yüzün etkisine ek olarak bir tanrı jetonu verir.
-            </p>
-          </section>
+        </article>
+        <div class="match-round" role="status" aria-live="polite">
+          <strong>Tur {{ state.round }}</strong
+          ><span>{{
+            phase.name === "roll"
+              ? "Zar atışı"
+              : phase.name === "favor"
+                ? "Tanrı gücü"
+                : phase.name === "ended"
+                  ? "Maç bitti"
+                  : "Savaş"
+          }}</span>
         </div>
-        <aside class="control-column" aria-label="Maç kontrolleri">
-          <MatchSetup v-if="preparing" @start="start" />
-          <section
-            v-else
-            id="match-controls"
-            tabindex="-1"
-            class="roll-panel"
-            aria-label="Zar atışı ve seçim"
-            :aria-busy="!!pending"
-          >
-            <div class="turn-heading">
-              <h2>
-                {{
-                  phase.name === "ended"
-                    ? `${names[phase.winnerId]} kazandı`
-                    : activePlayer
-                      ? names[activePlayer.id]
-                      : phase.name === "resolution"
-                        ? "Savaş zamanı"
-                        : "Tur tamamlandı"
-                }}
-              </h2>
-              <span v-if="activePlayer && phase.name === 'roll'"
-                >Atış
-                {{
-                  Math.min(
-                    activePlayer.rollsUsed +
-                      (phase.step === "awaiting-roll" ? 1 : 0),
-                    3,
-                  )
-                }}
-                / 3</span
-              >
-            </div>
-            <div class="roll-actions">
+      </div>
+      <div class="table-tools" aria-label="Sahne görünümü">
+        <button
+          class="text-button"
+          :disabled="busy"
+          :aria-pressed="closeView"
+          @click="closeView = !closeView"
+        >
+          {{ closeView ? "Tüm masayı gör" : "Zarlara yaklaş" }}
+        </button>
+      </div>
+      <section
+        v-if="!computerTurn && phase.name === 'favor'"
+        class="favor-action-panel"
+        aria-label="Tanrı gücü seçimi"
+      >
+        <h2>Bir tanrı çağır.</h2>
+        <FavorPicker
+          :key="phase.activePlayerId"
+          :state="state"
+          :player="state.players[phase.activePlayerId]"
+          :disabled="busy"
+          @choose="choose"
+          @skip="skip"
+        />
+      </section>
+      <section
+        id="match-controls"
+        tabindex="-1"
+        class="action-dock roll-panel"
+        :aria-busy="!!pending"
+        aria-label="Oyun kontrolleri"
+      >
+        <div class="dock-status">
+          <strong>{{
+            phase.name === "ended"
+              ? `${names[phase.winnerId]} kazandı`
+              : activePlayer
+                ? `${names[activePlayer.id]}${computerTurn ? " düşünüyor…" : ", sıra sende."}`
+                : phase.name === "resolution"
+                  ? "Savaş zamanı."
+                  : "Tur tamamlandı."
+          }}</strong
+          ><span v-if="activePlayer && phase.name === 'roll'"
+            >Atış
+            {{
+              Math.min(
+                activePlayer.rollsUsed +
+                  (phase.step === "awaiting-roll" ? 1 : 0),
+                3,
+              )
+            }}
+            / 3</span
+          ><span v-if="pending">{{
+            paused ? "Duraklatıldı" : "Olaylar oynanıyor…"
+          }}</span>
+        </div>
+        <div class="dock-main">
+          <div v-if="phase.name === 'roll'" class="dock-dice">
+            <div class="dice-owner-tabs" aria-label="Zarlarını gördüğün oyuncu">
               <button
-                v-if="
-                  !computerTurn &&
-                  phase.name === 'roll' &&
-                  phase.step === 'awaiting-roll'
-                "
-                class="primary-action"
-                :disabled="busy"
-                @click="roll"
-              >
-                Zarları at <span aria-hidden="true">↗</span>
-              </button>
-              <button
-                v-else-if="!computerTurn && phase.name === 'roll'"
-                class="primary-action"
-                :disabled="busy"
-                @click="confirm"
-              >
-                {{
-                  activePlayer?.rollsUsed === 3
-                    ? "Sonucu onayla"
-                    : "Seçimi onayla"
-                }}
-                <span aria-hidden="true">→</span>
-              </button>
-              <button
-                v-if="
-                  phase.name === 'resolution' || phase.name === 'round-complete'
-                "
-                class="primary-action"
-                :disabled="busy"
-                @click="advance"
-              >
-                {{
-                  phase.name === "resolution" ? "Savaşı başlat" : "Sonraki tur"
-                }}
-                <span aria-hidden="true">→</span>
-              </button>
-              <button class="restart-action" :disabled="busy" @click="restart">
-                Yeniden başlat
-              </button>
-            </div>
-            <p class="roll-instruction" role="status" aria-live="polite">
-              {{ instruction }}
-            </p>
-            <p v-if="error" role="alert">{{ error }}</p>
-            <FavorPicker
-              v-if="!computerTurn && phase.name === 'favor'"
-              :key="phase.activePlayerId"
-              :state="state"
-              :player="state.players[phase.activePlayerId]"
-              :disabled="busy"
-              @choose="choose"
-              @skip="skip"
-            />
-            <div class="dice-trays">
-              <DiceTray
                 v-for="player in state.players"
                 :key="player.id"
-                :player="player"
-                :active="activePlayer?.id === player.id"
-                :selectable="
-                  !busy &&
-                  !computerTurn &&
-                  phase.name === 'roll' &&
-                  phase.step === 'selecting-dice' &&
-                  phase.activePlayerId === player.id
-                "
-                @select="selectDie"
-              />
+                :aria-pressed="inspectingPlayer === player.id"
+                @click="inspectingPlayer = player.id"
+              >
+                {{ names[player.id] }}
+              </button>
             </div>
-            <details v-if="combatLog.length" class="combat-log" :open="reduced">
-              <summary>
-                Tur olayları <span>{{ combatLog.length }}</span>
-              </summary>
-              <ol>
-                <li v-for="event in combatLog" :key="event.id">
-                  {{ event.text }}
-                </li>
-              </ol>
-            </details>
-          </section>
-        </aside>
-      </div>
-      <div class="support-tools">
-        <div id="rules">
-          <details class="rules-guide">
-            <summary>Nasıl oynanır?</summary>
-            <ol>
-              <li>
-                Bilgisayara karşı veya aynı cihazda iki kişilik maç seç.
-                Bilgisayar sırasını kendi oynar; savaşı ve sonraki turu sen
-                başlatırsın.
-              </li>
-              <li>
-                Her oyuncu 15 can, 0 jeton ve üç güçle başlar. Yazı tura ilk
-                oyuncuyu seçer.
-              </li>
-              <li>
-                Dönüşümlü en fazla üç atış yap. Saklayacağın zarları seçip
-                onayla; üçüncü atış otomatik saklanır.
-              </li>
-              <li>
-                Altın çerçeveler jeton verir. Ok kalkanla, balta miğferle
-                engellenir. El, rakibin jetonlarını çalar.
-              </li>
-              <li>
-                Bir güç ve seviye seç veya pas geç. Bedel güç çalıştığında
-                ödenir; yetmezse güç uygulanmaz.
-              </li>
-              <li>
-                Savaş: önce güçler → altın jetonlar → oklar → baltalar → çalma →
-                son güçler. İlk 0 can maçı bitirir.
-              </li>
-            </ol>
-            <p>
-              Zarlarda Tab, Space/Enter, ok tuşları ve Home/End kullanabilirsin.
-            </p>
-          </details>
+            <DiceTray
+              :player="state.players[inspectingPlayer]"
+              :active="activePlayer?.id === inspectingPlayer"
+              :selectable="
+                !busy &&
+                !computerTurn &&
+                phase.step === 'selecting-dice' &&
+                phase.activePlayerId === inspectingPlayer
+              "
+              @select="selectDie"
+            />
+          </div>
+          <p class="roll-instruction" role="status" aria-live="polite">
+            {{ instruction }}
+          </p>
+          <div class="roll-actions">
+            <button
+              v-if="
+                !computerTurn &&
+                phase.name === 'roll' &&
+                phase.step === 'awaiting-roll'
+              "
+              class="primary-action"
+              :disabled="busy"
+              @click="roll"
+            >
+              Zarları at <UiIcon name="arrow" />
+            </button>
+            <button
+              v-else-if="!computerTurn && phase.name === 'roll'"
+              class="primary-action"
+              :disabled="busy"
+              @click="confirm"
+            >
+              {{
+                activePlayer?.rollsUsed === 3
+                  ? "Sonucu onayla"
+                  : "Seçimi onayla"
+              }}<UiIcon name="check" />
+            </button>
+            <button
+              v-if="
+                phase.name === 'resolution' || phase.name === 'round-complete'
+              "
+              class="primary-action"
+              :disabled="busy"
+              @click="advance"
+            >
+              {{ phase.name === "resolution" ? "Savaşı başlat" : "Sonraki tur"
+              }}<UiIcon name="arrow" />
+            </button>
+            <button
+              v-if="phase.name === 'ended'"
+              class="primary-action"
+              :disabled="busy"
+              @click="restart"
+            >
+              Yeni oyun <UiIcon name="arrow" />
+            </button>
+          </div>
         </div>
-        <div id="settings">
-          <ExperienceSettings
-            :settings="settings"
-            :audio-failed="audioFailed"
-            @retry="audio.unlock()"
-          />
-        </div>
-      </div>
+        <p v-if="error" class="field-error" role="alert">{{ error }}</p>
+      </section>
     </section>
-    <footer>
-      <span>Valhalla’dan ilham alan bağımsız bir hayran uyarlaması.</span
-      ><span>Ahşap, kemik ve kader.</span>
-    </footer>
+    <dialog
+      ref="dialog"
+      class="utility-dialog"
+      aria-labelledby="utility-title"
+      @close="overlay = null"
+      @cancel="overlay = null"
+      @click="
+        (event) => {
+          if (event.target === dialog) overlay = null;
+        }
+      "
+    >
+      <div class="dialog-heading">
+        <h2 id="utility-title">
+          {{
+            overlay === "rules"
+              ? "Masaya ilk kez mi oturuyorsun?"
+              : overlay === "settings"
+                ? "Ses ve görünüm"
+                : overlay === "log"
+                  ? `Tur ${state.round} · Olaylar`
+                  : "Oyuna ara ver"
+          }}
+        </h2>
+        <button
+          class="icon-button"
+          aria-label="Pencereyi kapat"
+          @click="overlay = null"
+        >
+          <UiIcon name="close" />
+        </button>
+      </div>
+      <div v-if="overlay === 'rules'" class="rules-content">
+        <p>Altı zar, üç tanrı gücü. Rakibinin 15 canını sıfırlayan kazanır.</p>
+        <ol>
+          <li>
+            <strong>Zarlarını at ve sakla.</strong> Sırayla en fazla üç atış
+            yap. Saklamak istediğin zarları seçip onayla.
+          </li>
+          <li>
+            <strong>Jetonlarını biriktir.</strong> Altın çerçeveli her zar bir
+            tanrı jetonu verir. El, rakibinden jeton çalar.
+          </li>
+          <li>
+            <strong>Tanrını çağır.</strong> Bir güç ve seviye seç ya da pas geç.
+            Jeton bedeli, güç çalıştığında ödenir.
+          </li>
+          <li>
+            <strong>Savaşı izle.</strong> Güçler, oklar, baltalar ve çalma
+            sırasıyla çözülür. Sonraki turda ilk oyuncu değişir.
+          </li>
+        </ol>
+        <div class="symbol-guide">
+          <div
+            v-for="symbol in SYMBOL_GUIDE"
+            :key="symbol.id"
+            class="symbol-description"
+          >
+            <SymbolIcon :symbol="symbol.id" />
+            <div>
+              <strong>{{ symbol.name }}</strong>
+              <p>{{ symbol.description }}</p>
+            </div>
+          </div>
+        </div>
+        <p>
+          Zarlarda Tab, Space/Enter, ok tuşları ve Home/End kullanabilirsin.
+        </p>
+      </div>
+      <ExperienceSettings
+        v-if="overlay === 'settings'"
+        :settings="settings"
+        :audio-failed="audioFailed"
+        @retry="audio.unlock()"
+      />
+      <div v-if="overlay === 'log'" class="combat-log">
+        <ol v-if="combatLog.length">
+          <li v-for="event in combatLog" :key="event.id">{{ event.text }}</li>
+        </ol>
+        <p v-else>
+          Henüz bir savaş yaşanmadı. İlk tur tamamlandığında olaylar burada
+          görünecek.
+        </p>
+      </div>
+      <div v-if="overlay === 'menu'" class="game-menu">
+        <p>
+          Tur {{ state.round }} ·
+          {{
+            opponent.mode === "computer"
+              ? `Bilgisayara karşı · ${DIFFICULTIES[opponent.difficulty].label}`
+              : "Aynı cihazda iki kişi"
+          }}
+        </p>
+        <button class="primary-action" @click="overlay = null">
+          Oyuna dön <UiIcon name="arrow" /></button
+        ><button class="secondary-action" :disabled="busy" @click="restart">
+          Ana menüye dön
+        </button>
+        <p v-if="busy">Oyuna dönüp masa hareketinin tamamlanmasını bekle.</p>
+      </div>
+    </dialog>
   </main>
 </template>
 <style>

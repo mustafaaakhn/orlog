@@ -120,7 +120,7 @@ onErrorCaptured(() => {
       clear-color="#152327"
       :dpr="quality === 'high' ? 1.75 : quality === 'low' ? 1 : [1, 1.25]"
       :tone-mapping-exposure="1.05"
-      aria-label="Üç boyutlu Orlog masası: ahşap kâse, oyuncuların zarları, can taşları ve kuşanılan tanrı totemleri. Zarları seçmek için dokun veya aşağıdaki zar düğmelerini kullan."
+      aria-label="Üç boyutlu Orlog masası: ahşap kâse, oyuncuların zarları, can taşları ve kuşanılan tanrı totemleri. Zarları seçmek için dokun veya oyun çubuğundaki zar düğmelerini kullan."
       role="img"
       @ready="ready"
       @render="rendered"
