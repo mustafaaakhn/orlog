@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import FavorPicker from "../ui/FavorPicker.vue";
 import GameMark from "../ui/GameMark.vue";
 import SymbolIcon from '../ui/SymbolIcon.vue';
 import UiIcon from '../ui/UiIcon.vue';
@@ -12,6 +13,7 @@ import {
   onBeforeUnmount,
   ref,
   computed,
+  nextTick,
   watch,
 } from "vue";
 import { TresCanvas } from "@tresjs/core";
@@ -34,6 +36,7 @@ const props = defineProps<{
 
   viewerId?: PlayerId;
   controlPlayer?: PlayerId | null;
+  favorPlayer?: PlayerId | null;
   state: GameState;
   batch: PresentationBatch | null;
 }>();
@@ -43,9 +46,31 @@ const emit = defineEmits<{
   presented: [batchId: number, event: GameEvent];
   progress: [batchId: number, event: GameEvent, step: number];
   select: [dieId: DieId];
+  choose: [favorId: import("../core").FavorId, level: import("../core").FavorLevel, input?: import("../core").FavorInput];
 }>();
 const targets = ref<SceneDieTarget[]>([]);
 const favors = ref<SceneFavorTarget[]>([]);
+const menuFavor = ref<SceneFavorTarget | null>(null);
+const menuPinned = ref(false);
+const favorMenu = ref<HTMLElement | null>(null);
+function inspectFavor(target: SceneFavorTarget, activate: boolean) {
+  if (target.playerId !== props.favorPlayer || props.batch || props.paused) return;
+  if (menuPinned.value && !activate) return;
+  if (menuFavor.value?.favorId !== target.favorId) menuPinned.value = false;
+  menuFavor.value = target;
+  if (activate) { menuPinned.value = true; void nextTick(() => favorMenu.value?.focus()); }
+}
+function closeFavor() {
+  const id = menuFavor.value?.favorId;
+  menuFavor.value = null;
+  menuPinned.value = false;
+  if (id) document.querySelector<HTMLElement>(`[data-favor-id="${id}"]`)?.focus();
+  // Focusing the source is also a preview trigger; Escape must still close it.
+  menuFavor.value = null;
+}
+watch([() => props.batch, () => props.paused, () => props.favorPlayer], () => {
+  menuFavor.value = null; menuPinned.value = false;
+});
 const highlightedFavor = ref<SceneFavorTarget | null>(null);
 watch([() => props.batch, () => props.paused], () => { highlightedFavor.value = null; });
 const cue = ref<PresentationCue | null>(null);
@@ -189,7 +214,16 @@ onErrorCaptured(() => {
         @favors="favors = $event"
       />
     </TresCanvas>
-    <SceneFavorControls v-if="status === 'ready' && !batch && !paused" :targets="favors" @highlight="highlightedFavor = $event" />
+    <SceneFavorControls v-if="status === 'ready' && !batch && !paused" :targets="favors" :active-player="favorPlayer" @highlight="highlightedFavor = $event" @inspect="inspectFavor" />
+    <section v-if="menuFavor && favorPlayer && !batch && !paused" ref="favorMenu"
+      class="table-favor-menu" role="dialog" aria-label="Tanrı gücü seçimi" tabindex="-1"
+      :style="{ left: `clamp(12px, calc(${menuFavor.x}% - 364px), max(12px, calc(100% - 352px)))` }"
+      @keydown.esc.stop="closeFavor">
+      <div class="favor-menu-heading"><h2>Tanrı gücü</h2><button aria-label="Tanrı menüsünü kapat" @click="closeFavor"><UiIcon name="close" /></button></div>
+      <FavorPicker :key="`${favorPlayer}/${menuFavor.favorId}`" :favor-id="menuFavor.favorId"
+        :state="state" :player="state.players[favorPlayer]" :disabled="false"
+        @editing="menuPinned = true" @choose="(id, level, input) => emit('choose', id, level, input)" />
+    </section>
     <div class="resolution-cue" :class="{ 'is-title': cue?.title }" role="status" aria-live="polite" aria-atomic="true">
       <template v-if="cue">
         <h2 v-if="cue.title">{{ cue.title }}</h2>

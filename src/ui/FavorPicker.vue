@@ -23,16 +23,12 @@ const props = defineProps<{
   player: PlayerState;
   state: GameState;
   disabled: boolean;
+  favorId: FavorId;
 }>();
 const emit = defineEmits<{
   choose: [favorId: FavorId, level: FavorLevel, input?: FavorInput];
-  skip: [];
+  editing: [];
 }>();
-const browsing = ref<FavorId>(props.player.favors[0]!);
-function browse(id: FavorId) {
-  browsing.value = id;
-  selected.value = null;
-}
 const selected = ref<FavorId | null>(null),
   level = ref<FavorLevel>(1);
 const dieIds = ref<DieId[]>([]),
@@ -71,10 +67,11 @@ watch(
   () => props.player.id,
   () => {
     selected.value = null;
-    browsing.value = props.player.favors[0]!;
+
   },
 );
 function select(id: FavorId, tier: FavorLevel) {
+  emit("editing");
   selected.value = id;
   level.value = tier;
   dieIds.value = [];
@@ -89,26 +86,8 @@ function confirm() {
 </script>
 <template>
   <div class="favor-picker">
-    <p>
-      Bir güç ve seviye seç veya pas geç. Bedel çağırma anında ödenir; jeton
-      yetmezse güç çalışmaz. Düşük öncelik önce çalışır; eşitlikte ilk oyuncu
-      öndedir.
-    </p>
-    <div class="favor-tabs" aria-label="Çağırılacak tanrı">
-      <button
-        v-for="id in player.favors"
-        :key="id"
-        :disabled="disabled"
-        :aria-pressed="browsing === id"
-        @click="browse(id)"
-      >
-        <FavorPortrait :id="id" /><span>{{
-          FAVOR_CATALOG[id].name.split("'")[0]
-        }}</span>
-      </button>
-    </div>
     <div class="favor-cards">
-      <article v-for="id in [browsing]" :key="id">
+      <article v-for="id in [favorId]" :key="id">
         <div class="favor-card-heading">
           <FavorPortrait :id="id" />
           <div>
@@ -231,8 +210,5 @@ function confirm() {
         Gücü onayla
       </button>
     </fieldset>
-    <button class="restart-action" :disabled="disabled" @click="emit('skip')">
-      Gücü pas geç
-    </button>
   </div>
 </template>

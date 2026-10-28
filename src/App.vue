@@ -17,7 +17,6 @@ import SymbolIcon from "./ui/SymbolIcon.vue";
 import { SYMBOL_GUIDE } from "./scene/symbols";
 import SceneLoaderState from "./ui/SceneLoaderState.vue";
 import MatchSetup from "./ui/MatchSetup.vue";
-import FavorPicker from "./ui/FavorPicker.vue";
 import { eventText } from "./presentation/eventText";
 import type {
   GameOptions,
@@ -170,7 +169,7 @@ const instruction = computed(() => {
   if (phase.value.name === "resolution")
     return "İki güç seçimi de tamamlandı. Savaşı başlat.";
   if (phase.value.name === "favor")
-    return `${names.value[phase.value.activePlayerId]} bir güç seçebilir veya pas geçebilir.`;
+    return `${names.value[phase.value.activePlayerId]} masadaki bir tanrıyı seçebilir veya Devam et ile geçebilir.`;
   if (phase.value.step === "awaiting-roll")
     return "Kendi haznendeki zarları at.";
   if (activePlayer.value?.rollsUsed === 3)
@@ -338,6 +337,8 @@ function confirm() {
         @presented="session.present"
         @progress="session.progress"
         @settled="session.settle($event)"
+        :favor-player="!preparing && !computerTurn && !busy && phase.name === 'favor' ? phase.activePlayerId : null"
+        @choose="choose"
         @select="selectDie"
       />
     </div>
@@ -358,21 +359,6 @@ function confirm() {
         Tur {{ state.round }}<span v-if="activePlayer"> · {{ names[activePlayer.id] }}</span>
       </p>
       <section
-        v-if="!computerTurn && phase.name === 'favor'"
-        class="favor-action-panel"
-        aria-label="Tanrı gücü seçimi"
-      >
-        <h2>Bir tanrı çağır.</h2>
-        <FavorPicker
-          :key="phase.activePlayerId"
-          :state="state"
-          :player="state.players[phase.activePlayerId]"
-          :disabled="busy"
-          @choose="choose"
-          @skip="skip"
-        />
-      </section>
-      <section
         id="match-controls"
         tabindex="-1"
         class="match-actions"
@@ -385,6 +371,10 @@ function confirm() {
           <button v-else-if="activePlayer && activePlayer.rollsUsed < 3" class="primary-action" @click="confirm">
             Seçimi onayla <UiIcon name="check" />
           </button>
+        </template>
+        <template v-if="!busy && !computerTurn && phase.name === 'favor'">
+          <p class="favor-prompt">Bir tanrı seç veya devam et.</p>
+          <button class="primary-action" @click="skip">Devam et <UiIcon name="arrow" /></button>
         </template>
         <button v-if="!busy && phase.name === 'resolution'" class="primary-action" @click="advance">
           Savaşı başlat <UiIcon name="arrow" />
