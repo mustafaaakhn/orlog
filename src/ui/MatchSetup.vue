@@ -3,6 +3,7 @@ import { computed, nextTick, ref, watch } from "vue";
 import FavorPortrait from "./FavorPortrait.vue";
 import UiIcon from "./UiIcon.vue";
 import SymbolIcon from "./SymbolIcon.vue";
+import TokenIcon from "./TokenIcon.vue";
 import {
   DEFAULT_FAVORS,
   FAVOR_CATALOG,
@@ -223,34 +224,31 @@ function start() {
     </nav>
     <template v-if="screen === 'mode'">
       <div class="mode-body">
-        <div class="flow-heading">
+        <div class="mode-intro flow-heading">
           <h1 tabindex="-1">Masada kiminle karşılaşacaksın?</h1>
           <p>Bir rakip seç. Sonra tanrılarını kuşanıp masaya geçelim.</p>
+          <div class="mode-pantheon" aria-hidden="true"><FavorPortrait id="thors-strike" /><FavorPortrait id="iduns-rejuvenation" /><FavorPortrait id="freyjas-plenty" /></div>
+          <p class="mode-invitation">Her atış bir ihtimal.<br />Her tanrı başka bir yol.</p>
         </div>
+        <div class="mode-options">
         <div class="mode-selection" aria-label="Oyun modu">
           <button
             :aria-pressed="selectedMode === 'computer'"
             @click="selectedMode = 'computer'; continueMode()"
           >
-            <UiIcon name="robot" />
+            <span class="mode-emblem"><UiIcon name="robot" /></span>
             <h2>Robota karşı</h2>
             <p>Tanrılarını seç ve mücadeleye başla.</p>
-            <span
-              >{{ selectedMode === "computer" ? "Seçildi" : "Tek oyuncu"
-              }}<UiIcon v-if="selectedMode === 'computer'" name="check"
-            /></span>
+            <span class="mode-card-action">Tek oyuncu <UiIcon name="arrow" /></span>
           </button>
           <button
             :aria-pressed="selectedMode === 'friend'"
             @click="selectedMode = 'friend'"
           >
-            <UiIcon name="people" />
+            <span class="mode-emblem"><UiIcon name="people" /></span>
             <h2>Arkadaşınla</h2>
             <p>Aynı bilgisayarı paylaş veya oda akışını incele.</p>
-            <span
-              >{{ selectedMode === "friend" ? "Seçildi" : "İki oyuncu"
-              }}<UiIcon v-if="selectedMode === 'friend'" name="check"
-            /></span>
+            <span class="mode-card-action">{{ selectedMode === "friend" ? "Seçildi" : "İki oyuncu" }}<UiIcon :name="selectedMode === 'friend' ? 'check' : 'arrow'" /></span>
           </button>
         </div>
         <div v-if="selectedMode === 'friend'" class="friend-area">
@@ -275,6 +273,7 @@ function start() {
             <p role="status" class="friend-room-status">{{ roomStatus }}</p>
             <p v-if="roomError" id="room-error" class="field-error" role="alert">{{ roomError }}</p>
           </template>
+        </div>
         </div>
       </div>
       <div class="flow-footer">
@@ -349,7 +348,7 @@ function start() {
                 :aria-label="`${shortName(id)} tanrısını kaldır`"
                 @click="toggleFavor(id)"
               >
-                <UiIcon name="close" />
+                <UiIcon name="close" /><span>Kaldır</span>
               </button>
             </div>
             <div
@@ -362,7 +361,7 @@ function start() {
             </div>
           </div>
           <section class="god-description" aria-live="polite">
-            <h2>{{ FAVOR_CATALOG[browsing].name }}</h2>
+            <div class="description-heading"><FavorPortrait :id="browsing" /><h2>{{ FAVOR_CATALOG[browsing].name }}</h2></div>
             <p class="favor-timing">
               {{
                 FAVOR_CATALOG[browsing].timing === "before-resolution"
@@ -373,7 +372,7 @@ function start() {
             </p>
             <dl>
               <div v-for="tier in [1, 2, 3] as const" :key="tier">
-                <dt>{{ FAVOR_CATALOG[browsing].tiers[tier].cost }} jeton</dt>
+                <dt>{{ FAVOR_CATALOG[browsing].tiers[tier].cost }}<TokenIcon /><span class="sr-only"> jeton</span></dt>
                 <dd>{{ describeFavorTier(browsing, tier) }}</dd>
               </div>
             </dl>

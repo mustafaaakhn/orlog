@@ -2958,3 +2958,214 @@ input[type="radio"] {
   .friend-room-inline { gap: 8px 12px; margin-top: 14px; }
   .friend-room-inline .text-button { padding-left: 0; }
 }
+
+/* 7H: a compact preparation room, framed portraits and a clear right-hand decision. */
+:root {
+  --preparation-green: #213e39;
+  --preparation-green-hover: #2c5049;
+  --preparation-rust: #723e2c;
+  --preparation-cream: #f5ebd8;
+  --preparation-brass: #e2bf7a;
+}
+.flow-screen { max-width: 1440px; padding-inline: clamp(20px, 4vw, 64px); }
+.flow-navigation { min-height: 72px; }
+.screen-mode .mode-body { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 48px; align-items: start; padding: 24px 0 32px; }
+.mode-intro.flow-heading { margin: 0; }
+.mode-intro h1 { max-width: 13ch; font-size: clamp(32px, 3.5vw, 52px); }
+.mode-intro > p { max-width: 31ch; }
+.mode-pantheon { display: flex; align-items: end; gap: 8px; margin: 32px 0 24px; }
+.mode-pantheon .favor-portrait { width: 29%; height: auto; aspect-ratio: .8; border-radius: 48% 48% 4px 4px; }
+.mode-pantheon .favor-portrait:nth-child(2) { margin-bottom: 20px; }
+.mode-intro .mode-invitation { color: var(--gold); font-size: 18px; }
+.mode-options { min-width: 0; }
+.mode-selection { grid-template-columns: 1fr; gap: 16px; }
+.mode-selection > button { display: grid; grid-template-columns: 58px minmax(0, 1fr); gap: 4px 20px; padding: 24px; background: var(--preparation-green); color: var(--preparation-cream); border-color: transparent; border-radius: 12px; }
+.mode-selection > button:nth-child(2) { background: var(--preparation-rust); }
+.mode-selection > button:hover { background: var(--preparation-green-hover); border-color: transparent; }
+.mode-selection > button:nth-child(2):hover { background: #814b35; }
+.mode-selection > button[aria-pressed="true"] { background: var(--preparation-green); border-color: transparent; }
+.mode-selection > button:nth-child(2)[aria-pressed="true"] { background: var(--preparation-rust); outline: 2px solid var(--gold); outline-offset: 3px; }
+.mode-selection > button > .mode-emblem { grid-row: 1 / 4; display: grid; place-items: center; width: 58px; height: 68px; padding: 0; margin: 0; border: 1px solid #e2bf7a66; border-radius: 24px 24px 4px 4px; color: var(--preparation-brass); }
+.mode-emblem svg { width: 32px; height: 32px; }
+.mode-selection h2 { font-size: 26px; margin: 0; }
+.mode-selection p { color: var(--preparation-cream); font-size: 16px; margin: 0; }
+.mode-selection > button > .mode-card-action { width: auto; grid-column: 2; border: 0; padding: 8px 0 0; color: var(--preparation-brass); font-size: 14px; }
+.friend-area { margin-top: 24px; padding-top: 20px; }
+.friend-area .segmented-control { gap: 0; border-bottom: 1px solid var(--line); }
+.friend-area .segmented-control button { flex: 1; border: 0; border-bottom: 2px solid transparent; border-radius: 0; padding: 10px 8px; }
+.friend-area .segmented-control button[aria-pressed="true"] { border-bottom-color: var(--preparation-green); color: var(--preparation-green); background: #d5dfd6; }
+.screen-gods .gods-layout { grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; padding-bottom: 20px; }
+.screen-gods .god-gallery { grid-template-columns: repeat(4, minmax(0, 1fr)); grid-auto-rows: 188px; gap: 12px; padding: 4px 12px 4px 4px; }
+.screen-gods .god-tile { height: 188px; padding: 8px 0 12px; border-radius: 10px; background: #d5d4c3; border-color: #a7aa95; }
+.screen-gods .god-tile > .favor-portrait { width: 120px; max-width: calc(100% - 16px); height: 120px; border-radius: 6px; }
+.screen-gods .god-tile-name { font-size: 17px; margin: 5px 10px 2px; }
+.screen-gods .god-tile-power { margin-inline: 10px; font-size: 13px; }
+.screen-gods .god-tile[aria-pressed="true"] { background: var(--preparation-green); color: var(--preparation-cream); border-color: var(--preparation-green); }
+.screen-gods .god-tile[aria-pressed="true"] .god-tile-power { color: var(--preparation-cream); }
+.screen-gods .god-tile[aria-pressed="true"] svg { color: var(--preparation-brass); }
+.screen-gods .god-tile:hover { border-color: var(--preparation-green); }
+.screen-gods .loadout-sidebar { display: block; border: 0; background: var(--panel); padding: 18px; border-radius: 12px; max-height: none; }
+.screen-gods .name-field { margin-bottom: 16px; }
+.screen-gods .chosen-gods { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.screen-gods .chosen-god, .screen-gods .empty-god { position: relative; min-height: 100px; padding: 8px 0; flex-direction: column; gap: 6px; text-align: center; border-bottom: 0; }
+.screen-gods .chosen-god > .favor-portrait { width: 64px; height: 64px; }
+.screen-gods .chosen-god small { display: none; }
+.screen-gods .chosen-god strong { font-size: 14px; }
+.screen-gods .chosen-god .icon-button { position: absolute; inset: auto; top: 0; right: -4px; background: var(--field); border-radius: 4px; width: 44px; min-height: 44px; padding: 13px; }
+.screen-gods .empty-god { border: 1px dashed var(--line); border-radius: 6px; justify-content: center; font-size: 13px; }
+.screen-gods .empty-god > span { font: 24px var(--display); width: auto; }
+.screen-gods .god-description { overflow: visible; min-height: 0; margin-top: 20px; padding-top: 18px; }
+.description-heading { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.description-heading .favor-portrait { width: 64px; height: 64px; }
+.description-heading h2 { margin: 0; font-size: 22px; }
+.screen-gods .god-description dl > div { display: grid; grid-template-columns: 48px minmax(0, 1fr); gap: 12px; margin-top: 12px; font-size: 15px; }
+.screen-gods .god-description dt { display: flex; align-items: start; gap: 5px; font-variant-numeric: tabular-nums; }
+.token-icon { width: 22px; height: 22px; flex-shrink: 0; vertical-align: middle; }
+.table-favor-menu { top: 12px; right: 12px; left: auto; transform: none; width: min(320px, calc(100% - 24px)); max-height: calc(100% - 32px); padding: 16px; border-radius: 12px; }
+.table-favor-menu.is-preview { pointer-events: none; }
+.favor-menu-help { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+.table-favor-menu .favor-card-heading { display: flex; align-items: center; gap: 12px; }
+.table-favor-menu .favor-card-heading h3 { font-size: 18px; margin: 0 0 5px; }
+.table-favor-menu .favor-card-heading p { font-size: 12px; margin: 0; }
+.table-favor-menu .favor-cards article > .favor-tier { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: 12px; width: 100%; min-height: 64px; margin: 8px 0 0; padding: 10px; text-align: left; border: 1px solid var(--line); border-radius: 4px; background: var(--field); color: var(--text); font-size: 15px; line-height: 1.35; }
+.table-favor-menu .favor-tier .tier-cost { float: none; display: flex; align-items: center; gap: 5px; color: var(--gold); font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.table-favor-menu .favor-tier .tier-label { display: block; margin-top: 5px; font-size: 12px; color: var(--muted); }
+.table-favor-menu .favor-tier[aria-pressed="true"] { border-color: var(--preparation-green); outline: 1px solid var(--preparation-green); background: #d5dfd6; }
+.table-favor-menu .favor-targets { margin-top: 16px; padding: 12px 0 0; border: 0; border-top: 1px solid var(--line); }
+.table-favor-menu .favor-targets legend { font-size: 14px; }
+.table-favor-menu .favor-targets > p { font-size: 14px; }
+@media (max-width: 1100px) {
+  .screen-mode .mode-body { gap: 28px; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); }
+  .screen-gods .god-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .screen-gods .gods-layout { grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; }
+  .screen-gods .loadout-sidebar { padding: 14px; }
+}
+@media (max-width: 800px) {
+  .screen-mode .mode-body { display: block; padding-top: 8px; }
+  .mode-intro h1 { max-width: 100%; font-size: 32px; }
+  .mode-pantheon, .mode-intro .mode-invitation { display: none; }
+  .mode-intro.flow-heading { margin-bottom: 24px; }
+  .mode-selection { grid-template-columns: 1fr 1fr; }
+  .mode-selection > button { grid-template-columns: 1fr; padding: 20px; gap: 8px; }
+  .mode-selection > button > .mode-emblem { grid-row: auto; }
+  .mode-selection > button > .mode-card-action { grid-column: 1; }
+  .screen-gods .gods-layout { grid-template-columns: minmax(0, 1fr) 270px; gap: 16px; }
+  .screen-gods .god-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 600px) {
+  .flow-screen { padding-inline: 16px; }
+  .flow-navigation { min-height: 58px; }
+  .screen-mode .mode-body { padding: 12px 0 20px; }
+  .mode-intro h1 { font-size: 28px; }
+  .mode-intro > p { font-size: 16px; }
+  .mode-selection { grid-template-columns: 1fr; gap: 12px; }
+  .mode-selection > button { grid-template-columns: 44px minmax(0, 1fr); padding: 16px; gap: 3px 14px; }
+  .mode-selection > button > .mode-emblem { grid-row: 1 / 4; width: 44px; height: 58px; }
+  .mode-selection > button > .mode-card-action { grid-column: 2; }
+  .mode-emblem svg { width: 26px; height: 26px; }
+  .mode-selection h2 { font-size: 22px; }
+  .mode-selection p { font-size: 14px; }
+  .friend-area .segmented-control button { font-size: 13px; padding: 8px 5px; }
+  .screen-gods .gods-heading { gap: 10px; margin-bottom: 12px; }
+  .screen-gods .gods-heading h1 { font-size: 26px; }
+  .screen-gods .gods-heading p { font-size: 14px; }
+  .screen-gods .gods-layout { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(120px, 1fr) minmax(180px, 1.2fr); gap: 10px; padding-bottom: 10px; }
+  .screen-gods .god-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: 132px; gap: 8px; padding-right: 6px; }
+  .screen-gods .god-tile { height: 132px; padding-top: 5px; border-radius: 6px; }
+  .screen-gods .god-tile > .favor-portrait { width: 76px; height: 76px; }
+  .screen-gods .god-tile-name { font-size: 14px; margin-inline: 6px; }
+  .screen-gods .god-tile-power { font-size: 12px; margin-inline: 6px; }
+  .screen-gods .loadout-sidebar { padding: 12px; overflow-y: auto; }
+  .screen-gods .name-field { margin-bottom: 8px; }
+  .screen-gods .loadout-heading { margin-bottom: 8px; }
+  .screen-gods .chosen-god, .screen-gods .empty-god { min-height: 64px; padding: 0; gap: 4px; }
+  .screen-gods .chosen-god > .favor-portrait { width: 36px; height: 36px; }
+  .screen-gods .god-description { margin-top: 12px; padding-top: 12px; }
+  .screen-gods .god-description dl { display: block; }
+  .screen-gods .god-description dl > div { font-size: 14px; }
+  .screen-gods .god-description .selection-hint { font-size: 13px; }
+  .description-heading h2 { font-size: 20px; }
+  .description-heading .favor-portrait { display: none; }
+  .screen-gods .god-description .favor-timing { display: block; margin-bottom: 8px; }
+  .screen-gods .god-tile-power { display: block; }
+  .table-favor-menu { top: 48px; width: min(260px, calc(100% - 24px)); max-height: calc(45% - 56px); padding: 12px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .screen-mode .mode-body { display: block; padding-top: 8px; overflow: visible; }
+  .mode-intro h1 { max-width: 100%; font-size: 28px; }
+  .mode-pantheon, .mode-intro .mode-invitation { display: none; }
+  .mode-selection { grid-template-columns: 1fr 1fr; }
+  .mode-selection > button { padding: 16px; }
+  .mode-selection > button > .mode-emblem { display: none; }
+  .mode-selection > button { display: flex; }
+  .mode-selection h2 { font-size: 22px; }
+  .screen-gods .gods-layout { min-height: 0; grid-template-columns: minmax(0, 1fr) 270px; }
+  .screen-gods .god-gallery { grid-auto-rows: 132px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .screen-gods .god-tile { height: 132px; }
+  .screen-gods .god-tile > .favor-portrait { width: 76px; height: 76px; }
+  .screen-gods .god-tile-name { font-size: 14px; }
+  .screen-gods .loadout-sidebar { padding: 12px; }
+  .table-favor-menu { top: 8px; right: 12px; width: 270px; max-height: calc(100% - 102px); padding: 12px; }
+  .table-favor-menu .favor-card-heading .favor-portrait { width: 36px; height: 36px; }
+  .table-favor-menu .favor-tier { min-height: 56px; }
+}
+.mode-selection > button[aria-pressed] > .mode-emblem,
+.mode-selection > button[aria-pressed] > .mode-card-action { color: var(--preparation-brass); }
+.mode-selection > button > .mode-emblem { grid-column: 1; grid-row: 1 / 4; }
+.mode-selection > button > .mode-card-action { grid-column: 2; grid-row: 3; }
+.mode-selection h2 { grid-column: 2; grid-row: 1; }
+.mode-selection p { grid-column: 2; grid-row: 2; }
+@media (min-width: 601px) and (max-width: 800px) {
+  .mode-selection > button > .mode-emblem { grid-row: 1; }
+  .mode-selection h2 { grid-column: 1; grid-row: 2; }
+  .mode-selection p { grid-column: 1; grid-row: 3; }
+  .mode-selection > button > .mode-card-action { grid-column: 1; grid-row: 4; }
+}
+.table-favor-menu .favor-card-heading > .favor-portrait { display: inline-block; width: 48px; height: 48px; }
+@media (max-height: 500px) and (orientation: landscape) {
+  .table-favor-menu .favor-card-heading > .favor-portrait { width: 36px; height: 36px; }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .screen-gods .flow-navigation { min-height: 44px; }
+  .screen-gods .gods-heading { margin: 0 0 8px; align-items: center; gap: 16px; }
+  .screen-gods .gods-heading h1 { margin-bottom: 0; font-size: 24px; }
+  .screen-gods .gods-heading p { display: none; }
+  .screen-gods .player-tabs button { padding-block: 8px; }
+  .screen-gods .flow-footer { padding-block: 10px; gap: 12px; }
+  .screen-gods .gods-layout { padding-bottom: 8px; }
+}
+/* Selected portraits and removal actions occupy separate cells. */
+.screen-gods .chosen-god {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  align-content: start;
+  gap: 6px;
+}
+.screen-gods .chosen-god > span:not(.favor-portrait) { padding-right: 0; overflow: visible; }
+.screen-gods .chosen-god .icon-button {
+  position: static;
+  inset: auto;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px;
+  gap: 4px;
+  border: 1px solid var(--line);
+  background: var(--field);
+  font-size: 13px;
+  justify-content: center;
+}
+.screen-gods .chosen-god .icon-button svg { width: 14px; height: 14px; }
+@media (max-width: 600px) {
+  .screen-gods .chosen-god {
+    grid-template-columns: 32px minmax(0, 1fr);
+    grid-template-rows: 44px 44px;
+    padding: 0;
+    gap: 4px;
+    align-items: center;
+    justify-items: start;
+  }
+  .screen-gods .chosen-god > .favor-portrait { width: 32px; height: 32px; }
+  .screen-gods .chosen-god strong { font-size: 13px; line-height: 1.2; overflow-wrap: anywhere; }
+  .screen-gods .chosen-god .icon-button { grid-column: 1 / -1; grid-row: 2; }
+}

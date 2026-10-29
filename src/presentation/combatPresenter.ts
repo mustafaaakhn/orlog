@@ -118,6 +118,36 @@ export function createCombatPresenter(
       })
     } finally { board.steal.clear() }
   }
+  async function gainGold(event: Extract<GameEvent, { type: 'TokensGained' }>) {
+    const count = event.dieIds.length;
+    if (closed || count === 0) return;
+    const origins = event.dieIds.map(id => board.dice.get(id)!.position.clone().add(new Vector3(0, 0.65, 0)));
+    const destinations = origins.map((_, i) => board.tokenPosition(event.playerId, event.tokens - count + i, event.tokens));
+    const endScale = board.tokenScale(event.playerId, event.tokens);
+    board.gain.prepare(origins);
+    try {
+      await animate(t => {
+        wait(t, reduced() ? 0.16 : 0.26);
+        if (reduced()) wait(t, 0.12);
+        else {
+          const travel = { value: 0 };
+          t.call(() => { if (!closed && !paused) board.gain.move(origins); });
+          t.to(travel, { value: 1, duration: 0.62, ease: 'power2.inOut', onUpdate: () => {
+            const positions = origins.map((point, i) => point.clone().lerp(destinations[i]!, travel.value)
+              .add(new Vector3(0, Math.sin(Math.PI * travel.value) * 1.1, 0)));
+            board.gain.move(positions, 1 + (endScale - 1) * travel.value);
+          } });
+        }
+        t.call(() => {
+          if (closed || paused) return;
+          board.gain.clear();
+          contact(event, 1);
+          board.steal.prepare(event.playerId, event.tokens - count, count);
+        });
+        wait(t, reduced() ? 0.08 : 0.16);
+      });
+    } finally { board.gain.clear(); board.steal.clear(); }
+  }
   async function stoneContact(event: GameEvent, player: PlayerId, index: number, step: number, from: Vector3, healing = false, symbol?: 'axe' | 'arrow') {
     const stone = board.lifeStone(player, index)
     const original = stone.material.emissive.clone()
@@ -211,21 +241,16 @@ export function createCombatPresenter(
           }
         } else if (event.type === 'TokensStolen') {
           await stealGold(event)
-        } else if (event.type === 'TokensGained' || event.type === 'TokensGranted' || event.type === 'TokensDestroyed' || event.type === 'FavorInvoked') {
+        } else if (event.type === 'TokensGained') {
+          await gainGold(event)
+        } else if (event.type === 'TokensGranted' || event.type === 'TokensDestroyed' || event.type === 'FavorInvoked') {
           const count = resourceSteps(event)
-          if (event.type === 'TokensGained') markers(ids, false)
           for (let step = 1; step <= count && !closed; step++) {
-            if (event.type === 'TokensGained') {
-              markers(ids, false)
-              markers([event.dieIds[step - 1]!], true)
-            }
             const outgoing = event.type === 'TokensDestroyed' || event.type === 'FavorInvoked'
             const tokenOwner = event.type === 'TokensDestroyed' ? event.targetId : event.playerId
             const tokenIndex = outgoing ? event.tokens + count - step : event.tokens - count + step - 1
             const pile = board.tokenPosition(tokenOwner, tokenIndex)
-            const from = event.type === 'TokensGained' ? board.dice.get(event.dieIds[step - 1]!)!.position.clone()
-
-              : outgoing ? pile : source(event)
+            const from = outgoing ? pile : source(event)
             const to = outgoing ? source(event) : pile
             feedback.cue?.({ text, progress: `${step} / ${count}` })
             await flight(from, to, { token: true, contact: () => contact(event, step) })
@@ -271,6 +296,8 @@ export function createCombatPresenter(
       board.effect.visible = false
       board.tokenEffect.visible = false
       board.steal.clear()
+      board.gain.clear()
+      markers([...board.dice.keys()], false)
       Object.values(board.attackEffects).forEach(effect => { effect.visible = false })
     },
   }

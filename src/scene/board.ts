@@ -484,12 +484,49 @@ export function createBoard(invalidate: () => void = () => {}) {
     clear: clearSteal,
   };
 
+  // Income uses the same real plate geometry/material, with one instance per
+  // event source. Its transforms belong only to the combat timeline, never physics.
+  let income = new InstancedMesh(tokenShape, flyingBrass, 16);
+  income.name = 'earned gold group';
+  income.castShadow = true;
+  income.visible = false;
+  root.add(income);
+  function moveIncome(points: Vector3[], scale = 1) {
+    for (const [i, point] of points.entries()) {
+      tokenMatrix.makeScale(scale, scale, scale);
+      tokenMatrix.setPosition(point);
+      income.setMatrixAt(i, tokenMatrix);
+    }
+    income.instanceMatrix.needsUpdate = true;
+    income.computeBoundingSphere();
+  }
+  const gain = {
+    prepare(points: Vector3[], scale = 1) {
+      if (income.instanceMatrix.count < points.length) {
+        root.remove(income); income.dispose();
+        income = new InstancedMesh(tokenShape, flyingBrass, points.length);
+        income.name = 'earned gold group';
+        income.castShadow = true;
+        root.add(income);
+      }
+      income.count = points.length;
+      income.visible = false;
+      moveIncome(points, scale);
+    },
+    move(points: Vector3[], scale = 1) {
+      moveIncome(points, scale);
+      income.visible = points.length > 0;
+    },
+    clear() { income.visible = false; invalidate(); },
+  };
+
   return {
     object: root,
     dice,
     effect,
     tokenEffect,
     steal,
+    gain,
     attackEffects,
     lifeStone(playerId: PlayerId, index: number) {
       return stoneGroups[playerId === 'player-1' ? 0 : 1]!.children[Math.max(0, Math.min(index, 14))] as Mesh<SphereGeometry, MeshStandardMaterial>;
@@ -678,6 +715,7 @@ export function createBoard(invalidate: () => void = () => {}) {
       disposed = true;
       clearSteal();
       cargo.dispose();
+      income.dispose();
       tokenMeshes.forEach(value => value.dispose());
       geometries.forEach((value) => value.dispose());
       materials.forEach((value) => value.dispose());

@@ -19,15 +19,16 @@ import type {
 import { SYMBOL_GUIDE } from "../scene/symbols";
 import SymbolIcon from "./SymbolIcon.vue";
 import FavorPortrait from "./FavorPortrait.vue";
+import TokenIcon from "./TokenIcon.vue";
 const props = defineProps<{
   player: PlayerState;
   state: GameState;
   disabled: boolean;
   favorId: FavorId;
+  preview?: boolean;
 }>();
 const emit = defineEmits<{
   choose: [favorId: FavorId, level: FavorLevel, input?: FavorInput];
-  editing: [];
 }>();
 const selected = ref<FavorId | null>(null),
   level = ref<FavorLevel>(1);
@@ -71,7 +72,6 @@ watch(
   },
 );
 function select(id: FavorId, tier: FavorLevel) {
-  emit("editing");
   selected.value = id;
   level.value = tier;
   dieIds.value = [];
@@ -102,22 +102,23 @@ function confirm() {
             </p>
           </div>
         </div>
-        <button
+        <component
+          :is="preview ? 'div' : 'button'"
+          class="favor-tier"
           v-for="tier in [1, 2, 3] as const"
           :key="tier"
-          :disabled="disabled"
-          :aria-pressed="selected === id && level === tier"
-          @click="select(id, tier)"
+          :disabled="!preview && disabled ? true : undefined"
+          :aria-pressed="preview ? undefined : selected === id && level === tier"
+          @click="!preview && select(id, tier)"
         >
           <span class="tier-cost"
-            >{{ FAVOR_CATALOG[id].tiers[tier].cost }} jeton</span
-          ><span class="tier-label">Seviye {{ tier }}</span
-          ><br />{{ describeFavorTier(id, tier) }}
-        </button>
+            ><span>{{ FAVOR_CATALOG[id].tiers[tier].cost }}<span class="sr-only"> jeton</span></span><TokenIcon /></span
+          ><span class="tier-effect">{{ describeFavorTier(id, tier) }}<small class="tier-label">Seviye {{ tier }}<span v-if="selected === id && level === tier"> · Seçildi</span></small></span>
+        </component>
       </article>
     </div>
     <fieldset
-      v-if="definition && selected"
+      v-if="!preview && definition && selected"
       class="favor-targets"
       :disabled="disabled"
     >

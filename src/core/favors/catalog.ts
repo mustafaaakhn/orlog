@@ -210,7 +210,7 @@ export function isFavorLevel(value: unknown): value is FavorLevel {
 export function describeFavorTier(id: FavorId, level: FavorLevel): string {
   const { effect, tiers } = FAVOR_CATALOG[id], n = tiers[level].amount
   switch (effect) {
-    case 'damage': return `${n} doğrudan hasar.`
+    case 'damage': return `${n} hasar ver.`
     case 'heal': return `${n} can iyileştir.`
     case 'remove-helmets': return `Rakibin ${n} miğfer zarını kaldır.`
     case 'defense-bonus': return `Her miğfer ve kalkan zarına +${n} savunma.`

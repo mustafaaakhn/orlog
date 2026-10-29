@@ -24,6 +24,8 @@ import type { PresentationBatch } from "../app/rollSession";
 import type { DieId, GameState, GameEvent, PlayerId } from "../core";
 
 import SceneFavorControls from "../ui/SceneFavorControls.vue";
+import { inspectFavor as inspect, leaveFavor } from '../ui/favorInspection';
+import type { FavorInspection } from '../ui/favorInspection';
 import type { SceneFavorTarget } from "./dieTargets";
 import SceneDiceControls from "../ui/SceneDiceControls.vue";
 import type { SceneDieTarget } from "./dieTargets";
@@ -50,26 +52,28 @@ const emit = defineEmits<{
 }>();
 const targets = ref<SceneDieTarget[]>([]);
 const favors = ref<SceneFavorTarget[]>([]);
-const menuFavor = ref<SceneFavorTarget | null>(null);
-const menuPinned = ref(false);
+const inspection = ref<FavorInspection>({ target: null, pinned: false });
+const menuFavor = computed(() => inspection.value.target);
+const menuPinned = computed(() => inspection.value.pinned);
 const favorMenu = ref<HTMLElement | null>(null);
 function inspectFavor(target: SceneFavorTarget, activate: boolean) {
   if (target.playerId !== props.favorPlayer || props.batch || props.paused) return;
-  if (menuPinned.value && !activate) return;
-  if (menuFavor.value?.favorId !== target.favorId) menuPinned.value = false;
-  menuFavor.value = target;
-  if (activate) { menuPinned.value = true; void nextTick(() => favorMenu.value?.focus()); }
+  inspection.value = inspect(inspection.value, target, activate);
+  if (activate) void nextTick(() => favorMenu.value?.focus());
+}
+function highlightFavor(target: SceneFavorTarget | null) {
+  highlightedFavor.value = target;
+  if (!target) inspection.value = leaveFavor(inspection.value);
 }
 function closeFavor() {
   const target = menuFavor.value;
-  menuFavor.value = null;
-  menuPinned.value = false;
+  inspection.value = { target: null, pinned: false };
   if (target) document.querySelector<HTMLElement>(`[data-player-id="${target.playerId}"][data-favor-id="${target.favorId}"]`)?.focus();
   // Focusing the source is also a preview trigger; Escape must still close it.
-  menuFavor.value = null;
+  inspection.value = { target: null, pinned: false };
 }
-watch([() => props.batch, () => props.paused, () => props.favorPlayer], () => {
-  menuFavor.value = null; menuPinned.value = false;
+watch([() => props.batch, () => props.paused, () => props.favorPlayer, () => props.state.gameId], () => {
+  inspection.value = { target: null, pinned: false };
 });
 const highlightedDie = ref<DieId | null>(null);
 const highlightedFavor = ref<SceneFavorTarget | null>(null);
@@ -117,6 +121,7 @@ function detachCanvas() {
   activeCanvas = undefined;
 }
 function failed() {
+  inspection.value = { target: null, pinned: false };
   cue.value = null;
   sceneComponent.value?.dispose();
   clearLoadingTimeout();
@@ -179,6 +184,7 @@ onErrorCaptured(() => {
   <div
     class="table-viewport"
     :aria-busy="status === 'checking' || status === 'loading'"
+    @keydown.esc.stop="closeFavor"
   >
     <TresCanvas
       v-if="sceneKey > 0 && (status === 'loading' || status === 'ready')"
@@ -217,15 +223,13 @@ onErrorCaptured(() => {
         @favors="favors = $event"
       />
     </TresCanvas>
-    <SceneFavorControls v-if="status === 'ready' && !batch && !paused" :targets="favors" :active-player="favorPlayer" @highlight="highlightedFavor = $event" @inspect="inspectFavor" />
-    <section v-if="menuFavor && favorPlayer && !batch && !paused" ref="favorMenu"
-      class="table-favor-menu" role="dialog" aria-label="Tanrı gücü seçimi" tabindex="-1"
-      :style="{ left: `clamp(12px, calc(${menuFavor.x}% - 364px), max(12px, calc(100% - 352px)))` }"
-      @keydown.esc.stop="closeFavor">
-      <div class="favor-menu-heading"><h2>Tanrı gücü</h2><button aria-label="Tanrı menüsünü kapat" @click="closeFavor"><UiIcon name="close" /></button></div>
+    <SceneFavorControls v-if="status === 'ready' && !batch && !paused" :targets="favors" :active-player="favorPlayer" :pinned-target="menuPinned ? menuFavor : null" @highlight="highlightFavor" @inspect="inspectFavor" />
+    <section v-if="menuFavor && favorPlayer && status === 'ready' && !batch && !paused" ref="favorMenu"
+      id="table-favor-menu" class="table-favor-menu" :class="{ 'is-preview': !menuPinned }" :role="menuPinned ? 'dialog' : 'region'" aria-label="Tanrı gücü seçimi" tabindex="-1">
+      <p class="favor-menu-help">{{ menuPinned ? 'Seviyeni seç · Escape ile kapat' : 'Seçmek için tanrıya tıkla' }}</p>
       <FavorPicker :key="`${favorPlayer}/${menuFavor.favorId}`" :favor-id="menuFavor.favorId"
-        :state="state" :player="state.players[favorPlayer]" :disabled="false"
-        @editing="menuPinned = true" @choose="(id, level, input) => emit('choose', id, level, input)" />
+        :state="state" :player="state.players[favorPlayer]" :disabled="false" :preview="!menuPinned"
+        @choose="(id, level, input) => emit('choose', id, level, input)" />
     </section>
     <div class="resolution-cue" :class="{ 'is-title': cue?.title }" role="status" aria-live="polite" aria-atomic="true">
       <template v-if="cue">
