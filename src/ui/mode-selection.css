@@ -1,0 +1,190 @@
+/* Two illustrated arches belong to the desktop game menu, not the match HUD. */
+@media (min-width: 1024px) {
+  .experience.at-mode {
+    --mode-background: #171a16;
+    --mode-ink: #f5ebd8;
+    --mode-brass: #d3b176;
+    background: var(--mode-background);
+    color: var(--mode-ink);
+    isolation: isolate;
+  }
+  .at-mode::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(#121813f5, #171a16f7 70%, #171a16), url("/assets/art/welcome-orlog-intro.webp") center / cover;
+    pointer-events: none;
+  }
+  .at-mode .masthead {
+    border: 0;
+    margin: 0 3.3%;
+    background: transparent;
+    pointer-events: none;
+  }
+  .at-mode .masthead > .wordmark,
+  .at-mode .masthead > .edition { display: none; }
+  .at-mode .header-tools { gap: 24px; pointer-events: auto; }
+  .at-mode .header-tools .text-button,
+  .cinematic-mode .back-button { color: var(--mode-ink); }
+  .at-mode .header-tools .text-button:hover,
+  .cinematic-mode .back-button:hover { color: #fff8e8; background: #f5ebd80d; }
+  .at-mode :focus-visible { outline-color: var(--mode-brass); }
+  .at-mode ::selection { background: var(--mode-brass); color: var(--mode-background); }
+  .setup-screen.cinematic-mode {
+    height: calc(100dvh - 84px);
+    max-width: none;
+    padding: 0 3.3% 36px;
+    overflow: visible;
+  }
+  .cinematic-mode .flow-navigation {
+    position: absolute;
+    top: -84px;
+    left: 3.3%;
+    height: 84px;
+    min-height: 0;
+    z-index: 6;
+  }
+  .cinematic-mode .flow-nav-spacer { display: none; }
+  .cinematic-mode .mode-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    place-items: center;
+    overflow: visible;
+    padding: 0;
+    min-height: 0;
+  }
+  .cinematic-mode .mode-options {
+    position: relative;
+    width: min(940px, calc((100dvh - 156px) * 1.36), 91vw);
+    margin: 20px auto 0;
+  }
+  .cinematic-mode .mode-brand {
+    position: absolute;
+    z-index: 2;
+    top: -52px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0;
+    color: var(--mode-brass);
+    font: 500 clamp(28px, 3vw, 38px)/1 var(--display);
+    letter-spacing: .16em;
+    text-indent: .16em;
+  }
+  .cinematic-mode .mode-brand svg { width: 30px; height: 34px; }
+  .cinematic-mode .mode-brand:focus { outline: none; }
+  .cinematic-mode .mode-selection {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 20px;
+  }
+  .cinematic-mode .mode-selection > button {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    isolation: isolate;
+    overflow: hidden;
+    aspect-ratio: 2 / 3;
+    min-width: 0;
+    padding: 32px 28px;
+    gap: 12px;
+    border: 1px solid #ab905c;
+    border-radius: 50% 50% 8px 8px / 23% 23% 8px 8px;
+    background: #21332e;
+    color: var(--mode-ink);
+    text-align: left;
+    transition: transform 260ms cubic-bezier(.16, 1, .3, 1), border-color 260ms ease-out;
+  }
+  .cinematic-mode .mode-selection > .mode-friend-choice { background: #442c21; }
+  .cinematic-mode .mode-selection > button::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(transparent 58%, #10161155 73%, #101611f5);
+    pointer-events: none;
+  }
+  .cinematic-mode .mode-scene {
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .cinematic-mode .mode-selection h2 {
+    margin: 0;
+    font: 400 clamp(24px, 2.4vw, 34px)/1.25 var(--display);
+    color: var(--mode-ink);
+    text-shadow: 0 2px 8px #101611;
+  }
+  .cinematic-mode .mode-selection > button > .mode-card-action {
+    display: flex;
+    align-items: center;
+    width: auto;
+    margin: 0 0 4px;
+    padding: 0;
+    border: 0;
+    color: var(--mode-brass);
+  }
+  .cinematic-mode .mode-card-action svg { width: 26px; height: 26px; }
+  .cinematic-mode .mode-selection > button:hover {
+    background: #21332e;
+    border-color: #f4d79c;
+    transform: translateY(-5px);
+  }
+  .cinematic-mode .mode-selection > .mode-friend-choice:hover { background: #442c21; }
+  .cinematic-mode .mode-selection > button:active { transform: translateY(-1px); }
+  .cinematic-mode .mode-selection > button:focus-visible {
+    outline: 3px solid var(--mode-ink);
+    outline-offset: 6px;
+  }
+  .cinematic-mode.friend-open .mode-body { overflow-y: auto; }
+  .cinematic-mode.friend-open .mode-options { width: min(660px, 100%); margin: 0 auto; }
+  .cinematic-mode .friend-area {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    color: var(--mode-ink);
+    background: transparent;
+    scrollbar-color: var(--mode-brass) var(--mode-background);
+  }
+  .cinematic-mode .mode-friend-title { margin: 0 0 36px; font: 400 44px/1.2 var(--display); }
+  .cinematic-mode .segmented-control { border-color: #d3b17666; }
+  .cinematic-mode .segmented-control button { color: var(--mode-ink); }
+  .cinematic-mode .segmented-control button[aria-pressed="true"] { color: var(--mode-brass); border-color: var(--mode-brass); background: transparent; }
+  .cinematic-mode .segmented-control button:hover { background: #f5ebd80d; }
+  .cinematic-mode .friend-area p,
+  .cinematic-mode .friend-area .room-code-label,
+  .cinematic-mode .flow-footer > span { color: var(--mode-ink); }
+  .cinematic-mode .friend-area .preview-note { color: #e2c794; background: transparent; }
+  .cinematic-mode .friend-area .room-code { color: var(--mode-brass); }
+  .cinematic-mode .friend-area .text-button { color: var(--mode-brass); }
+  .cinematic-mode .friend-area .field-error { color: #ffb6a5; }
+  .cinematic-mode .friend-area input { caret-color: #5e3e1a; }
+  .cinematic-mode .flow-footer { width: min(660px, 100%); margin: 24px auto 0; padding: 20px 0 0; border-color: #d3b17666; }
+  .cinematic-mode .primary-action,
+  .cinematic-mode .secondary-action { background: #302016; color: #fff1ce; border: 1px solid #d3b176; }
+  .cinematic-mode .primary-action:hover,
+  .cinematic-mode .secondary-action:hover { background: #4b3220; }
+  .cinematic-mode .primary-action:disabled { opacity: .55; }
+}
+@media (min-width: 1024px) and (max-height: 700px) {
+  .cinematic-mode .mode-brand { top: -48px; gap: 7px; font-size: 28px; }
+  .cinematic-mode .mode-brand svg { width: 24px; height: 27px; }
+  .cinematic-mode .mode-selection > button { padding: 24px 20px; }
+  .cinematic-mode .mode-selection h2 { font-size: 25px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cinematic-mode .mode-selection > button { transition: none; }
+  .cinematic-mode .mode-selection > button:hover { transform: none; }
+}
+[data-reduced-motion="true"] .cinematic-mode .mode-selection > button { transition: none; transform: none; }

@@ -269,6 +269,7 @@ function confirm() {
     :class="{
       'in-match': !preparing,
       'at-welcome': preparing && setupScreen === 'welcome',
+      'at-mode': preparing && setupScreen === 'mode',
       'is-intro-active': introActive,
     }"
     :data-reduced-motion="reduced"
@@ -493,4 +494,5 @@ function confirm() {
 </template>
 <style>
 @import "./ui/styles.css";
+@import "./ui/mode-selection.css";
 </style>

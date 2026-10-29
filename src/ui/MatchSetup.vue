@@ -5,6 +5,7 @@ import FavorPortrait from "./FavorPortrait.vue";
 import UiIcon from "./UiIcon.vue";
 import SymbolIcon from "./SymbolIcon.vue";
 import TokenIcon from "./TokenIcon.vue";
+import GameMark from "./GameMark.vue";
 import {
   DEFAULT_FAVORS,
   FAVOR_CATALOG,
@@ -55,6 +56,7 @@ function finishIntro() {
   void nextTick(() => document.querySelector<HTMLElement>(screen.value === "welcome" ? ".welcome-play" : ".setup-screen h1")?.focus({ preventScroll: true }));
 }
 const selectedMode = ref<"computer" | "friend">("computer");
+const friendOpen = ref(false);
 const friendMode = ref<"local" | "host" | "join">("local");
 const names = ref<Record<PlayerId, string>>({
   "player-1": "Oyuncu I",
@@ -128,17 +130,29 @@ watch(
   { immediate: true },
 );
 function goBack() {
-  if (screen.value === "mode") screen.value = "welcome";
-  else if (screen.value === "gods")
+  if (screen.value === "mode" && desktopWelcome.value && friendOpen.value) {
+    friendOpen.value = false;
+    void nextTick(() => document.querySelector<HTMLElement>(".mode-friend-choice")?.focus({ preventScroll: true }));
+  } else if (screen.value === "mode") screen.value = "welcome";
+  else if (screen.value === "gods") {
+    friendOpen.value = false;
     screen.value = "mode";
-  else if (screen.value === "coin") {
+  } else if (screen.value === "coin") {
     firstPlayer.value = null;
     screen.value = "gods";
   }
 }
+function chooseFriend() {
+  selectedMode.value = "friend";
+  friendOpen.value = true;
+  if (desktopWelcome.value) void nextTick(() => document.querySelector<HTMLElement>(".mode-friend-title")?.focus({ preventScroll: true }));
+}
 function continueMode() {
   roomError.value = "";
-  if (roomReady.value) screen.value = "gods";
+  if (roomReady.value) {
+    editingPlayer.value = "player-1";
+    screen.value = "gods";
+  }
 }
 watch(roomCode, () => { roomJoined.value = false; roomError.value = ""; });
 function joinRoom() {
@@ -234,7 +248,7 @@ function start() {
   <section
     v-else-if="screen !== 'welcome'"
     class="setup-screen flow-screen"
-    :class="`screen-${screen}`"
+    :class="[`screen-${screen}`, { 'cinematic-mode': screen === 'mode' && desktopWelcome, 'friend-open': friendOpen }]"
     aria-label="Yeni oyun hazırlığı"
     :inert="introActive"
   >
@@ -242,7 +256,7 @@ function start() {
       <button class="text-button back-button" @click="goBack">
         <UiIcon name="back" /> Geri
       </button>
-      <ol>
+      <ol v-if="screen !== 'mode' || !desktopWelcome">
         <li
           v-for="(step, index) in steps"
           :key="step"
@@ -260,34 +274,42 @@ function start() {
     </nav>
     <template v-if="screen === 'mode'">
       <div class="mode-body">
-        <div class="mode-intro flow-heading">
+        <div v-if="!desktopWelcome" class="mode-intro flow-heading">
           <h1 tabindex="-1">Masada kiminle karşılaşacaksın?</h1>
           <p>Bir rakip seç. Sonra tanrılarını kuşanıp masaya geçelim.</p>
           <div class="mode-pantheon" aria-hidden="true"><FavorPortrait id="thors-strike" /><FavorPortrait id="iduns-rejuvenation" /><FavorPortrait id="freyjas-plenty" /></div>
           <p class="mode-invitation">Her atış bir ihtimal.<br />Her tanrı başka bir yol.</p>
         </div>
         <div class="mode-options">
-        <div class="mode-selection" aria-label="Oyun modu">
+        <h1 v-if="desktopWelcome && !friendOpen" class="mode-brand" tabindex="-1" aria-label="Orlog — rakibini seç"><GameMark /><span>ORLOG</span></h1>
+        <div v-if="!desktopWelcome || !friendOpen" class="mode-selection" aria-label="Oyun modu">
           <button
-            :aria-pressed="selectedMode === 'computer'"
+            class="mode-robot-choice"
+            :aria-pressed="desktopWelcome ? undefined : selectedMode === 'computer'"
+            aria-label="Robota karşı oyna"
             @click="selectedMode = 'computer'; continueMode()"
           >
-            <span class="mode-emblem"><UiIcon name="robot" /></span>
+            <img v-if="desktopWelcome" class="mode-scene" src="/assets/art/mode-robot.webp" width="1024" height="1536" alt="" decoding="async" />
+            <span v-if="!desktopWelcome" class="mode-emblem"><UiIcon name="robot" /></span>
             <h2>Robota karşı</h2>
-            <p>Tanrılarını seç ve mücadeleye başla.</p>
-            <span class="mode-card-action">Tek oyuncu <UiIcon name="arrow" /></span>
+            <p v-if="!desktopWelcome">Tanrılarını seç ve mücadeleye başla.</p>
+            <span class="mode-card-action"><span v-if="!desktopWelcome">Tek oyuncu</span><UiIcon name="arrow" /></span>
           </button>
           <button
-            :aria-pressed="selectedMode === 'friend'"
-            @click="selectedMode = 'friend'"
+            class="mode-friend-choice"
+            :aria-pressed="desktopWelcome ? undefined : selectedMode === 'friend'"
+            aria-label="Arkadaşınla oyna"
+            @click="chooseFriend"
           >
-            <span class="mode-emblem"><UiIcon name="people" /></span>
+            <img v-if="desktopWelcome" class="mode-scene" src="/assets/art/mode-friend.webp" width="1024" height="1536" alt="" decoding="async" />
+            <span v-if="!desktopWelcome" class="mode-emblem"><UiIcon name="people" /></span>
             <h2>Arkadaşınla</h2>
-            <p>Aynı bilgisayarı paylaş veya oda akışını incele.</p>
-            <span class="mode-card-action">{{ selectedMode === "friend" ? "Seçildi" : "İki oyuncu" }}<UiIcon :name="selectedMode === 'friend' ? 'check' : 'arrow'" /></span>
+            <p v-if="!desktopWelcome">Aynı bilgisayarı paylaş veya oda akışını incele.</p>
+            <span class="mode-card-action"><span v-if="!desktopWelcome">{{ selectedMode === "friend" ? "Seçildi" : "İki oyuncu" }}</span><UiIcon :name="!desktopWelcome && selectedMode === 'friend' ? 'check' : 'arrow'" /></span>
           </button>
         </div>
-        <div v-if="selectedMode === 'friend'" class="friend-area">
+        <div v-if="selectedMode === 'friend' && (!desktopWelcome || friendOpen)" class="friend-area">
+          <h1 v-if="desktopWelcome" class="mode-friend-title" tabindex="-1">Arkadaşınla</h1>
           <div class="segmented-control" role="group" aria-label="Arkadaşınla oynama şekli">
             <button v-for="path in friendPaths"
               :key="path.id" :aria-pressed="friendMode === path.id" @click="friendMode = path.id; roomError = ''">{{ path.label }}</button>
@@ -312,7 +334,7 @@ function start() {
         </div>
         </div>
       </div>
-      <div class="flow-footer">
+      <div v-if="!desktopWelcome || friendOpen" class="flow-footer">
         <span>{{ roomPreview ? 'Oda arayüzü önizlemesi' : selectedMode === 'friend' ? 'Aynı masada iki kişi' : 'Sen ve bilgisayar' }}</span>
         <button class="primary-action" :disabled="!roomReady" @click="continueMode">{{ roomPreview ? 'Yerel önizlemeyi başlat' : 'Tanrılarını seç' }}<UiIcon name="arrow" /></button>
       </div>
