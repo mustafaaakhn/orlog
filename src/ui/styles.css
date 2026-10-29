@@ -3075,6 +3075,7 @@ input[type="radio"] {
 /* Desktop approval pass: scene and control share the exact artwork coordinates. */
 .welcome-stage { display: contents; }
 .at-welcome .masthead { display: none; }
+.is-intro-active .masthead { opacity: 0; pointer-events: none; }
 @media (min-width: 1024px) {
   .at-welcome .masthead {
     display: flex;

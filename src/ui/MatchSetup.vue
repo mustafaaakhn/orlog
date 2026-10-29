@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import WelcomeIntro from "./WelcomeIntro.vue";
 import FavorPortrait from "./FavorPortrait.vue";
 import UiIcon from "./UiIcon.vue";
 import SymbolIcon from "./SymbolIcon.vue";
@@ -16,6 +17,12 @@ import type { FavorId, GameOptions, PlayerId } from "../core";
 import { FAVOR_ART_IDS } from "../scene/favorArt";
 import type { OpponentOptions } from "../ai/computer";
 type Screen = "welcome" | "mode" | "gods" | "coin";
+const props = defineProps<{
+  reduced: boolean;
+  paused: boolean;
+  muted: boolean;
+  volume: number;
+}>();
 const emit = defineEmits<{
   start: [
     options: GameOptions,
@@ -23,9 +30,30 @@ const emit = defineEmits<{
     opponent: OpponentOptions,
   ];
   screen: [screen: Screen];
+  cinematic: [active: boolean];
 }>();
 const screen = ref<Screen>("welcome");
 const welcomeArtFailed = ref(false);
+const desktopQuery = window.matchMedia("(min-width: 1024px)");
+const desktopWelcome = ref(desktopQuery.matches);
+const introActive = ref(false);
+const updateDesktop = () => { desktopWelcome.value = desktopQuery.matches; };
+desktopQuery.addEventListener("change", updateDesktop);
+watch(desktopWelcome, (desktop) => {
+  if (!desktop && introActive.value) finishIntro();
+});
+onBeforeUnmount(() => {
+  desktopQuery.removeEventListener("change", updateDesktop);
+  emit("cinematic", false);
+});
+function setIntroActive(active: boolean) {
+  introActive.value = active;
+  emit("cinematic", active);
+}
+function finishIntro() {
+  setIntroActive(false);
+  void nextTick(() => document.querySelector<HTMLElement>(screen.value === "welcome" ? ".welcome-play" : ".setup-screen h1")?.focus({ preventScroll: true }));
+}
 const selectedMode = ref<"computer" | "friend">("computer");
 const friendMode = ref<"local" | "host" | "join">("local");
 const names = ref<Record<PlayerId, string>>({
@@ -91,6 +119,7 @@ watch(
   screen,
   async (value) => {
     emit("screen", value);
+    if (introActive.value) return;
     await nextTick();
     document
       .querySelector<HTMLElement>(value === "welcome" ? ".welcome-play" : ".setup-screen h1")
@@ -173,8 +202,16 @@ function start() {
 }
 </script>
 <template>
+  <WelcomeIntro
+    v-if="desktopWelcome && (screen === 'welcome' || introActive)"
+    :reduced="props.reduced" :paused="props.paused"
+    :muted="props.muted" :volume="props.volume"
+    @active="setIntroActive"
+    @enter="screen = 'mode'"
+    @complete="finishIntro"
+  />
   <section
-    v-if="screen === 'welcome'"
+    v-if="screen === 'welcome' && !desktopWelcome"
     class="welcome-screen setup-screen"
     aria-labelledby="welcome-title"
     :class="{ 'is-unavailable': welcomeArtFailed }"
@@ -195,10 +232,11 @@ function start() {
     </div>
   </section>
   <section
-    v-else
+    v-else-if="screen !== 'welcome'"
     class="setup-screen flow-screen"
     :class="`screen-${screen}`"
     aria-label="Yeni oyun hazırlığı"
+    :inert="introActive"
   >
     <nav class="flow-navigation" aria-label="Hazırlık adımları">
       <button class="text-button back-button" @click="goBack">

@@ -38,6 +38,7 @@ const TablePreview = defineAsyncComponent({
 });
 const preparing = ref(true);
 const setupScreen = ref("welcome");
+const introActive = ref(false);
 const overlay = ref<"rules" | "settings" | "log" | "menu" | null>(null);
 const dialog = ref<HTMLDialogElement | null>(null);
 const localViewer = ref<PlayerId>("player-1");
@@ -62,11 +63,16 @@ const audio = createAudioPlayer((failed) => {
 });
 const paused = ref(document.hidden);
 watch(settings, (value) => audio.configure(value), { immediate: true });
-const unlockAudio = () => audio.unlock();
+const unlockAudio = () => {
+  if (!preparing.value || setupScreen.value !== "welcome") audio.unlock();
+};
 const visibility = () => {
   paused.value = document.hidden;
-  audio.visibility(paused.value);
+  audio.visibility(paused.value || introActive.value || !!overlay.value);
 };
+watch([introActive, overlay, paused], () => {
+  audio.visibility(paused.value || introActive.value || !!overlay.value);
+});
 onMounted(() => {
   audio.visibility(document.hidden);
   document.addEventListener("pointerdown", unlockAudio, { capture: true });
@@ -263,13 +269,14 @@ function confirm() {
     :class="{
       'in-match': !preparing,
       'at-welcome': preparing && setupScreen === 'welcome',
+      'is-intro-active': introActive,
     }"
     :data-reduced-motion="reduced"
   >
     <a v-if="!preparing" class="skip-link" href="#match-controls"
       >Oyun kontrollerine geç</a
     >
-    <header class="masthead">
+    <header class="masthead" :inert="introActive" :aria-hidden="introActive || undefined">
       <a
         class="wordmark"
         href="./"
@@ -337,8 +344,13 @@ function confirm() {
     </div>
     <MatchSetup
       v-if="preparing"
+      :reduced="reduced"
+      :paused="paused || !!overlay"
+      :muted="settings.muted"
+      :volume="settings.effects"
       @start="start"
       @screen="setupScreen = $event"
+      @cinematic="introActive = $event"
     />
     <section v-else class="match-screen" aria-label="Orlog oyun masası">
       <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
