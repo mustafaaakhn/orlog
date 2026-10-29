@@ -211,7 +211,7 @@ onBeforeUnmount(() => {
   border-radius: 4px;
   background: #302016;
   color: #fff1ce;
-  font: 500 clamp(20px, 1.65vw, 28px)/1.25 var(--display);
+  font: 400 clamp(20px, 1.65vw, 28px)/1.25 var(--display);
   letter-spacing: 0.1em;
   text-indent: 0;
   text-shadow: none;
@@ -238,7 +238,7 @@ onBeforeUnmount(() => {
   border-radius: 4px;
   background: #302016;
   color: #fff1ce;
-  font: 400 15px/1.3 "Source Sans 3", sans-serif;
+  font: 400 15px/1.4 var(--body);
   cursor: pointer;
 }
 .intro-skip svg { width: 18px; height: 18px; }

@@ -1,17 +1,28 @@
 @font-face {
-  font-family: Cinzel;
-  src: url("/assets/fonts/cinzel-latin.ttf") format("truetype");
-  font-weight: 400 900;
+  font-family: Norse;
+  src: url("/assets/fonts/norse-bold.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "Source Sans 3";
-  src: url("/assets/fonts/source-sans-3.ttf") format("truetype");
-  font-weight: 200 900;
+  font-family: Metamorphous;
+  src: url("/assets/fonts/metamorphous-latin-ext-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
   font-display: swap;
+  unicode-range: U+0100-0130, U+0132-024F, U+1E00-1EFF, U+20A0-20AB, U+20AD-20CF, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: Metamorphous;
+  src: url("/assets/fonts/metamorphous-latin-400-normal.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 :root {
-  font-family: "Source Sans 3", sans-serif;
+  font-family: var(--body);
   color: var(--text);
   background: var(--background);
   font-synthesis: none;
@@ -42,7 +53,9 @@
   --player-two-surface: #e9d1c0;
   --modal-backdrop: #30271fc9;
   --cue-background: #352a20f2;
-  --display: Cinzel, serif;
+  --body: "Metamorphous", Georgia, serif;
+  --display: var(--body);
+  --brand: "Norse", "Metamorphous", serif;
   --radius: 4px;
 }
 * {
@@ -133,7 +146,7 @@ fieldset {
   min-width: 0;
 }
 legend {
-  font-weight: 600;
+  font-weight: 400;
 }
 input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
 select {
@@ -160,7 +173,7 @@ input[type="radio"] {
   gap: 20px;
   padding: 12px 22px;
   min-height: 50px;
-  font-weight: 600;
+  font-weight: 400;
   font-size: 16px;
   text-decoration: none;
 }
@@ -226,7 +239,7 @@ input[type="radio"] {
   display: flex;
   align-items: center;
   gap: 12px;
-  font: 600 27px var(--display);
+  font: 700 34px var(--brand);
   letter-spacing: 0.16em;
   text-decoration: none;
 }
@@ -478,7 +491,7 @@ input[type="radio"] {
 .room-code-area h2,
 .room-players h2 {
   font-family: inherit;
-  font-weight: 600;
+  font-weight: 400;
   font-size: 17px;
   margin-bottom: 22px;
 }
@@ -533,7 +546,7 @@ input[type="radio"] {
   flex: 1;
 }
 .room-player strong {
-  font-weight: 600;
+  font-weight: 400;
 }
 .room-player div > span {
   font-size: 14px;
@@ -697,7 +710,7 @@ input[type="radio"] {
 }
 .loadout-heading h2 {
   font-family: inherit;
-  font-weight: 600;
+  font-weight: 400;
   font-size: 17px;
   margin: 0;
 }
@@ -734,7 +747,7 @@ input[type="radio"] {
   color: var(--muted);
 }
 .chosen-god strong {
-  font-weight: 600;
+  font-weight: 400;
 }
 .empty-god {
   color: var(--muted);
@@ -772,7 +785,7 @@ input[type="radio"] {
 }
 .god-description dt {
   color: var(--gold);
-  font-weight: 600;
+  font-weight: 400;
 }
 .god-description dd {
   margin: 0;
@@ -810,7 +823,7 @@ input[type="radio"] {
   outline-offset: 7px;
   background: #d7b579;
   color: #453422;
-  font: 500 50px var(--display);
+  font: 400 50px var(--display);
   box-shadow: 0 16px 28px #080d0e66;
 }
 .toss-coin svg {
@@ -930,7 +943,7 @@ input[type="radio"] {
 }
 .player-identity strong {
   font-size: 16px;
-  font-weight: 600;
+  font-weight: 400;
   max-width: 220px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -945,7 +958,7 @@ input[type="radio"] {
 }
 .player-resources b {
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 400;
   font-variant-numeric: tabular-nums;
 }
 .player-resources > span {
@@ -1004,7 +1017,7 @@ input[type="radio"] {
   font-size: 14px;
 }
 .dock-status strong {
-  font-weight: 600;
+  font-weight: 400;
 }
 .dock-status > span {
   font-size: 13px;
@@ -1089,7 +1102,7 @@ input[type="radio"] {
 }
 .favor-card-heading h3 {
   font-family: inherit;
-  font-weight: 600;
+  font-weight: 400;
   font-size: 17px;
   margin: 0 0 6px;
 }
@@ -1120,10 +1133,10 @@ input[type="radio"] {
 .tier-cost {
   float: right;
   color: var(--gold);
-  font-weight: 600;
+  font-weight: 400;
 }
 .tier-label {
-  font-weight: 600;
+  font-weight: 400;
 }
 .favor-targets {
   border: 1px solid var(--field-border);
@@ -2857,7 +2870,7 @@ input[type="radio"] {
 .table-favor-menu .favor-card-heading h3 { font-size: 18px; margin: 0 0 5px; }
 .table-favor-menu .favor-card-heading p { font-size: 12px; margin: 0; }
 .table-favor-menu .favor-cards article > .favor-tier { display: grid; grid-template-columns: 52px minmax(0, 1fr); align-items: center; gap: 12px; width: 100%; min-height: 64px; margin: 8px 0 0; padding: 10px; text-align: left; border: 1px solid var(--line); border-radius: 4px; background: var(--field); color: var(--text); font-size: 15px; line-height: 1.35; }
-.table-favor-menu .favor-tier .tier-cost { float: none; display: flex; align-items: center; gap: 5px; color: var(--gold); font-size: 18px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.table-favor-menu .favor-tier .tier-cost { float: none; display: flex; align-items: center; gap: 5px; color: var(--gold); font-size: 18px; font-weight: 400; font-variant-numeric: tabular-nums; }
 .table-favor-menu .favor-tier .tier-label { display: block; margin-top: 5px; font-size: 12px; color: var(--muted); }
 .table-favor-menu .favor-tier[aria-pressed="true"] { border-color: var(--preparation-green); outline: 1px solid var(--preparation-green); background: #d5dfd6; }
 .table-favor-menu .favor-targets { margin-top: 16px; padding: 12px 0 0; border: 0; border-top: 1px solid var(--line); }
@@ -3033,7 +3046,7 @@ input[type="radio"] {
   border-radius: 2px;
   background: #302016;
   color: #fff1ce;
-  font: 500 34px/1.2 var(--display);
+  font: 400 34px/1.2 var(--display);
   letter-spacing: 0.12em;
   text-indent: 0.12em;
   text-transform: uppercase;
@@ -3090,7 +3103,7 @@ input[type="radio"] {
     text-shadow: 0 2px 4px #140e09;
   }
   .at-welcome .edition { display: none; }
-  .at-welcome .wordmark { font-size: 25px; gap: 10px; }
+  .at-welcome .wordmark { font-size: 32px; gap: 10px; }
   .at-welcome .wordmark svg { width: 27px; height: 31px; color: inherit; }
   .at-welcome .header-tools { gap: 24px; }
   .at-welcome .header-tools .text-button { color: inherit; padding: 10px 4px; }
@@ -3123,7 +3136,7 @@ input[type="radio"] {
     border-radius: 50%;
     background: transparent;
     color: #f6d9a1;
-    font: 500 clamp(28px, 2.9cqw, 64px)/1 var(--display);
+    font: 400 clamp(28px, 2.9cqw, 64px)/1 var(--display);
     letter-spacing: 0.16em;
     text-indent: 0.16em;
     text-shadow: 0 2px 3px #1b0b08;
