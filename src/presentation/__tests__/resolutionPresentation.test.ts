@@ -9,7 +9,7 @@ import { createEventQueue } from '../eventQueue'
 import { mockBoard } from './testBoard'
 import { createDicePresenter } from '../dicePresenter'
 import { recordRoll } from '../rollSimulation'
-import { collectionSlot } from '../../scene/tableLayout'
+import { collectionSlot, TABLE_HALF_DEPTH } from '../../scene/tableLayout'
 
 type Draft = Parameters<typeof resolveRound>[0]
 function fixture() {
@@ -159,6 +159,6 @@ describe('event-driven resolution presentation', () => {
     expect(phaseTitle({ ...e, type: 'RoundStarted', firstPlayerId: 'player-2' }, 'round-complete')).toBe('Tur 2 · Zar atışı')
     expect(phaseTitle({ ...e, type: 'PhaseChanged', phase: { name: 'favor', activePlayerId: 'player-2' } }, 'favor')).toBe('')
     expect(phaseTitle({ ...e, type: 'PhaseChanged', phase: { name: 'resolution' } }, 'favor')).toBe('Çözümleme')
-    expect(collectionSlot('player-1', 8)[2]).toBeLessThan(9)
+    expect(collectionSlot('player-1', 8)[2] + 0.44).toBeLessThan(TABLE_HALF_DEPTH)
   })
 })

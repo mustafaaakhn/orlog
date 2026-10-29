@@ -1,4 +1,5 @@
 import {
+  BackSide,
   BoxGeometry,
   Color,
   DoubleSide,
@@ -36,6 +37,7 @@ import {
 } from "./diceGeometry";
 import {
   bowlCenter,
+  resourceLayout,
   lifeStoneSlot,
   playerAngle,
   seatPosition,
@@ -133,7 +135,7 @@ export function createBoard(invalidate: () => void = () => {}) {
 
   const table = mesh(
     root,
-    geometry(new RoundedBoxGeometry(21.5, 0.48, 20.8, 2, 0.12)),
+    geometry(new RoundedBoxGeometry(30, 0.48, 23.5, 2, 0.12)),
     wood,
     [0, -0.235, 0],
   );
@@ -191,6 +193,8 @@ export function createBoard(invalidate: () => void = () => {}) {
   }
 
   const dieShape = geometry(new RoundedBoxGeometry(0.88, 0.88, 0.88, 3, 0.075));
+  const dieContourShape = geometry(new RoundedBoxGeometry(0.99, 0.99, 0.99, 3, 0.085));
+  const contourSurface = material({ color: '#f4d899', emissive: '#dbab48', emissiveIntensity: 0.8, side: BackSide });
   const faceShape = geometry(new PlaneGeometry(0.735, 0.735));
   const faceMaterials = new Map<string, MeshStandardMaterial>();
   const dice = new Map<DieId, Group>();
@@ -204,6 +208,10 @@ export function createBoard(invalidate: () => void = () => {}) {
         die.userData.dieId = dieId;
         dice.set(dieId, die);
         mesh(die, dieShape, bone, [0, 0, 0]);
+        const contour = mesh(die, dieContourShape, contourSurface, [0, 0, 0]);
+        contour.name = 'die-contour';
+        contour.castShadow = contour.receiveShadow = false;
+        contour.visible = false;
         definition.faces.forEach((face) => {
           const cacheKey = `${face.symbol}-${face.grantsToken}`;
           let surface = faceMaterials.get(cacheKey);
@@ -321,7 +329,7 @@ export function createBoard(invalidate: () => void = () => {}) {
   for (const [index, player] of (["player-1", "player-2"] as const).entries()) {
     const stones = new Group();
     stones.name = `${player}: five columns, three rows of life stones`;
-    stones.position.set(...seatPosition(player, -5.7, 0, 5.15));
+    stones.position.set(...seatPosition(player, resourceLayout(false).lifeX, 0, resourceLayout(false).lifeZ));
     stones.rotation.y = playerAngle(player);
     for (let i = 0; i < 15; i++) {
       const surface = (index === 0 ? blueStone : redStone).clone();
@@ -338,7 +346,7 @@ export function createBoard(invalidate: () => void = () => {}) {
     root.add(stones);
     stoneGroups.push(stones);
     const tokens = new Group();
-    tokens.position.set(...seatPosition(player, 3.9, 0, 3.3));
+    tokens.position.set(...seatPosition(player, resourceLayout(false).tokenX, 0, resourceLayout(false).tokenZ));
     tokens.rotation.y = playerAngle(player);
     root.add(tokens);
     tokenGroups.push(tokens);
@@ -350,7 +358,7 @@ export function createBoard(invalidate: () => void = () => {}) {
     for (let i = 0; i < 3; i++) {
       const totem = new Group();
       totem.name = FAVOR_CATALOG[DEFAULT_FAVORS[i]!].name;
-      totem.position.set(...seatPosition(player, 4.25 + i * 1.36, 0, 5.25));
+      totem.position.set(...seatPosition(player, resourceLayout(false).godX + i * resourceLayout(false).godGap, 0, resourceLayout(false).godZ));
       totem.rotation.y = playerAngle(player);
       totem.userData.playerId = player;
       const contour = mesh(totem, geometry(new RoundedBoxGeometry(1.32, 0.12, 2.09, 2, 0.08)), material({ color: '#f4d899', emissive: '#dbab48', emissiveIntensity: 0.8 }), [0, 0.13, 0]);
@@ -393,16 +401,11 @@ export function createBoard(invalidate: () => void = () => {}) {
     return [symbol, object];
   })) as Record<'arrow' | 'axe', Mesh<PlaneGeometry, MeshStandardMaterial>>;
 
-  // One hand and one instanced cargo per theft event, sharing the real plate shape.
+  // The actual plates travel together; no hand or replacement symbol is drawn.
   const stealObject = new Group();
-  stealObject.name = 'hand carrying stolen gold';
+  stealObject.name = 'glowing stolen gold';
   root.add(stealObject);
   stealObject.visible = false;
-  const hand = mesh(stealObject, geometry(new PlaneGeometry(1.35, 1.35)), material({
-    map: keepTexture(createSymbolTexture('hand')), transparent: true,
-    depthWrite: false, side: DoubleSide, color: '#fff0c7', emissive: '#b38a3b', emissiveIntensity: 0.6,
-  }), [0, 0.65, 0]);
-  hand.rotation.x = -Math.PI / 2;
   let cargo = new InstancedMesh(tokenShape, flyingBrass, 16);
   cargo.castShadow = true;
   stealObject.add(cargo);
@@ -421,10 +424,14 @@ export function createBoard(invalidate: () => void = () => {}) {
     stealObject.visible = false;
     if (stolen) {
       const plates = tokenMeshes[stolen.owner === 'player-1' ? 0 : 1]!;
-      for (const index of stolen.indices) if (index < plates.count) {
-        tokenMatrix.makeTranslation(...tokenSlot(index));
-        plates.setMatrixAt(index, tokenMatrix);
+      for (const index of stolen.indices) {
+        // Shrinking count keeps the backing color buffer. Reset even hidden
+        // source slots so later income cannot resurrect a stale theft glow.
         plates.setColorAt(index, white);
+        if (index < plates.count) {
+          tokenMatrix.makeTranslation(...tokenSlot(index));
+          plates.setMatrixAt(index, tokenMatrix);
+        }
       }
       plates.instanceMatrix.needsUpdate = true;
       if (plates.instanceColor) plates.instanceColor.needsUpdate = true;
@@ -450,7 +457,6 @@ export function createBoard(invalidate: () => void = () => {}) {
         cargo.castShadow = true;
         stealObject.add(cargo);
       }
-      hand.rotation.z = owner === 'player-1' ? Math.PI : 0;
       cargo.count = count;
       cargo.visible = false;
       return stolen.indices.map(index => tokenPosition(owner, index));
@@ -634,26 +640,32 @@ export function createBoard(invalidate: () => void = () => {}) {
     setNarrow(narrow: boolean) {
       // Keep both players facing each other at every width. Only the table's
       // peripheral resources move inward; physics and battle lines stay fixed.
-      table.scale.x = narrow ? 17 / 21.5 : 1;
-      fabric.scale.x = narrow ? 14.8 / 18.3 : 1;
+      table.scale.x = narrow ? 17 / 30 : 1;
+      fabric.scale.x = narrow ? 14.8 / 27 : 1;
+      const layout = resourceLayout(narrow);
       for (const [index, player] of (
         ["player-1", "player-2"] as const
       ).entries()) {
         stoneGroups[index]!.position.set(
-          ...seatPosition(player, narrow ? -5.2 : -5.7, 0, 5.15),
+          ...seatPosition(player, layout.lifeX, 0, layout.lifeZ),
         );
+        tokenGroups[index]!.position.set(...seatPosition(player, layout.tokenX, 0, layout.tokenZ));
         for (let i = 0; i < 3; i++) {
           const totem = totemGroups[index * 3 + i]!;
           const [x, , z] = seatPosition(
             player,
-            (narrow ? 3.75 : 4.25) + i * (narrow ? 1.3 : 1.36),
+            layout.godX + i * layout.godGap,
             0,
-            5.25,
+            layout.godZ,
           );
           totem.position.x = x;
           totem.position.z = z;
         }
       }
+    },
+    highlightDie(id: DieId | null) {
+      for (const [dieId, die] of dice) die.getObjectByName('die-contour')!.visible = dieId === id && die.visible;
+      invalidate();
     },
     favorTargets() { return totemGroups.filter(totem => totem.visible); },
     highlightFavor(player: PlayerId | null, id: FavorId | null) {

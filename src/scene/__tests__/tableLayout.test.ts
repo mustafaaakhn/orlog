@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { bowlCenter, lifeStoneSlot, seatPosition } from "../tableLayout";
+import { bowlCenter, lifeStoneSlot, seatPosition, collectionSlot, TABLE_HALF_DEPTH } from "../tableLayout";
 import {
   bowlWorldSlot,
   playerFaceRotation,
@@ -34,6 +34,25 @@ describe("player-facing table layout", () => {
         ),
       ),
     ).toBeCloseTo(0);
+  });
+  it("keeps all nine battle and collection dice clear of both bowls and each other", () => {
+    for (const player of ["player-1", "player-2"] as const) {
+      const side = player === "player-1" ? 1 : -1;
+      const center = bowlCenter(player)[2] * side;
+      const slots = Array.from({ length: 9 }, (_, index) => reserveSlot(player, index));
+      for (const slot of slots) {
+        // Cube edge to the bowl's outer wall, even for three bonus dice.
+        expect(center - 3.25 - (slot[2] * side + 0.44)).toBeGreaterThan(1.8);
+      }
+      const collected = Array.from({ length: 9 }, (_, index) => collectionSlot(player, index));
+      for (const [x, , z] of collected) {
+        expect(Math.hypot(x, z - center * side) - 0.63).toBeGreaterThan(3.25);
+        expect(Math.abs(z) + 0.44).toBeLessThan(TABLE_HALF_DEPTH);
+      }
+      for (const [i, a] of collected.entries()) for (const b of collected.slice(i + 1)) {
+        expect(Math.hypot(a[0] - b[0], a[2] - b[2])).toBeGreaterThanOrEqual(0.9 - 1e-8);
+      }
+    }
   });
   it("places fifteen life stones in five columns and three rows", () => {
     const slots = Array.from({ length: 15 }, (_, i) => lifeStoneSlot(i));

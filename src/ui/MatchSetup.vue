@@ -13,9 +13,8 @@ import {
 } from "../core";
 import type { FavorId, GameOptions, PlayerId } from "../core";
 import { FAVOR_ART_IDS } from "../scene/favorArt";
-import { DIFFICULTIES } from "../ai/computer";
-import type { Difficulty, OpponentOptions } from "../ai/computer";
-type Screen = "welcome" | "mode" | "room" | "gods" | "coin";
+import type { OpponentOptions } from "../ai/computer";
+type Screen = "welcome" | "mode" | "gods" | "coin";
 const emit = defineEmits<{
   start: [
     options: GameOptions,
@@ -25,9 +24,8 @@ const emit = defineEmits<{
   screen: [screen: Screen];
 }>();
 const screen = ref<Screen>("welcome");
-const selectedMode = ref<"computer" | "friend" | "room">("computer");
-const friendMode = ref<"local" | "join">("local");
-const difficulty = ref<Difficulty>("normal");
+const selectedMode = ref<"computer" | "friend">("computer");
+const friendMode = ref<"local" | "host" | "join">("local");
 const names = ref<Record<PlayerId, string>>({
   "player-1": "Oyuncu I",
   "player-2": "Oyuncu II",
@@ -44,12 +42,24 @@ const roomError = ref("");
 const roomJoined = ref(false);
 const guestPresent = ref(false);
 const copied = ref(false);
-const roomPreview = computed(
-  () =>
-    selectedMode.value === "room" ||
-    (selectedMode.value === "friend" && friendMode.value === "join"),
+const roomPreview = computed(() => selectedMode.value === "friend" && friendMode.value !== "local");
+const isHost = computed(() => friendMode.value === "host");
+const roomReady = computed(
+  () => !roomPreview.value || (isHost.value ? guestPresent.value : roomJoined.value),
 );
-const isHost = computed(() => selectedMode.value === "room");
+const friendPaths = [
+  { id: "local", label: "Aynı bilgisayarda" },
+  { id: "host", label: "Oda kur" },
+  { id: "join", label: "Odaya katıl" },
+] as const;
+const roomStatus = computed(() => {
+  if (isHost.value) return guestPresent.value
+    ? "Oda sahibi: Sen · Misafir: Arkadaşın · 2 / 2 (önizleme)"
+    : "Oda sahibi: Sen · Arkadaş bekleniyor · 1 / 2 (önizleme)";
+  return roomJoined.value
+    ? `Oda: ${roomCode.value.toUpperCase()} · Misafir: Sen · Oda sahibinin başlatması bekleniyor (önizleme)`
+    : "6 harf veya rakamdan oluşan örnek bir kod gir.";
+});
 const local = computed(() => selectedMode.value !== "computer");
 const currentLoadout = computed(() => loadouts.value[editingPlayer.value]);
 const valid = computed(() =>
@@ -88,9 +98,8 @@ watch(
 );
 function goBack() {
   if (screen.value === "mode") screen.value = "welcome";
-  else if (screen.value === "room") screen.value = "mode";
   else if (screen.value === "gods")
-    screen.value = roomPreview.value ? "room" : "mode";
+    screen.value = "mode";
   else if (screen.value === "coin") {
     firstPlayer.value = null;
     screen.value = "gods";
@@ -98,11 +107,16 @@ function goBack() {
 }
 function continueMode() {
   roomError.value = "";
-  screen.value = roomPreview.value ? "room" : "gods";
+  if (roomReady.value) screen.value = "gods";
 }
+watch(roomCode, () => { roomJoined.value = false; roomError.value = ""; });
 function joinRoom() {
   if (!/^[A-Z0-9]{6}$/.test(roomCode.value.trim().toUpperCase())) {
     roomError.value = "6 harf veya rakamdan oluşan bir oda kodu gir.";
+    void nextTick(() => {
+      document.getElementById("room-error")?.scrollIntoView({ block: "nearest" });
+      document.getElementById("room-code")?.focus({ preventScroll: true });
+    });
     return;
   }
   roomError.value = "";
@@ -151,7 +165,7 @@ function start() {
       },
       {
         mode: local.value ? "local" : "computer",
-        difficulty: difficulty.value,
+        difficulty: "normal",
       },
     );
 }
@@ -216,11 +230,11 @@ function start() {
         <div class="mode-selection" aria-label="Oyun modu">
           <button
             :aria-pressed="selectedMode === 'computer'"
-            @click="selectedMode = 'computer'"
+            @click="selectedMode = 'computer'; continueMode()"
           >
             <UiIcon name="robot" />
             <h2>Robota karşı</h2>
-            <p>Kendi hızında oyna. Üç zorluk, aynı mücadele.</p>
+            <p>Tanrılarını seç ve mücadeleye başla.</p>
             <span
               >{{ selectedMode === "computer" ? "Seçildi" : "Tek oyuncu"
               }}<UiIcon v-if="selectedMode === 'computer'" name="check"
@@ -232,224 +246,40 @@ function start() {
           >
             <UiIcon name="people" />
             <h2>Arkadaşınla</h2>
-            <p>Aynı cihazı paylaş veya bir odaya katıl.</p>
+            <p>Aynı bilgisayarı paylaş veya oda akışını incele.</p>
             <span
               >{{ selectedMode === "friend" ? "Seçildi" : "İki oyuncu"
               }}<UiIcon v-if="selectedMode === 'friend'" name="check"
             /></span>
           </button>
-          <button
-            :aria-pressed="selectedMode === 'room'"
-            @click="selectedMode = 'room'"
-          >
-            <UiIcon name="door" />
-            <h2>Oda kur</h2>
-            <p>Kodunu paylaş. Arkadaşını masana davet et.</p>
-            <span
-              >Oda önizlemesi<UiIcon
-                v-if="selectedMode === 'room'"
-                name="check"
-            /></span>
-          </button>
         </div>
-        <div class="mode-detail">
-          <template v-if="selectedMode === 'computer'"
-            ><fieldset class="difficulty-options">
-              <legend>Zorluk</legend>
-              <button
-                v-for="(entry, key) in DIFFICULTIES"
-                :key="key"
-                :aria-pressed="difficulty === key"
-                @click="difficulty = key"
-              >
-                {{ entry.label }}
-              </button>
-            </fieldset>
-            <p>{{ DIFFICULTIES[difficulty].description }}</p></template
-          >
-          <template v-else-if="selectedMode === 'friend'"
-            ><div
-              class="segmented-control"
-              aria-label="Arkadaşınla oynama şekli"
-            >
-              <button
-                :aria-pressed="friendMode === 'local'"
-                @click="friendMode = 'local'"
-              >
-                Aynı cihazda</button
-              ><button
-                :aria-pressed="friendMode === 'join'"
-                @click="friendMode = 'join'"
-              >
-                Odaya katıl
-              </button>
+        <div v-if="selectedMode === 'friend'" class="friend-area">
+          <div class="segmented-control" role="group" aria-label="Arkadaşınla oynama şekli">
+            <button v-for="path in friendPaths"
+              :key="path.id" :aria-pressed="friendMode === path.id" @click="friendMode = path.id; roomError = ''">{{ path.label }}</button>
+          </div>
+          <p v-if="friendMode === 'local'">Yan yana oturun. Sırayla zar atıp aynı masayı paylaşın.</p>
+          <template v-else>
+            <p id="room-preview-note" class="preview-note">Oda önizlemesi · Gerçek bağlantı kurulmaz. Devam ederseniz aynı bilgisayarda oynarsınız.</p>
+            <div v-if="isHost" class="friend-room-inline">
+              <div><span class="room-code-label">Örnek davet kodu</span><strong class="room-code">SKAL26</strong></div>
+              <button class="secondary-action" @click="copyCode"><UiIcon name="copy" />{{ copied ? 'Kod kopyalandı' : 'Kodu kopyala' }}</button>
+              <button class="text-button" :aria-pressed="guestPresent" @click="guestPresent = !guestPresent">{{ guestPresent ? 'Bekleme durumunu göster' : 'Arkadaş katılımını önizle' }}</button>
             </div>
-            <p>
-              {{
-                friendMode === "local"
-                  ? "Yan yana oturun. Sırayla zar atıp aynı masayı paylaşın."
-                  : "Arkadaşının oda koduyla katılma ekranını incele. Çevrim içi oyun yakında."
-              }}
-            </p></template
-          >
-          <p v-else class="preview-note">
-            Oda akışını inceleyebilirsin. Çevrim içi bağlantı daha sonra
-            eklenecek.
-          </p>
+            <form v-else class="friend-join-form" @submit.prevent="joinRoom">
+              <label for="room-code">Oda kodu</label>
+              <div class="friend-code-entry"><input id="room-code" v-model="roomCode" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" placeholder="Örn. SKAL26"
+                :aria-invalid="!!roomError" :aria-describedby="roomError ? 'room-preview-note room-error' : 'room-preview-note'" />
+                <button class="secondary-action" type="submit">Katıl</button></div>
+            </form>
+            <p role="status" class="friend-room-status">{{ roomStatus }}</p>
+            <p v-if="roomError" id="room-error" class="field-error" role="alert">{{ roomError }}</p>
+          </template>
         </div>
       </div>
       <div class="flow-footer">
-        <span>{{
-          selectedMode === "computer"
-            ? "Sen ve bilgisayar"
-            : selectedMode === "room"
-              ? "Özel oda · Arayüz önizlemesi"
-              : friendMode === "local"
-                ? "Aynı masada iki kişi"
-                : "Odaya katılım · Arayüz önizlemesi"
-        }}</span
-        ><button class="primary-action" @click="continueMode">
-          {{ roomPreview ? "Odaya geç" : "Tanrılarını seç" }}
-          <UiIcon name="arrow" />
-        </button>
-      </div>
-    </template>
-    <template v-else-if="screen === 'room'">
-      <div class="flow-heading">
-        <h1 tabindex="-1">
-          {{
-            isHost
-              ? "Masan hazır. Arkadaşını davet et."
-              : roomJoined
-                ? "Masada yerin hazır."
-                : "Arkadaşının masasına katıl."
-          }}
-        </h1>
-        <p>Oda önizlemesi. Bu ekranda gerçek bir bağlantı kurulmaz.</p>
-      </div>
-      <div class="room-layout">
-        <div class="room-code-area">
-          <template v-if="isHost"
-            ><h2>Davet kodun</h2>
-            <div class="room-code">SKAL26</div>
-            <button class="secondary-action" @click="copyCode">
-              <UiIcon name="copy" />{{
-                copied ? "Kod kopyalandı" : "Kodu kopyala"
-              }}
-            </button>
-            <p>
-              Arkadaşın bu kodla odana katılacak.<br />Oyunu yalnızca sen
-              başlatabilirsin.
-            </p></template
-          >
-          <form v-else-if="!roomJoined" @submit.prevent="joinRoom">
-            <label for="room-code">Oda kodu</label
-            ><input
-              id="room-code"
-              v-model="roomCode"
-              autocomplete="off"
-              autocapitalize="characters"
-              spellcheck="false"
-              maxlength="6"
-              placeholder="Örn. SKAL26"
-              :aria-invalid="!!roomError"
-              :aria-describedby="roomError ? 'room-error' : undefined"
-            /><button class="primary-action" type="submit">
-              Katılımı önizle <UiIcon name="arrow" />
-            </button>
-          </form>
-          <template v-else
-            ><h2>Katıldığın oda</h2>
-            <div class="room-code">{{ roomCode.toUpperCase() }}</div>
-            <p>Oda sahibinin başlatması bekleniyor.</p></template
-          >
-          <p v-if="roomError" id="room-error" class="field-error" role="alert">
-            {{ roomError }}
-          </p>
-        </div>
-        <div class="room-players">
-          <h2>
-            Masadakiler
-            <span
-              >{{
-                (isHost && !guestPresent) || (!isHost && !roomJoined)
-                  ? "1"
-                  : "2"
-              }}
-              / 2</span
-            >
-          </h2>
-          <div class="room-player">
-            <UiIcon name="people" />
-            <div>
-              <strong>{{ isHost ? "Sen" : "Oda sahibi" }}</strong
-              ><span>Oda sahibi</span>
-            </div>
-            <span class="ready-label">Hazır</span>
-          </div>
-          <div
-            class="room-player"
-            :class="{ waiting: isHost ? !guestPresent : !roomJoined }"
-          >
-            <UiIcon name="people" />
-            <div>
-              <strong>{{
-                isHost
-                  ? guestPresent
-                    ? "Arkadaşın"
-                    : "Arkadaş bekleniyor"
-                  : roomJoined
-                    ? "Sen"
-                    : "Boş koltuk"
-              }}</strong
-              ><span>{{
-                isHost
-                  ? guestPresent
-                    ? "Katılım önizlemesi"
-                    : "Davet koduyla katılacak"
-                  : roomJoined
-                    ? "Misafir"
-                    : "Kodunu girerek katıl"
-              }}</span>
-            </div>
-            <UiIcon v-if="isHost ? guestPresent : roomJoined" name="check" />
-          </div>
-          <button
-            v-if="isHost"
-            class="text-button"
-            @click="guestPresent = !guestPresent"
-          >
-            {{
-              guestPresent
-                ? "Bekleme durumunu göster"
-                : "Arkadaş katılımını önizle"
-            }}
-          </button>
-        </div>
-      </div>
-      <div class="flow-footer">
-        <span role="status">{{
-          isHost
-            ? guestPresent
-              ? "İki oyuncu da masada."
-              : "Arkadaşının katılması bekleniyor."
-            : "Başlatma yetkisi oda sahibinde."
-        }}</span
-        ><button
-          v-if="isHost"
-          class="primary-action"
-          :disabled="!guestPresent"
-          @click="screen = 'gods'"
-        >
-          Tanrı seçimine geç <UiIcon name="arrow" /></button
-        ><button
-          v-else
-          class="secondary-action"
-          :disabled="!roomJoined"
-          @click="screen = 'gods'"
-        >
-          Tanrı seçimini önizle <UiIcon name="arrow" />
-        </button>
+        <span>{{ roomPreview ? 'Oda arayüzü önizlemesi' : selectedMode === 'friend' ? 'Aynı masada iki kişi' : 'Sen ve bilgisayar' }}</span>
+        <button class="primary-action" :disabled="!roomReady" @click="continueMode">{{ roomPreview ? 'Yerel önizlemeyi başlat' : 'Tanrılarını seç' }}<UiIcon name="arrow" /></button>
       </div>
     </template>
     <template v-else-if="screen === 'gods'">

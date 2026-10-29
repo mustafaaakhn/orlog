@@ -430,7 +430,7 @@ input[type="radio"] {
 }
 .mode-selection {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 20px;
 }
 .mode-selection > button {
@@ -2579,14 +2579,13 @@ input[type="radio"] {
   touch-action: manipulation;
 }
 .scene-die-target:hover:enabled {
-  border-color: var(--gold);
-  background: #78532612;
+  background: transparent;
 }
 .scene-die-target:focus-visible {
-  box-shadow: 0 0 0 4px #fff4dd;
-  outline: 2px solid var(--focus);
-  outline-offset: 2px;
-  background: #78532618;
+  /* The rounded 3D die contour is the visible keyboard focus indicator. */
+  box-shadow: none;
+  outline: none;
+  background: transparent;
 }
 .scene-die-target:disabled {
   pointer-events: none;
@@ -2936,4 +2935,26 @@ input[type="radio"] {
 @media (max-height: 500px) and (orientation: landscape) {
   .table-favor-menu { max-height: calc(100% - 16px); padding: 14px; }
   .favor-prompt { font-size: 13px; }
+}
+
+/* 7G: three compact paths share the same friend area. */
+.friend-area { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+.friend-area > p { color: var(--muted); margin: 14px 0 0; font-size: 15px; }
+.friend-area .segmented-control { flex-wrap: wrap; }
+.friend-area .segmented-control button { min-width: 0; padding: 8px 16px; }
+.friend-room-inline { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-top: 20px; }
+.room-code-label { display: block; font-size: 13px; color: var(--muted); }
+.friend-room-inline .room-code { display: block; font-size: 30px; margin: 2px 0 0; }
+.friend-join-form { margin-top: 20px; max-width: 420px; }
+.friend-join-form label { display: block; margin-bottom: 8px; }
+.friend-code-entry { display: flex; gap: 10px; }
+.friend-code-entry input { min-width: 0; width: 100%; text-transform: uppercase; letter-spacing: 0.1em; }
+.friend-code-entry button { flex-shrink: 0; }
+.friend-area .friend-room-status { font-size: 14px; }
+@media (max-width: 600px) {
+  .friend-area { margin-top: 16px; padding-top: 14px; }
+  .friend-area .segmented-control { gap: 4px; }
+  .friend-area .segmented-control button { padding: 8px 10px; font-size: 14px; }
+  .friend-room-inline { gap: 8px 12px; margin-top: 14px; }
+  .friend-room-inline .text-button { padding-left: 0; }
 }

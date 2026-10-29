@@ -27,7 +27,6 @@ import type {
 } from "./core";
 import { createRollSession } from "./app/rollSession";
 import { createComputerDriver } from "./app/computerDriver";
-import { DIFFICULTIES } from "./ai/computer";
 import type { OpponentOptions } from "./ai/computer";
 
 const TablePreview = defineAsyncComponent({
@@ -161,7 +160,7 @@ const instruction = computed(() => {
   if (pending.value)
     return eventText(lastEvent.value) || "Olaylar masada çözülüyor…";
   if (computerTurn.value)
-    return `Bilgisayar düşünüyor… (${DIFFICULTIES[opponent.value.difficulty].label})`;
+    return "Bilgisayar düşünüyor…";
   if (phase.value.name === "ended")
     return `${names.value[phase.value.winnerId]} kazandı. Yeni bir maç için yeniden başlat.`;
   if (phase.value.name === "round-complete")
@@ -466,7 +465,7 @@ function confirm() {
           Tur {{ state.round }} ·
           {{
             opponent.mode === "computer"
-              ? `Bilgisayara karşı · ${DIFFICULTIES[opponent.difficulty].label}`
+              ? "Robota karşı"
               : "Aynı cihazda iki kişi"
           }}
         </p>

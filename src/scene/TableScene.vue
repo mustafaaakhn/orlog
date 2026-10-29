@@ -35,6 +35,7 @@ const props = defineProps<{
   paused: boolean;
   quality: string;
   speed: number;
+  highlightedDie: DieId | null;
   highlightedFavor: { playerId: PlayerId; favorId: import("../core").FavorId } | null;
   viewerId: PlayerId;
   state: GameState;
@@ -240,7 +241,7 @@ watch(
     const side = playerSide(props.viewerId);
     const narrow = sizes.width.value < 620 && aspect < 1.1;
     board.setNarrow(narrow);
-    direction.set(0, 1, (narrow ? 0.78 : 1.05) * side).normalize();
+    direction.set(0, 1, (narrow ? 0.78 : 1.3) * side).normalize();
     up.set(0, Math.abs(direction.z), -direction.y * side);
     const target = new Vector3(0, 0.2, 0);
     // Fit both seats in one oblique view; no optional zoom mode.
@@ -272,6 +273,7 @@ watch(
   { immediate: true },
 );
 
+watch(() => props.highlightedDie, value => board.highlightDie(value));
 watch(() => props.highlightedFavor, value => board.highlightFavor(value?.playerId ?? null, value?.favorId ?? null));
 const raycaster = new Raycaster();
 let pointer: { x: number; y: number; id: number } | undefined;
@@ -348,12 +350,12 @@ onBeforeUnmount(dispose);
     :intensity="2.1"
     cast-shadow
     :shadow-mapSize="shadowSize"
-    :shadow-camera-left="-11"
-    :shadow-camera-right="11"
-    :shadow-camera-top="10"
-    :shadow-camera-bottom="-10"
+    :shadow-camera-left="-16"
+    :shadow-camera-right="16"
+    :shadow-camera-top="13"
+    :shadow-camera-bottom="-13"
     :shadow-camera-near="0.5"
-    :shadow-camera-far="35"
+    :shadow-camera-far="45"
     :shadow-radius="4"
     :shadow-normalBias="0.025"
     :shadow-bias="-0.0001"

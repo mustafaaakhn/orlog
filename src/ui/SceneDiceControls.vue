@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, watch, onBeforeUnmount } from "vue";
+import { createDieHighlight } from "./dieHighlight";
 import { getDieFace } from "../core";
 import type { DieId, PlayerState } from "../core";
 import { closestDieTarget } from "../scene/dieTargets";
@@ -10,7 +11,7 @@ const props = defineProps<{
   targets: readonly SceneDieTarget[];
   disabled: boolean;
 }>();
-const emit = defineEmits<{ select: [id: DieId] }>();
+const emit = defineEmits<{ select: [id: DieId]; highlight: [id: DieId | null] }>();
 const controls = computed(() =>
   props.player.dice.flatMap((die, index) => {
     const target = props.targets.find((value) => value.id === die.id);
@@ -26,7 +27,14 @@ const controls = computed(() =>
     ];
   }),
 );
-const aimed = ref<DieId | null>(null);
+const highlight = createDieHighlight(
+  () => !props.disabled,
+  () => controls.value.map(target => target.id),
+);
+const { aimed } = highlight;
+watch(() => props.player.id, highlight.clear);
+watch(highlight.id, id => emit("highlight", id), { immediate: true });
+onBeforeUnmount(() => emit("highlight", null));
 function nearest(event: MouseEvent | PointerEvent) {
   const container = (event.currentTarget as HTMLElement).closest(
     ".scene-die-controls",
@@ -41,7 +49,7 @@ function nearest(event: MouseEvent | PointerEvent) {
   );
 }
 function aim(event: PointerEvent) {
-  aimed.value = nearest(event)?.id ?? null;
+  if (event.pointerType !== "touch") aimed.value = nearest(event)?.id ?? null;
 }
 function select(event: MouseEvent, fallback: DieId) {
   emit("select", event.detail ? (nearest(event)?.id ?? fallback) : fallback);
@@ -66,6 +74,7 @@ function navigate(event: KeyboardEvent) {
   const current = buttons.indexOf(event.target as HTMLButtonElement);
   if (current < 0 || !buttons.length) return;
   event.preventDefault();
+  aimed.value = null;
   const next =
     event.key === "Home"
       ? 0
@@ -99,6 +108,8 @@ function navigate(event: KeyboardEvent) {
       :aria-label="target.label"
       :aria-pressed="target.selected"
       :disabled="disabled"
+      @focus="highlight.focus(target.id)"
+      @blur="highlight.focus(null)"
       @click="select($event, target.id)"
     >
       <span class="sr-only">{{ target.label }}</span>

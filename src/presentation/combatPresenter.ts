@@ -93,14 +93,12 @@ export function createCombatPresenter(
     const finalOffsets = destinations.map(point => point.clone().sub(arrival))
     const startScale = board.tokenScale(event.targetId), endScale = board.tokenScale(event.playerId, event.tokens)
     board.steal.cargo(offsets, startScale)
-    effect.position.copy(source(event)).add(new Vector3(0, 1, 0))
-    if (reduced()) effect.position.copy(pickup)
+    effect.position.copy(pickup)
     effect.visible = true
     try {
       await animate(t => {
-        if (reduced()) wait(t, 0.16)
-        else t.to(effect.position, { x: pickup.x, z: pickup.z, y: pickup.y + 0.12, duration: 0.34, ease: 'power2.out' })
-        t.call(() => { if (!closed && !paused) board.steal.lift() })
+        wait(t, reduced() ? 0.16 : 0.34)
+        t.call(() => { if (!closed && !paused && !reduced()) board.steal.lift() })
         if (reduced()) wait(t, 0.12)
         else {
           t.to(effect.position, { y: Math.max(pickup.y, arrival.y) + 1.5, duration: 0.18, ease: 'power2.out' })
@@ -114,6 +112,7 @@ export function createCombatPresenter(
           if (closed || paused) return
           effect.visible = false
           contact(event, 1)
+          board.steal.prepare(event.playerId, event.tokens - event.amount, event.amount)
         })
         wait(t, reduced() ? 0.08 : 0.12)
       })
@@ -195,7 +194,7 @@ export function createCombatPresenter(
       }
       const text = eventText(event)
       if (text) feedback.cue?.({ text,
-        symbol: event.type === 'AttackBlocked' || event.type === 'DamageDealt' ? event.symbol : event.type === 'TokensStolen' ? 'hand' : undefined,
+        symbol: event.type === 'AttackBlocked' || event.type === 'DamageDealt' ? event.symbol : undefined,
         targetSymbol: event.type === 'AttackBlocked' ? event.symbol === 'arrow' ? 'shield' : 'helmet' : undefined,
       })
       const ids = eventDice(event)

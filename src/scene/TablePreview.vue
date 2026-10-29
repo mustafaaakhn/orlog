@@ -71,12 +71,14 @@ function closeFavor() {
 watch([() => props.batch, () => props.paused, () => props.favorPlayer], () => {
   menuFavor.value = null; menuPinned.value = false;
 });
+const highlightedDie = ref<DieId | null>(null);
 const highlightedFavor = ref<SceneFavorTarget | null>(null);
 watch([() => props.batch, () => props.paused], () => { highlightedFavor.value = null; });
 const cue = ref<PresentationCue | null>(null);
 const collected = ref<DieId[]>([]);
 const controlsDisabled = computed(
   () =>
+    props.paused ||
     !!props.batch ||
     props.state.phase.name !== "roll" ||
     props.state.phase.step !== "selecting-dice",
@@ -200,6 +202,7 @@ onErrorCaptured(() => {
         :quality="quality"
         :speed="speed"
         :highlighted-favor="highlightedFavor"
+        :highlighted-die="!controlsDisabled && controlPlayer && status === 'ready' ? highlightedDie : null"
         :viewer-id="viewerId ?? 'player-1'"
         :state="state"
         :batch="batch"
@@ -252,6 +255,7 @@ onErrorCaptured(() => {
       :targets="targets"
       :disabled="controlsDisabled"
       @select="emit('select', $event)"
+      @highlight="highlightedDie = $event"
     />
     <div
       v-if="status !== 'ready'"
