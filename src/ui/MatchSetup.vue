@@ -93,7 +93,7 @@ watch(
     emit("screen", value);
     await nextTick();
     document
-      .querySelector<HTMLElement>(".setup-screen h1")
+      .querySelector<HTMLElement>(value === "welcome" ? ".welcome-play" : ".setup-screen h1")
       ?.focus({ preventScroll: true });
   },
   { immediate: true },
@@ -177,36 +177,19 @@ function start() {
     v-if="screen === 'welcome'"
     class="welcome-screen setup-screen"
     aria-labelledby="welcome-title"
+    :class="{ 'is-unavailable': welcomeArtFailed }"
   >
-    <div class="welcome-copy">
-      <h1 id="welcome-title" tabindex="-1">Bir avuç zar.<br />Bir destan.</h1>
-      <p>
-        Tanrılarını yanına al. Zarlarını at.<br />Kuzeyin masasında kaderini
-        kendin seç.
-      </p>
-      <button class="primary-action welcome-play" @click="screen = 'mode'">
-        Oyna <UiIcon name="arrow" />
-      </button>
-      <div class="welcome-symbols" aria-label="Altı zar, üç tanrı, tek kazanan">
-        <SymbolIcon symbol="axe" /><span>6 zar</span
-        ><span class="welcome-divider"></span><span>3 tanrı</span
-        ><span class="welcome-divider"></span><span>Tek kazanan</span>
-      </div>
-    </div>
-    <figure class="welcome-art" :class="{ 'is-unavailable': welcomeArtFailed }">
-      <img v-if="!welcomeArtFailed"
+    <h1 id="welcome-title" class="sr-only">Orlog</h1>
+    <picture v-if="!welcomeArtFailed" class="welcome-art">
+      <source media="(orientation: portrait)" srcset="/assets/art/welcome-orlog-portrait.webp" width="887" height="1774" />
+      <img
         src="/assets/art/welcome-orlog.webp"
-        srcset="/assets/art/welcome-orlog-768.webp 768w, /assets/art/welcome-orlog.webp 1536w"
-        sizes="(max-width: 600px) calc(100vw - 40px), 54vw"
         width="1536" height="1024" fetchpriority="high" decoding="async"
         alt="Eivor ve Sigurd, fiyort manzarasına karşı Orlog oynuyor; oyma ahşap tanrılar masanın çevresinden oyunu izliyor."
         @error="welcomeArtFailed = true"
       />
-      <figcaption v-else>Kuzeyin masası seni bekliyor.</figcaption>
-    </figure>
-    <p class="welcome-footnote">
-      Valhalla’dan ilham alan bağımsız bir hayran uyarlaması.
-    </p>
+    </picture>
+    <button class="welcome-play" @click="screen = 'mode'">Oyna</button>
   </section>
   <section
     v-else
