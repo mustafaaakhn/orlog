@@ -261,18 +261,6 @@ input[type="radio"] {
   width: 100%;
   height: 100%;
 }
-.at-welcome .scene-layer {
-  left: 40%;
-  bottom: 0;
-  top: 84px;
-}
-.at-welcome .scene-layer::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: linear-gradient(90deg, var(--table-surround), transparent 25%);
-}
 .setup-screen {
   position: relative;
   z-index: 1;
@@ -1648,9 +1636,7 @@ input[type="radio"] {
   .welcome-copy > p {
     font-size: 18px;
   }
-  .at-welcome .scene-layer {
-    left: 38%;
-  }
+
   .room-layout {
     gap: 30px;
   }
@@ -1723,16 +1709,6 @@ input[type="radio"] {
     bottom: 16px;
     font-size: 10px;
     max-width: 32ch;
-  }
-  .at-welcome .scene-layer {
-    top: 390px;
-    bottom: 20px;
-    left: 5%;
-    right: 0;
-    opacity: 0.85;
-  }
-  .at-welcome .scene-layer::after {
-    background: linear-gradient(var(--table-surround), transparent 20%);
   }
   .flow-screen {
     height: calc(100dvh - 68px);
@@ -2252,9 +2228,7 @@ input[type="radio"] {
   .welcome-screen {
     padding: 0 20px;
   }
-  .at-welcome .scene-layer {
-    top: 350px;
-  }
+
   .flow-heading h1 {
     font-size: 24px;
   }
@@ -2356,10 +2330,7 @@ input[type="radio"] {
     top: 110px;
     bottom: 175px;
   }
-  .at-welcome .scene-layer {
-    top: 64px;
-    bottom: 0;
-  }
+
   .match-hud {
     top: 8px;
   }
@@ -2550,9 +2521,7 @@ input[type="radio"] {
     margin-top: 15px;
     font-size: 12px;
   }
-  .at-welcome .scene-layer {
-    inset: 56px 0 0 43%;
-  }
+
   .welcome-footnote {
     display: none;
   }
@@ -3168,4 +3137,52 @@ input[type="radio"] {
   .screen-gods .chosen-god > .favor-portrait { width: 32px; height: 32px; }
   .screen-gods .chosen-god strong { font-size: 13px; line-height: 1.2; overflow-wrap: anywhere; }
   .screen-gods .chosen-god .icon-button { grid-column: 1 / -1; grid-row: 2; }
+}
+
+/* 7I: the welcome illustration owns its space; the match Canvas mounts on start. */
+.welcome-screen {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 36px;
+  padding: 24px 4% 56px 7%;
+  pointer-events: auto;
+}
+.welcome-copy { min-width: 0; padding: 0; }
+.welcome-copy h1 { font-size: clamp(40px, 4.8vw, 76px); }
+.welcome-art {
+  margin: 0;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  overflow: hidden;
+  border-radius: 12px;
+  background: var(--field);
+}
+.welcome-art img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.welcome-art.is-unavailable { display: grid; place-items: center; padding: 24px; }
+.welcome-art figcaption { color: var(--muted); text-align: center; }
+@media (max-width: 600px) {
+  .welcome-screen {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    gap: 24px;
+    padding: 28px 20px 44px;
+  }
+  .welcome-copy { max-width: 100%; padding: 0; }
+  .welcome-copy h1 { font-size: clamp(36px, 10vw, 54px); }
+  .welcome-copy > p { margin-bottom: 20px; }
+  .welcome-symbols { margin-top: 20px; }
+  .welcome-footnote { left: 20px; bottom: 12px; max-width: none; }
+}
+@media (max-height: 500px) and (min-width: 601px) {
+  .welcome-screen {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    gap: 24px;
+    align-content: center;
+    padding: 12px 24px;
+  }
+  .welcome-copy { max-width: 100%; }
+  .welcome-copy h1 { font-size: 32px; }
+  .welcome-copy > p { font-size: 15px; margin-bottom: 12px; }
+  .welcome-play { min-height: 48px; min-width: 175px; font-size: 17px; }
+  .welcome-symbols { margin-top: 12px; }
 }

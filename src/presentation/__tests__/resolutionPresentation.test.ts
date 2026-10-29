@@ -71,6 +71,7 @@ describe('event-driven resolution presentation', () => {
       { type: 'TokensStolen', playerId: 'player-1', targetId: 'player-2', amount: 3, tokens: 53, targetTokens: 47, dieIds: ['player-1/die-1'] },
       { type: 'FavorInvoked', playerId: 'player-1', favorId: 'thors-strike', level: 1, cost: 4, tokens: 46 },
       { type: 'DamageDealt', playerId: 'player-1', targetId: 'player-2', amount: 3, health: 3, favorId: 'thors-strike' },
+      { type: 'DamageDealt', playerId: 'player-1', targetId: 'player-2', amount: 3, health: 3, dieId: 'player-1/die-1', symbol: 'arrow' },
       { type: 'HealthRestored', playerId: 'player-1', amount: 3, health: 9 },
       { type: 'HealthSacrificed', playerId: 'player-1', amount: 3, health: 3, favorId: 'odins-sacrifice' },
       { type: 'TokensGranted', playerId: 'player-1', amount: 3, tokens: 53, favorId: 'odins-sacrifice' },
@@ -85,7 +86,7 @@ describe('event-driven resolution presentation', () => {
       for (let step = 1; step <= resourceSteps(event); step++) {
         const previous = state.players[player][field]
         state = applyResourceProgress(state, event, step)
-        expect(state.players[player][field]).toBe(previous + (event.type === 'TokensStolen' ? event.amount : event.type === 'TokensGained' ? event.dieIds.length : decreasing ? -1 : 1))
+        expect(state.players[player][field]).toBe(previous + (event.type === 'TokensStolen' ? event.amount : event.type === 'TokensGained' ? event.dieIds.length : event.type === 'DamageDealt' && event.favorId ? -event.amount : decreasing ? -1 : 1))
         expect(applyResourceProgress(state, event, step).players).toEqual(state.players)
       }
       expect(state.players).toEqual(applyResourceEvent(before, event).players)

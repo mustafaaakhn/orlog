@@ -35,6 +35,7 @@ export function createCombatPresenter(
   const collected = new Set<DieId>()
   const counts: Record<PlayerId, number> = { 'player-1': 0, 'player-2': 0 }
   let durationScale = 1
+  let clearStoneGroup: (() => void) | undefined
   function animate(build: (timeline: gsap.core.Timeline) => void, combat = true) {
     if (closed) return Promise.resolve()
     return new Promise<void>(resolve => {
@@ -148,6 +149,39 @@ export function createCombatPresenter(
       });
     } finally { board.gain.clear(); board.steal.clear(); }
   }
+  async function favorDamage(event: Extract<GameEvent, { type: 'DamageDealt' }>) {
+    if (closed || event.amount <= 0) return
+    // The resolver already clips lethal damage. Only its actual lost stones react.
+    const stones = Array.from({ length: event.amount }, (_, i) => board.lifeStone(event.targetId, event.health + i))
+    const originals = stones.map(stone => ({ stone, emissive: stone.material.emissive.clone(), intensity: stone.material.emissiveIntensity }))
+    const restore = () => {
+      originals.forEach(({ stone, emissive, intensity }) => {
+        stone.material.emissive.copy(emissive)
+        stone.material.emissiveIntensity = intensity
+      })
+      invalidate()
+    }
+    clearStoneGroup = restore
+    stones.forEach(stone => {
+      stone.material.emissive.set('#e52d46')
+      stone.material.emissiveIntensity = 1.7
+    })
+    invalidate()
+    try {
+      // All targets are marked before one shared pulse reaches their centroid.
+      const target = stones.reduce((sum, _, i) => sum.add(board.lifePosition(event.targetId, event.health + i)), new Vector3()).multiplyScalar(1 / stones.length)
+      await flight(source(event), target, { color: '#ef6472' })
+      if (closed) return
+      await animate(t => {
+        wait(t, reduced() ? 0.1 : 0.16)
+        t.call(() => contact(event, 1))
+        wait(t, reduced() ? 0.04 : 0.1)
+      })
+    } finally {
+      restore()
+      clearStoneGroup = undefined
+    }
+  }
   async function stoneContact(event: GameEvent, player: PlayerId, index: number, step: number, from: Vector3, healing = false, symbol?: 'axe' | 'arrow') {
     const stone = board.lifeStone(player, index)
     const original = stone.material.emissive.clone()
@@ -232,6 +266,8 @@ export function createCombatPresenter(
       try {
         if (event.type === 'AttackBlocked') {
           await flight(source(event), board.dice.get(event.defenderDieId)!.position.clone(), { symbol: event.symbol, blocked: true })
+        } else if (event.type === 'DamageDealt' && event.favorId) {
+          await favorDamage(event)
         } else if (event.type === 'DamageDealt' || event.type === 'HealthRestored' || event.type === 'HealthSacrificed') {
           const player = event.type === 'DamageDealt' ? event.targetId : event.playerId
           for (let step = 1; step <= event.amount && !closed; step++) {
@@ -292,6 +328,8 @@ export function createCombatPresenter(
       closed = true
       active?.kill()
       finish?.()
+      clearStoneGroup?.()
+      clearStoneGroup = undefined
       feedback.cue?.(null)
       board.effect.visible = false
       board.tokenEffect.visible = false

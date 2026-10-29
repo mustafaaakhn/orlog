@@ -106,6 +106,7 @@ function restart() {
   session.recover();
   session.restart();
   sceneGeneration.value++;
+  sceneReady.value = false;
   preparing.value = true;
   setupScreen.value = "welcome";
   overlay.value = null;
@@ -305,7 +306,7 @@ function confirm() {
       </nav>
     </header>
     <div
-      v-show="!preparing || setupScreen === 'welcome'"
+      v-if="!preparing"
       class="scene-layer"
       :aria-hidden="preparing"
       :inert="preparing"

@@ -334,3 +334,55 @@ describe('automatic battle after both favor decisions', () => {
     expect(session.resolveReady()).toBe(false)
   })
 })
+
+describe('grouped favor damage session contacts', () => {
+  it('publishes a real five-damage event once, rejects duplicate/foreign/stale contacts and waits for settlement', () => {
+    const session = createRollSession({ random: () => .6 })
+    // Defensive, token-bearing rolls fund Thor without injecting presentation state.
+    for (let round = 0; round < 3; round++) {
+      const batch = resolveSession(session)
+      session.settle(batch.id)
+      expect(session.advanceRound()).toBe(true)
+      settle(session)
+    }
+    while (session.state.value.phase.name === 'roll') {
+      const phase = session.state.value.phase
+      session.dispatch({ type: phase.step === 'awaiting-roll' ? 'RollDice' : 'ConfirmRoll', playerId: phase.activePlayerId })
+      settle(session)
+    }
+    while (session.state.value.phase.name === 'favor') {
+      const phase = session.state.value.phase
+      expect(session.dispatch({ type: 'ChooseFavor', playerId: phase.activePlayerId, favorId: 'thors-strike', level: 2 })).toBe(true)
+      settle(session)
+    }
+    expect(session.resolveReady()).toBe(true)
+    const batch = session.pending.value!, hits = batch.events.filter(e => e.type === 'DamageDealt' && e.favorId)
+    expect(hits).toHaveLength(2)
+    const hit = hits[0]!
+    if (hit.type !== 'DamageDealt') throw new Error('Expected favor damage')
+    const previous = session.state.value
+    session.progress(batch.id + 1, hit, 1)
+    session.progress(batch.id, { ...hit }, 1)
+    session.progress(batch.id, hit, 2)
+    expect(session.state.value).toBe(previous)
+    session.progress(batch.id, hit, 1)
+    expect(hit.amount).toBe(5)
+    expect(session.state.value.players[hit.targetId].health).toBe(hit.health)
+    const contacted = session.state.value
+    session.progress(batch.id, hit, 1)
+    expect(session.state.value).toBe(contacted)
+    expect(session.advanceRound()).toBe(false)
+    session.present(batch.id, hit)
+    session.present(batch.id, hit)
+    expect(session.history.value.filter(e => e.id === hit.id)).toHaveLength(1)
+    session.progress(batch.id, hits[1]!, 1)
+    const later = session.state.value
+    session.progress(batch.id, hit, 1)
+    expect(session.state.value).toBe(later)
+    session.recover()
+    expect(session.state.value).toBe(batch.state)
+    session.progress(batch.id, hit, 1)
+    expect(session.state.value).toBe(batch.state)
+    expect(session.advanceRound()).toBe(true)
+  })
+})

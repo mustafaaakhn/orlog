@@ -25,6 +25,7 @@ const emit = defineEmits<{
   screen: [screen: Screen];
 }>();
 const screen = ref<Screen>("welcome");
+const welcomeArtFailed = ref(false);
 const selectedMode = ref<"computer" | "friend">("computer");
 const friendMode = ref<"local" | "host" | "join">("local");
 const names = ref<Record<PlayerId, string>>({
@@ -192,6 +193,17 @@ function start() {
         ><span class="welcome-divider"></span><span>Tek kazanan</span>
       </div>
     </div>
+    <figure class="welcome-art" :class="{ 'is-unavailable': welcomeArtFailed }">
+      <img v-if="!welcomeArtFailed"
+        src="/assets/art/welcome-orlog.webp"
+        srcset="/assets/art/welcome-orlog-768.webp 768w, /assets/art/welcome-orlog.webp 1536w"
+        sizes="(max-width: 600px) calc(100vw - 40px), 54vw"
+        width="1536" height="1024" fetchpriority="high" decoding="async"
+        alt="Eivor ve Sigurd, fiyort manzarasına karşı Orlog oynuyor; oyma ahşap tanrılar masanın çevresinden oyunu izliyor."
+        @error="welcomeArtFailed = true"
+      />
+      <figcaption v-else>Kuzeyin masası seni bekliyor.</figcaption>
+    </figure>
     <p class="welcome-footnote">
       Valhalla’dan ilham alan bağımsız bir hayran uyarlaması.
     </p>

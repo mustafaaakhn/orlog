@@ -3,6 +3,7 @@ import type { GameEvent, GameState } from '../core'
 export function resourceSteps(event: GameEvent): number {
   if (event.type === 'TokensGained') return event.dieIds.length > 0 ? 1 : 0
   if (event.type === 'TokensStolen') return event.amount > 0 ? 1 : 0
+  if (event.type === 'DamageDealt' && event.favorId) return event.amount > 0 ? 1 : 0
   if (event.type === 'FavorInvoked') return event.cost
   if (['DamageDealt', 'HealthRestored', 'HealthSacrificed', 'TokensGranted', 'TokensDestroyed'].includes(event.type))
     return 'amount' in event ? event.amount : 0
