@@ -253,7 +253,7 @@ function start() {
     :inert="introActive"
   >
     <nav class="flow-navigation" aria-label="Hazırlık adımları">
-      <button class="text-button back-button" @click="goBack">
+      <button v-if="screen !== 'mode' || !desktopWelcome || friendOpen" class="text-button back-button" @click="goBack">
         <UiIcon name="back" /> Geri
       </button>
       <ol v-if="screen !== 'mode' || !desktopWelcome">

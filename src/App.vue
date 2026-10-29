@@ -39,7 +39,12 @@ const TablePreview = defineAsyncComponent({
 const preparing = ref(true);
 const setupScreen = ref("welcome");
 const introActive = ref(false);
+const entryTools = computed(() => preparing.value && (setupScreen.value === "welcome" || setupScreen.value === "mode"));
+const languagePicker = ref<HTMLElement | null>(null);
 const overlay = ref<"rules" | "settings" | "log" | "menu" | null>(null);
+watch([introActive, setupScreen, overlay], () => {
+  if (languagePicker.value?.matches(":popover-open")) languagePicker.value.hidePopover();
+});
 const dialog = ref<HTMLDialogElement | null>(null);
 const localViewer = ref<PlayerId>("player-1");
 const viewerId = computed(() =>
@@ -293,14 +298,28 @@ function confirm() {
         ><GameMark />ORLOG</a
       >
       <span class="edition">Kuzeyin zar oyunu</span>
-      <nav class="header-tools" aria-label="Yardımcı alanlar">
+      <nav class="header-tools" :class="{ 'entry-tools': entryTools }" aria-label="Yardımcı alanlar">
+        <template v-if="entryTools">
+          <button class="icon-button entry-tool" aria-label="Oyun rehberi" title="Oyun rehberi" @click="overlay = 'rules'">
+            <UiIcon name="book" />
+          </button>
+          <button class="icon-button entry-tool" aria-label="Dil seçimi" title="Dil seçimi" popovertarget="language-picker">
+            <UiIcon name="translate" />
+          </button>
+          <div id="language-picker" ref="languagePicker" class="language-picker" popover>
+            <h2>Dil seçimi</h2>
+            <button class="language-option" aria-pressed="true" lang="tr" popovertarget="language-picker" popovertargetaction="hide">
+              Türkçe <UiIcon name="check" />
+            </button>
+          </div>
+        </template>
         <button v-if="!preparing" class="text-button" @click="overlay = 'log'">
           <UiIcon name="log" /><span>Tur olayları</span>
         </button>
-        <button class="text-button" @click="overlay = 'rules'">
+        <button v-if="!entryTools" class="text-button" @click="overlay = 'rules'">
           <UiIcon name="book" /><span>Oyun rehberi</span>
         </button>
-        <button class="text-button" @click="overlay = 'settings'">
+        <button v-if="!entryTools" class="text-button" @click="overlay = 'settings'">
           <UiIcon name="settings" /><span>Ayarlar</span>
         </button>
         <button
@@ -495,4 +514,5 @@ function confirm() {
 <style>
 @import "./ui/styles.css";
 @import "./ui/mode-selection.css";
+@import "./ui/entry-tools.css";
 </style>
