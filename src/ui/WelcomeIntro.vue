@@ -129,8 +129,8 @@ onBeforeUnmount(() => {
     <img
       v-if="!posterFailed"
       class="intro-poster"
-      src="/assets/art/welcome-orlog-intro.webp"
-      width="1344" height="768"
+      src="/assets/art/welcome-orlog-intro-2k.webp"
+      width="2688" height="1536"
       fetchpriority="high" decoding="async"
       alt="Eivor ve sarışın Viking kadını, bahar fiyordunun kıyısında karşılıklı Orlog oynuyor."
       @error="posterFailed = true"
@@ -140,8 +140,8 @@ onBeforeUnmount(() => {
       ref="video"
       class="intro-video"
       :class="{ 'is-visible': phase === 'playing' || phase === 'revealing' }"
-      src="/assets/video/orlog-intro.mp4"
-      poster="/assets/art/welcome-orlog-intro.webp"
+      src="/assets/video/orlog-intro-2k.mp4"
+      poster="/assets/art/welcome-orlog-intro-2k.webp"
       preload="auto" playsinline disablepictureinpicture
       :muted="muted"
       aria-hidden="true" tabindex="-1"

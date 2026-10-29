@@ -14,7 +14,7 @@
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: linear-gradient(#121813f5, #171a16f7 70%, #171a16), url("/assets/art/welcome-orlog-intro.webp") center / cover;
+    background: linear-gradient(#121813f5, #171a16f7 70%, #171a16), url("/assets/art/welcome-orlog-intro-2k.webp") center / cover;
     pointer-events: none;
   }
   .at-mode .masthead {
