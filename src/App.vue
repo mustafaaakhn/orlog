@@ -269,7 +269,7 @@ function confirm() {
     <a v-if="!preparing" class="skip-link" href="#match-controls"
       >Oyun kontrollerine geç</a
     >
-    <header v-if="!preparing || setupScreen !== 'welcome'" class="masthead">
+    <header class="masthead">
       <a
         class="wordmark"
         href="./"

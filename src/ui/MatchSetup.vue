@@ -180,16 +180,19 @@ function start() {
     :class="{ 'is-unavailable': welcomeArtFailed }"
   >
     <h1 id="welcome-title" class="sr-only">Orlog</h1>
-    <picture v-if="!welcomeArtFailed" class="welcome-art">
-      <source media="(orientation: portrait)" srcset="/assets/art/welcome-orlog-portrait.webp" width="887" height="1774" />
-      <img
-        src="/assets/art/welcome-orlog.webp"
-        width="1536" height="1024" fetchpriority="high" decoding="async"
-        alt="Eivor ve Sigurd, fiyort manzarasına karşı Orlog oynuyor; oyma ahşap tanrılar masanın çevresinden oyunu izliyor."
-        @error="welcomeArtFailed = true"
-      />
-    </picture>
-    <button class="welcome-play" @click="screen = 'mode'">Oyna</button>
+    <div class="welcome-stage">
+      <picture v-if="!welcomeArtFailed" class="welcome-art">
+        <source media="(min-width: 1024px)" srcset="/assets/art/welcome-orlog-desktop.webp" width="1672" height="941" />
+        <source media="(orientation: portrait)" srcset="/assets/art/welcome-orlog-portrait.webp" width="887" height="1774" />
+        <img
+          src="/assets/art/welcome-orlog.webp"
+          width="1536" height="1024" fetchpriority="high" decoding="async"
+          alt="Eivor ve Sigurd, fiyort manzarasına karşı Orlog oynuyor; oyma ahşap tanrılar masanın çevresinden oyunu izliyor."
+          @error="welcomeArtFailed = true"
+        />
+      </picture>
+      <button class="welcome-play" @click="screen = 'mode'">Oyna</button>
+    </div>
   </section>
   <section
     v-else
