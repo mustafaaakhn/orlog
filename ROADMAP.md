@@ -59,13 +59,13 @@ Bu inceleme fiziksel iPhone/Android testi veya tam maç doğrulaması değildir.
 
 Bağımlılık: Yok. Kamera ve tanrı seçimi bu aşamada değiştirilmez.
 
-- [ ] Üstte rakibin, altta oyuncunun adını, canını ve jetonunu ikon + sayı
+- [x] Üstte rakibin, altta oyuncunun adını, canını ve jetonunu ikon + sayı
   olarak göster. Tur/sıra ve ana eylem için yeterli alan bırak.
-- [ ] Göstergeleri mevcut sunum zamanlamasına bağla; kazanım, çalma, ödeme,
+- [x] Göstergeleri mevcut sunum zamanlamasına bağla; kazanım, çalma, ödeme,
   hasar ve iyileştirmede sayıların doğru anda güncellendiğini doğrula.
-- [ ] Uzun oyuncu adları, sıfır/yüksek jeton miktarı ve güvenli ekran
+- [x] Uzun oyuncu adları, sıfır/yüksek jeton miktarı ve güvenli ekran
   kenarlarında taşma veya kontrol örtüşmesi olmadığını doğrula.
-- [ ] Dikey/kısa yatay mobil ve masaüstü görünümünü kontrol et; zorunlu
+- [x] Dikey/kısa yatay mobil ve masaüstü görünümünü kontrol et; zorunlu
   komutları çalıştır, ilgili belgeleri güncelle ve aşamayı commit et.
 
 **Kabul:** Oyuncu iki tarafın canını ve jetonunu fiziksel parçaları saymadan
@@ -164,8 +164,22 @@ eksikken tüm mobil kabulün tamamlandığı söylenmez.
 
 ## Doğrulama ve devam notları
 
-Henüz hiçbir geliştirme aşaması uygulanmadı. Her aşama tesliminde bu bölüm
-aşama numarası, doğrulama kanıtı, açık maddeler ve sıradaki işle güncellenir.
+**Aşama 1 tamamlandı — 30 Ekim 2026.** Mobil kaynak göstergeleri mevcut sunum
+durumunu izler. Kamera, güç seçimi ve oyun kuralları değiştirilmedi.
+
+- Node 24.21.0 ile `npm run check` geçti; `npm run test:ci`: 32 dosya, 431 test
+  başarılı. Dört yeni test iki koltuğu, sıfır/yüksek jetonu, temas öncesi/sonrası
+  kaynakları ve eski/tekrar callback'lerin reddini kapsar.
+- Chromium 143'te 320×568, 360×800, 390×844, 430×932, 568×320, 667×375,
+  844×390, 768×1024 ve 1440×900 görüntülendi. Uzun adlar, 0/999 jeton,
+  güvenli alan benzetimi, güç fazı/hata metni ve yerel ikinci koltuk kontrol
+  edildi. Normal ve azaltılmış harekette gerçek olay kuyruğunun 21'er durum
+  güncellemesinde DOM sayıları sunum durumuyla eşleşti.
+- Ayrıntı ve ekran görüntüsü konumları: [Aşama 1 doğrulaması](docs/review/mobile-hud.md).
+  Tarayıcı boyutu/güvenli alan benzetimi fiziksel cihaz testi değildir.
+  iPhone/Safari, Android/Chrome ve gerçek dokunma kabulü Aşama 5'te açık kalır.
+- Sıradaki iş **Aşama 2**; ayrıca istenmeden başlanmaz. Mevcut örtüşen zar
+  hedefleri Aşama 4 kapsamında kalır.
 
 ## Bu planın dışında
 

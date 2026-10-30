@@ -14,6 +14,7 @@ defineProps<{
     | "door"
     | "monitor"
     | "room-add"
+    | "heart"
     | "heart-plus"
     | "heart-minus"
     | "dice"
@@ -29,6 +30,7 @@ defineProps<{
     | "exit";
 }>();
 const paths = {
+  heart: "M12 20 3.5 11.5a5 5 0 0 1 7-7L12 6l1.5-1.5a5 5 0 0 1 7 7Z",
   monitor: "M3 4h18v13H3ZM8 21h8m-4-4v4",
   "room-add": "M3 21h18M5 21V3h12v6m-8 5h1m10-1v8m-4-4h8",
   "heart-plus": "M12 20 3.5 11.5a5 5 0 0 1 7-7L12 6l1.5-1.5a5 5 0 0 1 7 7Zm-3-9h6m-3-3v6",

@@ -250,8 +250,10 @@ rastgelelik, ölüm ve kaynak sınırları aynıdır.
   bu açıklamanın parçası değildir. Diğer başarısızlık nedenleri ayrı sunulur.
 - İki karar ve sunum tamamlanınca savaş otomatik bir kez başlar; savaş düğmesi kalkar.
   Sonraki tur, 7D'deki gibi bütün temaslar/toplama tamamlanınca otomatik açılır.
-- Kaynaklar görsel HUD'da sayı olarak gösterilmez; gerçek sayılar core ve ekran okuyucu
-  anlatımında korunur. Fiziksel taşlar/altınlar görünür, menüde seviye bedelleri sayısaldır.
+- Bu teslimde kaynaklar görsel HUD'da sayı olarak gösterilmez; gerçek sayılar core ve
+  ekran okuyucu anlatımında korunur. 30 Ekim mobil yol haritasının Aşama 1'i ile dar/kısa
+  yatay ekranlara aynı sunum anını izleyen sayısal can/jeton göstergeleri eklenmiştir.
+  Fiziksel taşlar/altınlar ve menüdeki sayısal seviye bedelleri korunur; kural değişmez.
 - Beşlik altın yığınları ve toplu el hareketi yalnız sunumdur: bir yığının yüksekliği beş,
   toplam jeton için yeni üst sınır yoktur. Çalma gerçek olay miktarıyla sınırlıdır; oyuncu
   sırası, iki yönlü çalma ve son kaynaklar yeniden hesaplanmaz.

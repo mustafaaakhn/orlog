@@ -18,6 +18,7 @@ import { SYMBOL_GUIDE } from "./scene/symbols";
 import SceneLoaderState from "./ui/SceneLoaderState.vue";
 import MatchSetup from "./ui/MatchSetup.vue";
 import MatchResult from "./ui/MatchResult.vue";
+import MatchResources from "./ui/MatchResources.vue";
 import { eventText } from "./presentation/eventText";
 import type {
   GameOptions,
@@ -501,30 +502,32 @@ function confirm() {
         Tur {{ state.round }}<span v-if="activePlayer"> · {{ names[activePlayer.id] }}</span>
       </p>
       <p v-if="networkStatus" class="network-status" role="status">{{ networkStatus }}</p>
-      <section
-        id="match-controls"
-        tabindex="-1"
-        class="match-actions"
-        aria-label="Oyun kontrolleri"
-      >
-        <template v-if="!busy && humanTurn && phase.name === 'roll'">
-          <button v-if="phase.step === 'awaiting-roll'" class="primary-action" @click="roll">
-            Zar at <UiIcon name="arrow" />
-          </button>
-          <button v-else-if="activePlayer && activePlayer.rollsUsed < 3" class="primary-action" @click="confirm">
-            Seçimi onayla <UiIcon name="check" />
-          </button>
-        </template>
-        <template v-if="!busy && humanTurn && phase.name === 'favor'">
-          <p class="favor-prompt">Bir tanrı seç veya devam et.</p>
-          <button class="primary-action" @click="skip">Devam et <UiIcon name="arrow" /></button>
-        </template>
-        <template v-if="resultAvailable">
-          <button v-if="!resultOpen" class="secondary-action" @click="resultOpen = true">Sonucu göster</button>
-        </template>
-        <p v-if="error" class="field-error" role="alert">{{ error }}</p>
-        <p v-if="onlineError" class="field-error" role="alert">{{ onlineError }}</p>
-      </section>
+      <MatchResources :state="state" :names="names" :viewer-id="viewerId">
+        <section
+          id="match-controls"
+          tabindex="-1"
+          class="match-actions"
+          aria-label="Oyun kontrolleri"
+        >
+          <template v-if="!busy && humanTurn && phase.name === 'roll'">
+            <button v-if="phase.step === 'awaiting-roll'" class="primary-action" @click="roll">
+              Zar at <UiIcon name="arrow" />
+            </button>
+            <button v-else-if="activePlayer && activePlayer.rollsUsed < 3" class="primary-action" @click="confirm">
+              Seçimi onayla <UiIcon name="check" />
+            </button>
+          </template>
+          <template v-if="!busy && humanTurn && phase.name === 'favor'">
+            <p class="favor-prompt">Bir tanrı seç veya devam et.</p>
+            <button class="primary-action" @click="skip">Devam et <UiIcon name="arrow" /></button>
+          </template>
+          <template v-if="resultAvailable">
+            <button v-if="!resultOpen" class="secondary-action" @click="resultOpen = true">Sonucu göster</button>
+          </template>
+          <p v-if="error" class="field-error" role="alert">{{ error }}</p>
+          <p v-if="onlineError" class="field-error" role="alert">{{ onlineError }}</p>
+        </section>
+      </MatchResources>
     </section>
     <MatchResult v-if="resultAvailable && resultOpen && phase.name === 'ended'"
       :winner="names[phase.winnerId]" :round="state.round"
@@ -630,4 +633,5 @@ function confirm() {
 @import "./ui/setup-refresh.css";
 @import "./ui/fjord-table.css";
 @import "./ui/match-moments.css";
+@import "./ui/mobile-resources.css";
 </style>

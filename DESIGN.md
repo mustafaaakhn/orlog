@@ -26,6 +26,21 @@ Maç tek viewport içindedir: oyuncu yakında, rakip karşıda; her koltuğun ke
 haznesi, can taşları ve üç tanrı levhası vardır. Kaynaklar fiziksel taş ve
 jetonlarla gösterilir. Sayısal durum ekran okuyucu metninde de korunur.
 
+Kullanılabilir genişlik 600px veya altındaysa ya da yatay ekranın yüksekliği
+500px veya altındaysa, rakibin adı/canı/jetonu üstte, oyuncununkiler altta
+kompakt satırlarda da gösterilir. Can kalp, jeton masadaki altınla aynı ikon
+ve tam sayıyla okunur. Uzun adlar üç noktayla kısalır; kaynak sayıları kısalmaz.
+Yerel iki kişide alt satır aktif koltuğu, botta/çevrim içi oyunda kişisel
+koltuğu izler. Geniş masaüstü ve dikey tablet düzeninde bu ek satırlar gizlidir.
+
+Dikey mobilde alt kaynak satırı ve ana eylem aynı akıştadır; açıklama veya
+hata metni satırı yukarı iter. Kısa yatayda kaynaklar solda, tur/sıra sağ üstte,
+ana eylem sağ alttadır. Maç başlığı ve kontroller güvenli ekran kenarlarını
+(`safe-area-inset-*`) hesaba katar. Kamera ve güç menüsü bu düzen için değişmez.
+HUD, fiziksel kaynaklarla aynı sunum durumunu okur; bekleyen olay grubunun
+nihai değerini erkenden göstermez. Mevcut ekran okuyucu bildirimi korunur,
+görsel kopyalar tekrar okutulmaz.
+
 Zarlar doğrudan masada seçilir; saklananlar merkez sırasına geçer. İki tarafın
 zarları hover/odakla incelenebilir. Tanrı önizlemesi geçicidir; güç seçimi
 bilinçli tıklama, dokunma veya klavye eylemiyle sabitlenir.

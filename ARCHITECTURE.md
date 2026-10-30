@@ -19,6 +19,14 @@ sonucu core, çevrim içi oyunda sunucudaki core üretir. Görsel katman sonuç,
 hasar veya jeton üretmez. Durum ve sunum aynı sıralı olay kaydını izler;
 kaynak görünümü ilgili temas/aktarım tamamlandığında güncellenir.
 
+Mobil `MatchResources` bileşeni fiziksel kaynaklar ve ekran okuyucu metniyle
+aynı `createRollSession().state` değerini okur. Bekleyen grubun `state` sonucu
+HUD'a verilmez. `progress` temasları ve `present` olayları mevcut oturum
+üzerinden yayınlanır; UI ayrıca kaynak hesabı, sayaç veya zamanlayıcı tutmaz.
+Koltuğun ekrandaki sırası mevcut `viewerId` ile belirlenir. Mobil alt kaynak
+satırı ana eylemi slot olarak taşır; geniş görünümde bu kapsayıcılar
+`display: contents` ile mevcut eylem yerleşimini korur.
+
 ## Sahne ve sunum
 
 Rapier 3D kaydı Web Worker’da, hazne yerelinde sabit 1/60 saniye adımlarla
