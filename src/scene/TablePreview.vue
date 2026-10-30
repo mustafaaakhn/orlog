@@ -26,6 +26,9 @@ import { inspectFavor as inspect, leaveFavor } from '../ui/favorInspection';
 import type { FavorInspection } from '../ui/favorInspection';
 import type { SceneFavorTarget } from "./dieTargets";
 import SceneDiceControls from "../ui/SceneDiceControls.vue";
+import OpponentDiceSummary from '../ui/OpponentDiceSummary.vue';
+import { useVisibleDice } from '../presentation/visibleDice';
+import { useTableInsets } from './useTableInsets';
 import type { SceneDieTarget } from "./dieTargets";
 const props = defineProps<{
   audio: AudioPort;
@@ -42,6 +45,14 @@ const props = defineProps<{
   batch: PresentationBatch | null;
   blocked?: boolean;
 }>();
+const viewport = ref<HTMLElement | null>(null);
+const frameInsets = useTableInsets(viewport);
+const visibleDice = useVisibleDice(() => props.state, () => props.batch);
+const opponentId = computed(() => props.viewerId === 'player-2' ? 'player-1' : 'player-2');
+function presented(id: number, event: GameEvent) {
+  visibleDice.presented(id, event);
+  emit('presented', id, event);
+}
 const emit = defineEmits<{
   availability: [ready: boolean];
   settled: [batchId: number];
@@ -193,6 +204,7 @@ onErrorCaptured(() => {
 
 <template>
   <div
+    ref="viewport"
     class="table-viewport"
     :aria-busy="status === 'checking' || status === 'loading'"
     @keydown.esc.stop="closeFavor"
@@ -225,7 +237,8 @@ onErrorCaptured(() => {
         :viewer-id="viewerId ?? 'player-1'"
         :state="state"
         :batch="batch"
-        @presented="(id, event) => emit('presented', id, event)"
+        :frame-insets="frameInsets"
+        @presented="presented"
         @progress="(id, event, step) => emit('progress', id, event, step)"
         @cue="cue = $event"
         @collected="collected = $event"
@@ -237,6 +250,8 @@ onErrorCaptured(() => {
         @favors="favors = $event"
       />
     </TresCanvas>
+    <OpponentDiceSummary v-show="status === 'ready'" :state="visibleDice.state.value"
+      :viewer-id="viewerId ?? 'player-1'" :rolling="visibleDice.rolling(opponentId)" :collected="collected" />
     <SceneFavorControls v-if="status === 'ready' && !batch && !paused && !turningSeat" :targets="favors" :active-player="favorPlayer" :pinned-target="menuPinned ? menuFavor : null" @highlight="highlightFavor" @inspect="inspectFavor" />
     <section v-if="menuFavor && status === 'ready' && !batch && !paused" ref="favorMenu"
       id="table-favor-menu" class="table-favor-menu" :class="{ 'is-preview': !menuPinned }" :role="menuPinned ? 'dialog' : 'region'" :aria-label="menuPinned ? 'Tanrı gücü seçimi' : 'Tanrı bilgileri'" tabindex="-1">

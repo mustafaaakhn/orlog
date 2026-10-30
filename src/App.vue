@@ -641,4 +641,5 @@ function confirm() {
 @import "./ui/fjord-table.css";
 @import "./ui/match-moments.css";
 @import "./ui/mobile-resources.css";
+@import "./ui/mobile-camera.css";
 </style>

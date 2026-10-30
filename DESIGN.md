@@ -36,7 +36,7 @@ koltuğu izler. Geniş masaüstü ve dikey tablet düzeninde bu ek satırlar giz
 Dikey mobilde alt kaynak satırı ve ana eylem aynı akıştadır; açıklama veya
 hata metni satırı yukarı iter. Kısa yatayda kaynaklar solda, tur/sıra sağ üstte,
 ana eylem sağ alttadır. Maç başlığı ve kontroller güvenli ekran kenarlarını
-(`safe-area-inset-*`) hesaba katar. Kaynak düzeni kamerayı değiştirmez.
+(`safe-area-inset-*`) hesaba katar.
 HUD, fiziksel kaynaklarla aynı sunum durumunu okur; bekleyen olay grubunun
 nihai değerini erkenden göstermez. Mevcut ekran okuyucu bildirimi korunur,
 görsel kopyalar tekrar okutulmaz.
@@ -44,6 +44,21 @@ görsel kopyalar tekrar okutulmaz.
 Zarlar doğrudan masada seçilir; saklananlar merkez sırasına geçer. İki tarafın
 zarları hover/odakla incelenebilir. Tanrı önizlemesi geçicidir; güç seçimi
 bilinçli tıklama, dokunma veya klavye eylemiyle sabitlenir.
+
+Mobil kamera, dış masa sınırı yerine kendi hazneni ve iki merkez zar sırasını
+kadrajlar. Rakip haznenin tamamını sığdırmak zorunlu değildir. Üst HUD'un
+altında rakibin henüz merkeze alınmamış zarlarının simgeleri, jeton işaretleri
+ve varsa artırılmış değerleri görünür. Atılmamış zarlar çizgiyle, henüz sunumu
+bitmemiş atışlar üç noktayla gösterilir; gelecek yüzler erkenden açıklanmaz.
+Saklanan, seçili, kaldırılmış ve kullanılıp toplanmış zarlar bu özetten çıkar.
+
+Kamera başlık, kaynaklar, zar özeti ve alt eylemlerin ölçülen alanını boş
+bırakır. Kısa yatayda kaynak/özet solda, yakın oyun alanı sağdadır; eylemler
+yer varsa yan yana durur. Çözümleme sırasında iki tarafın can/jeton/tanrı
+temaslarını göstermek için kadraj geçici olarak genişler. Normal harekette
+geçiş yumuşaktır; azaltılmış harekette kamera animasyonu yapılmaz. Masaüstü
+tam masa kadrajını korur. Koltuk yönü mevcut yerel/bot/çevrim içi davranışını
+izler; kamera ve özet oyun sonucu üretmez.
 
 Mobil maçta **Tanrı gücü** düğmesi alttan açılan bir panel sunar. Oyuncunun
 üç kuşanılmış tanrısı portre, öncelik, zamanlama ve üç seviyenin bedel/etki

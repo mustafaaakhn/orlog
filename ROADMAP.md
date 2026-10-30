@@ -99,17 +99,17 @@ Panelde her seçenek okunur ve klavye olmadan panelden çıkılabilir.
 Bağımlılık: Aşama 1–2. HUD ve güç paneli, kadraj dışındaki parçaların
 işlevlerini erişilebilir tutar.
 
-- [ ] Mobil kamerayı oyuncunun kasesi ve iki tarafın merkez zar sıralarına
+- [x] Mobil kamerayı oyuncunun kasesi ve iki tarafın merkez zar sıralarına
   odakla. Rakibin kasesini ve dış masa kenarlarını sığdırma zorunluluğunu kaldır.
-- [ ] Rakibin kadraj dışındaki, henüz saklanmamış görünür zarlarını güncel
+- [x] Rakibin kadraj dışındaki, henüz saklanmamış görünür zarlarını güncel
   yüzleri ve jeton işaretleriyle kompakt bir 2B özette sun. Bilgiyi yalnız
   sunumda görünür olduğu anda göster; gelecek zar yüzlerini erkenden gösterme.
-- [ ] İki koltukta da doğru yönü koru: bot, aynı cihazda iki kişi ve çevrim içi
+- [x] İki koltukta da doğru yönü koru: bot, aynı cihazda iki kişi ve çevrim içi
   oyunda oyuncunun kendi kasesi yakında olsun. Sıra/koltuk dönüşünü doğrula.
-- [ ] Atış, merkezde saklama, savaş, jeton aktarımı ve tanrı etkilerinde
+- [x] Atış, merkezde saklama, savaş, jeton aktarımı ve tanrı etkilerinde
   okunması gereken hedeflerin kadraj/HUD altında kaybolmadığını kontrol et.
   Efekt ve seçim hedefleri yeni kamera izdüşümüyle eşleşsin.
-- [ ] Dikey/yatay geçişi, az hareket seçeneğini ve masaüstü kadrajını
+- [x] Dikey/yatay geçişi, az hareket seçeneğini ve masaüstü kadrajını
   tarayıcıda doğrula; kamera davranışı için anlamlı testleri güncelle,
   zorunlu komutları çalıştır, belgeleri güncelle ve commit et.
 
@@ -191,7 +191,25 @@ Kapatma ve inceleme komut üretmez; mevcut ödeme/öncelik kuralları korunur.
   menüsü kontrol edildi. Ayrıntılar: [Aşama 2 doğrulaması](docs/review/mobile-favor-panel.md).
 - Tarayıcı boyutu benzetimi fiziksel dokunma testi değildir; iPhone/Safari
   ve Android/Chrome kabulü Aşama 5'te açık kalır.
-- Sıradaki iş **Aşama 3**; ayrıca istenmeden başlanmaz.
+
+**Aşama 3 tamamlandı — 30 Ekim 2026.** Mobil kadraj yakın hazne ve merkez
+sıralarına odaklanır; rakip haznedeki görünür zarlar sunum zamanlamasını
+koruyan 2B özette gösterilir. Aşama 1–2 ile birleşik sürüm doğrulandı.
+
+- Node 24.21.0 ile `npm run check` ve `npm run test:ci` geçti: 34 dosyada
+  443 test. Kamera testleri iki koltuğun yakın haznesini, dokuz zarlık sıraları,
+  çözümleme temas alanlarını ve masaüstü kadrajını; yeni özet testleri yüz
+  yayınlama zamanını, jeton/değer işaretlerini ve eski callback'leri kapsar.
+- Chromium 143: 360×800, 390×844, 430×932, 568×320, 667×375, 844×390,
+  768×1024, 1440×900; yön geçişleri, normal/azaltılmış hareket, yerel koltuk
+  dönüşü, bot ve iki gerçek ağ koltuğu kontrol edildi. Ölçülen mobil
+  görünümlerde yakın haznedeki zar genişliği önceki kameraya göre yaklaşık
+  1,46–1,53 kat arttı. Dokuz zar ve güvenli alan benzetimleri de doğrulandı.
+- Kanıtlar ve sınırlar: [Aşama 3 doğrulaması](docs/review/mobile-camera.md).
+  Fiziksel iPhone/Safari ve Android/Chrome, gerçek dokunma ve cihaz
+  performansı Aşama 5'te açıktır.
+- Sıradaki iş **Aşama 4**; ayrıca istenmeden başlanmaz. Zar geometrisi,
+  fizik sonucu ve oyun kuralları bu aşamada değiştirilmedi.
 
 ## Bu planın dışında
 

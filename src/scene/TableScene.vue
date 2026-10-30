@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, watch, computed, nextTick } from "vue";
+import { gsap } from 'gsap';
 import { useTres } from "@tresjs/core";
 import {
   DirectionalLight,
@@ -22,7 +23,8 @@ import type { PresentationBatch } from "../app/rollSession";
 import type { DieId, GameState, GameEvent, PlayerId } from "../core";
 
 import type { SceneDieTarget } from "./dieTargets";
-import { frameTableCamera } from './tableCamera';
+import { frameTableCamera, isMobileTableView } from './tableCamera';
+import type { TableInsets } from './tableCamera';
 import { collectionSlot } from './tableLayout';
 import { createSeatTurn } from '../presentation/seatTurn';
 
@@ -38,6 +40,7 @@ const props = defineProps<{
   viewerId: PlayerId;
   state: GameState;
   batch: PresentationBatch | null;
+  frameInsets: TableInsets;
 }>();
 const emit = defineEmits<{
   settled: [batchId: number];
@@ -248,6 +251,8 @@ watch(
   },
 );
 const camera = new PerspectiveCamera(42, 1, 0.1, 100);
+const composition = { combat: 0 };
+let compositionTween: gsap.core.Tween | undefined;
 let seatTurning = false;
 const seatTurn = createSeatTurn(props.viewerId, {
   frame: angle => frameCamera(angle),
@@ -277,7 +282,12 @@ function publishTargets() {
       .clone()
       .add(new Vector3(0, 0.18, 0))
       .project(camera);
-    if (Math.abs(point.x) < 1.1 && Math.abs(point.y) < 1.1 && point.z < 1)
+    const screenX = (point.x + 1) * sizes.width.value / 2;
+    const screenY = (1 - point.y) * sizes.height.value / 2;
+    const edge = props.frameInsets;
+    const underHud = isMobileTableView(sizes.width.value, sizes.height.value) &&
+      (screenX < edge.left || screenX > sizes.width.value - edge.right || screenY < edge.top || screenY > sizes.height.value - edge.bottom);
+    if (!underHud && Math.abs(point.x) < 1.1 && Math.abs(point.y) < 1.1 && point.z < 1)
       targets.push({ id, x: (point.x + 1) * 50, y: (1 - point.y) * 50 });
   }
   emit("targets", targets);
@@ -292,18 +302,31 @@ function frameCamera(angle: number) {
   const aspect = Math.max(sizes.aspectRatio.value, 0.25);
   const narrow = sizes.width.value < 620 && aspect < 1.1;
   board.setNarrow(narrow);
-  frameTableCamera(camera, sizes.width.value, sizes.height.value, props.viewerId, narrow, angle);
+  frameTableCamera(camera, sizes.width.value, sizes.height.value, props.viewerId, narrow, angle, { insets: props.frameInsets, combat: composition.combat });
   invalidate();
   publishTargets();
 }
 watch(() => props.viewerId, player => seatTurn.turn(player, props.reduced, props.paused));
 watch(() => props.paused, paused => { if (paused) seatTurn.snap(props.viewerId); });
 watch(() => props.reduced, reduced => { if (reduced) seatTurn.snap(props.viewerId); });
+const resolutionFrame = computed(() => props.batch?.events.some(event => ['TokensGained', 'TokensStolen', 'FavorInvoked', 'DamageDealt', 'HealthRestored', 'TokensGranted', 'TokensDestroyed', 'HealthSacrificed', 'DiceRecast', 'DiceRemoved', 'HelmetsRemoved'].includes(event.type)) ?? false);
+watch([resolutionFrame, () => props.reduced], ([combat, reduced]) => {
+  compositionTween?.kill();
+  if (reduced) {
+    composition.combat = Number(combat);
+    frameCamera(seatTurn.angle);
+  } else compositionTween = gsap.to(composition, {
+    combat: Number(combat), duration: .45, ease: 'power2.out',
+    onUpdate: () => frameCamera(seatTurn.angle),
+  });
+}, { immediate: true });
 watch(
   [
     () => sizes.aspectRatio.value,
     () => sizes.width.value,
     () => sizes.height.value,
+    () => props.frameInsets,
+    () => props.batch,
   ],
   () => {
     frameCamera(seatTurn.angle);
@@ -357,6 +380,7 @@ onMounted(() => {
   canvas.addEventListener("pointercancel", pointerCancel);
 });
 function dispose() {
+  compositionTween?.kill();
   if (sceneClosed) return;
   sceneClosed = true;
   seatTurn.dispose();
