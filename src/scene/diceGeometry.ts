@@ -62,7 +62,7 @@ export function reserveSlot(
   // Six base dice face the opponent. Favor dice extend this same battle line.
   const column = index < 6 ? index - 2.5 : index === 6 ? -3.5 : index - 3.5;
   return [
-    column * 0.98 * playerSide(player),
+    column * 1.125 * playerSide(player),
     selected ? 0.65 : 0.49,
     1.08 * playerSide(player),
   ];

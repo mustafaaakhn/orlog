@@ -180,8 +180,8 @@ export function createFaceTexture(face: DieFace) {
     }
   }
   ctx.save();
-  ctx.translate(25, 25);
-  ctx.scale(2.06, 2.06);
+  ctx.translate(13, 13);
+  ctx.scale(2.3, 2.3);
   ctx.lineWidth = 5;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
@@ -190,8 +190,12 @@ export function createFaceTexture(face: DieFace) {
   ctx.fillStyle = "#fff1d4";
   ctx.fill(new Path2D(SYMBOL_PATHS[face.symbol]), "evenodd");
   ctx.translate(0, -0.65);
-  ctx.fillStyle = "#29231d";
-  ctx.fill(new Path2D(SYMBOL_PATHS[face.symbol]), "evenodd");
+  ctx.fillStyle = "#241e17";
+  const symbol = new Path2D(SYMBOL_PATHS[face.symbol]);
+  ctx.fill(symbol, "evenodd");
+  ctx.strokeStyle = "#241e17";
+  ctx.lineWidth = 1.1;
+  ctx.stroke(symbol);
   ctx.restore();
   return texture(element);
 }

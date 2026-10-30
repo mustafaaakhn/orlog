@@ -31,6 +31,7 @@ import { DICE_DEFINITIONS, DEFAULT_FAVORS, FAVOR_CATALOG } from "../core";
 import type { DieId, GameState, PlayerId, FavorId } from "../core";
 import {
   FACE_NORMALS,
+  topFace,
   playerFaceRotation,
   reserveSlot,
   bowlWorldSlot,
@@ -226,6 +227,7 @@ export function createBoard(invalidate: () => void = () => {}) {
   const contourSurface = material({ color: '#f4d899', emissive: '#dbab48', emissiveIntensity: 0.8, side: BackSide });
   const faceShape = geometry(new PlaneGeometry(0.735, 0.735));
   const faceMaterials = new Map<string, MeshStandardMaterial>();
+  const restingFaceMaterials = new Map<MeshStandardMaterial, { upper: MeshStandardMaterial; side: MeshStandardMaterial }>();
   const dice = new Map<DieId, Group>();
   for (const player of ["player-1", "player-2"] as const) {
     [...DICE_DEFINITIONS, ...DICE_DEFINITIONS.slice(0, 3)].forEach(
@@ -250,6 +252,13 @@ export function createBoard(invalidate: () => void = () => {}) {
               roughness: 0.7,
             });
             faceMaterials.set(cacheKey, surface);
+            // Share the same map. The pale emission still respects the ink;
+            // only the actual upper face gets it, once the dice stop moving.
+            restingFaceMaterials.set(surface, {
+              upper: material({ map: surface.map, roughness: 0.7,
+                emissiveMap: surface.map, emissive: "#eadfc4", emissiveIntensity: 0.12 }),
+              side: material({ map: surface.map, roughness: 0.7, color: "#bfb49f" }),
+            });
           }
           const normal = new Vector3(...FACE_NORMALS[face.id]);
           const plaque = mesh(
@@ -259,6 +268,8 @@ export function createBoard(invalidate: () => void = () => {}) {
             normal.clone().multiplyScalar(0.441).toArray(),
           );
           plaque.quaternion.setFromUnitVectors(new Vector3(0, 0, 1), normal);
+          plaque.name = `face/${face.id}`;
+          plaque.userData.neutralSurface = surface;
           plaque.castShadow = false;
         });
         // The shared presenter marker remains an invisible anchor; no wire cage.
@@ -726,6 +737,18 @@ export function createBoard(invalidate: () => void = () => {}) {
           );
           totem.position.x = x;
           totem.position.z = z;
+        }
+      }
+    },
+    setDiceReadability(resting: boolean) {
+      for (const die of dice.values()) {
+        const upper = topFace(die.quaternion).faceId;
+        for (const plaque of die.children) {
+          const neutral = plaque.userData.neutralSurface as MeshStandardMaterial | undefined;
+          if (!neutral) continue;
+          const accents = restingFaceMaterials.get(neutral)!;
+          (plaque as Mesh).material = !resting ? neutral
+            : plaque.name === `face/${upper}` ? accents.upper : accents.side;
         }
       }
     },

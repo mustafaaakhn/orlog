@@ -219,7 +219,7 @@ onErrorCaptured(() => {
         :quality="quality"
         :speed="speed"
         :highlighted-favor="highlightedFavor"
-        :highlighted-die="!controlsDisabled && controlPlayer && status === 'ready' ? highlightedDie : null"
+        :highlighted-die="!batch && !paused && !blocked && !turningSeat && status === 'ready' ? highlightedDie : null"
         :viewer-id="viewerId ?? 'player-1'"
         :state="state"
         :batch="batch"
@@ -259,10 +259,12 @@ onErrorCaptured(() => {
       </p>
     </section>
     <SceneDiceControls
-      v-if="status === 'ready' && controlPlayer"
-      :player="state.players[controlPlayer]"
+      v-if="status === 'ready'"
+      :players="Object.values(state.players)"
+      :selectable-player="controlsDisabled ? null : controlPlayer ?? null"
       :targets="targets"
-      :disabled="controlsDisabled"
+      :collected="collected"
+      :disabled="!!batch || paused || !!blocked || !!turningSeat || menuPinned"
       @select="emit('select', $event)"
       @highlight="highlightedDie = $event"
     />

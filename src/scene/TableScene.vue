@@ -161,6 +161,7 @@ watch(
       return;
     }
     try {
+      board.setDiceReadability(false);
       const resolution = batch.state.phase.name === 'round-complete' || batch.state.phase.name === 'ended';
       last = resolution ? lastContributions(batch.events) : new Map();
       await queue.play(batch.events);
@@ -221,6 +222,7 @@ const seatTurn = createSeatTurn(props.viewerId, {
 function publishTargets() {
   if (sceneClosed || seatTurning || props.batch || !sizes.width.value || !sizes.height.value)
     return;
+  board.setDiceReadability(true);
   board.object.updateMatrixWorld(true);
   camera.updateMatrixWorld(true);
   const targets: SceneDieTarget[] = [];
