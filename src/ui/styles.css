@@ -826,19 +826,16 @@ input[type="radio"] {
   font: 400 50px var(--display);
   box-shadow: 0 16px 28px #080d0e66;
 }
-.toss-coin svg {
-  width: 64px;
-  height: 64px;
-}
 .toss-coin.tossed {
+  transform: rotateY(var(--coin-turn));
   animation: coin-settle 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 @keyframes coin-settle {
   from {
-    transform: perspective(400px) rotateY(540deg) translateY(-30px);
+    transform: translateY(-30px) rotateY(0);
   }
   to {
-    transform: perspective(400px) rotateY(0) translateY(0);
+    transform: translateY(0) rotateY(var(--coin-turn));
   }
 }
 .coin-screen .coin-announcement {

@@ -492,16 +492,19 @@ function start() {
         <div class="coin-stage">
           <div
             class="toss-coin"
-            :class="{ tossed: firstPlayer }"
+            :class="{ tossed: firstPlayer, 'lands-on-two': firstPlayer === 'player-2' }"
             :key="firstPlayer ?? 'untossed'"
+            role="img"
+            :aria-label="firstPlayer ? `${firstPlayer === 'player-1' ? 'I' : 'II'} yüzü: ${playerName(firstPlayer)}` : 'İki yüzlü demir ve altın sikke: I ve II'"
           >
-            <img src="/assets/art/toss-coin.webp" width="512" height="512" alt="Altın örgü motifleri işlenmiş demir sikke" />
+            <img class="coin-face coin-front" src="/assets/art/toss-coin-i.webp" width="512" height="512" alt="" aria-hidden="true" />
+            <img class="coin-face coin-back" src="/assets/art/toss-coin-ii.webp" width="512" height="512" alt="" aria-hidden="true" />
           </div>
         </div>
         <p class="coin-announcement" role="status" aria-live="polite">
           {{
             firstPlayer
-              ? `${playerName(firstPlayer)} ilk başlayacak.`
+              ? `${firstPlayer === "player-1" ? "I" : "II"} · ${playerName(firstPlayer)} ilk başlayacak.`
               : "Yazı mı, tura mı? Şans iki tarafa da eşit."
           }}
         </p>
