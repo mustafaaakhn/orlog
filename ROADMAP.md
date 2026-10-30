@@ -149,23 +149,28 @@ ayrıca anlaşılır. Oyuncu istediği zarı güvenilir biçimde seçip geri ala
 Bağımlılık: Aşama 1–4. Bu aşama yeni özellik ekleme aşaması değildir;
 bulunan kapsam içi hatalar düzeltilir.
 
-- [ ] 360×800, 390×844, 430×932 ve 844×390 ekranlarda tüm mobil akışı;
+- [x] 360×800, 390×844, 430×932 ve 844×390 ekranlarda tüm mobil akışı;
   tablet ve masaüstünde mevcut davranışın korunduğunu kontrol et.
-- [ ] Botla tam maç, yerel iki oyuncuda sıra değişimi ve çevrim içi oyunda
+- [x] Botla tam maç, yerel iki oyuncuda sıra değişimi ve çevrim içi oyunda
   iki koltuğu doğrula. Güç seçimi, savaş, sonuç ve yeniden maç akışlarını kapsa.
 - [ ] Fiziksel iPhone/Safari ve Android/Chrome üzerinde dokunma, panel
   kaydırma, yön değiştirme ve tarayıcı çubuklarının açılıp kapanmasını doğrula.
   Donanım yoksa bu madde açık kalır; kullanıcı testi için kısa yönerge verilir.
-- [ ] Sekmeden çıkıp dönme, az hareket, kalite seçenekleri, uzun adlar ve
+- [x] Sekmeden çıkıp dönme, az hareket, kalite seçenekleri, uzun adlar ve
   yüksek jeton sayısında HUD/sahne tutarlılığını kontrol et. Fiziksel cihazda
   akıcılık veya ısınma sorunu gözlenirse bulguyu kaydet ve nedenini araştır.
-- [ ] Son değişikliklerden sonra zorunlu komutları çalıştır; cihaz/tarayıcı,
+- [x] Son değişikliklerden sonra zorunlu komutları çalıştır; cihaz/tarayıcı,
   test edilen akışlar, ekran görüntüsü konumları ve açık sorunları aşağıya
   kaydet. Yalnız doğrulanmış maddeleri kapatıp commit et.
 
 **Kabul:** Yeni mobil düzen temel maç akışında kullanılabilir; doğrulanan ve
 doğrulanamayan cihaz/etkileşimler açıkça kayıtlıdır. Fiziksel cihaz kontrolü
 eksikken tüm mobil kabulün tamamlandığı söylenmez.
+
+**Durum:** Tarayıcı doğrulaması tamamlandı; fiziksel cihaz kabulü bekleniyor.
+Aşama 4'ün fiziksel dokunma maddesi ve bu aşamanın iPhone/Android maddesi
+açık kalır. [Cihaz test yönergesi ve kayıt tablosu](docs/MOBILE_DEVICE_CHECKLIST.md)
+hazırdır; tarayıcı benzetimi bu kayıtların yerine geçmez.
 
 ## Doğrulama ve devam notları
 
@@ -229,6 +234,28 @@ kalan alanda ayrılır; sığmazsa kaydırılır. Rakip özeti dokunarak incelen
 - Fiziksel cihaz maddesi `[ ]` kalır. Bu kontrol ve Aşama 5 ortak kabulü
   tamamlanmadan bütün mobil kabulün bittiği söylenmez. Aşama 5'e otomatik
   başlanmadı.
+
+**Aşama 5 — Tarayıcı doğrulaması tamamlandı, fiziksel kabul açık — 30 Ekim 2026.**
+
+- Aşama 1–4'ün birleşik sürümünde `npm run check` ve `npm run test:ci`
+  geçti: Node 24.21.0, 37 dosyada 460 test. Kozmetik araç düğmesi düzeltmesi
+  için yapay test eklenmedi.
+- Chromium 143: 390×844'te botla 5 turluk tam maç; 360×800'de azaltılmış
+  hareketle ve 430×932'de normal hareketle 4'er turluk yerel maç; 844×390
+  kurucu / 390×844 misafir ile 5 turluk gerçek Socket.IO maçı tamamlandı.
+  Güç kararı, savaş, sonuç ve aynı oyuncu/odada yeniden maç doğrulandı.
+- 768×1024 tablet ve 1440×900 masaüstünde bir tur, mevcut tanrı menüsü ve
+  sonraki tur kontrol edildi. Uzun adlar, 0/999 jeton, kalite varyantları ve
+  CDP ile üretilen kısa dokunma/uzun basma/panel kaydırma da geçti.
+- Google Chrome 156'da odak benzetimi kapalı gerçek sekme geçişinde sayfa
+  gizlendi, arka plan ilerlemesi tamamlandı; dönüşte aynı WebGL canvas'ı
+  güncel kaldı. 360px ve altında maç başlığının 40px'e düşen araç düğmeleri
+  44px'e düzeltildi; 320px ve 360px sınırları kontrol edildi.
+- Ayrıntı, kanıt konumları ve açık kabul: [Aşama 5 raporu](docs/review/mobile-acceptance.md).
+  Fiziksel iPhone/Safari ve Android/Chrome, gerçek tarayıcı çubukları, cihaz
+  akıcılığı/ısınması test edilmedi. Bu nedenle tüm mobil kabul tamamlanmış
+  sayılmaz; [fiziksel cihaz yönergesi](docs/MOBILE_DEVICE_CHECKLIST.md) ile
+  iki cihazın sonuçları beklenir.
 
 ## Bu planın dışında
 

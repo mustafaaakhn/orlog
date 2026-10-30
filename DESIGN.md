@@ -103,6 +103,8 @@ Klavye odağı görünürdür. Zar hedefleri Tab, Space/Enter, oklar ve Home/End
 ile kullanılabilir; dokunma hedefleri en az 44px tutulur. Seçim, altın çerçeve
 ve durum yalnız renk üzerinden anlatılmaz. Video için Escape, medya hatası ve
 azaltılmış hareket kurtarma yolları vardır.
+360px ve altındaki maç başlığında yardımcı araç düğmeleri de 44×44px
+boyutunu korur; geniş masaüstü ve karşılama başlığı bu düzeltmeden etkilenmez.
 
 Bu belge güncel uygulama rehberidir; tarihsel teslimlerin açık görsel kabul
 maddelerini kendiliğinden tamamlanmış saymaz. Ayrıntılı eski tasarım belgeleri

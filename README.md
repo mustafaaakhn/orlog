@@ -52,6 +52,7 @@ npm run test:ci
 - [Mimari](ARCHITECTURE.md)
 - [Tasarım](DESIGN.md)
 - [Mobil geliştirme yol haritası](ROADMAP.md)
+- [Fiziksel mobil cihaz kabulü](docs/MOBILE_DEVICE_CHECKLIST.md)
 - [Oyun kuralları ve kaynakları](docs/GAME_RULES.md)
 - [Çevrim içi oyun](docs/ONLINE_PLAY.md)
 - [Varlık kaynakları ve lisans kayıtları](docs/ASSETS.md)

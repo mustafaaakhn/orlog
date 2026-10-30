@@ -47,6 +47,7 @@
   .masthead .header-tools.entry-tools { gap: 2px; }
 }
 @media (max-width: 360px) {
+  .in-match .masthead .entry-tool { width: 44px; flex-shrink: 0; }
   .in-match .masthead .wordmark { font-size: 18px; letter-spacing: .08em; gap: 4px; }
   .in-match .masthead .wordmark svg { width: 18px; }
 }
