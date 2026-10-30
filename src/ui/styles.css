@@ -3075,7 +3075,16 @@ input[type="radio"] {
 /* Desktop approval pass: scene and control share the exact artwork coordinates. */
 .welcome-stage { display: contents; }
 .at-welcome .masthead { display: none; }
-.is-intro-active .masthead { opacity: 0; pointer-events: none; }
+.is-intro-active .masthead {
+  display: flex;
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: 7;
+  color: #f6ead5;
+  pointer-events: none;
+}
+.is-intro-active .header-tools,
+.is-intro-active .edition { visibility: hidden; }
 @media (min-width: 1024px) {
   .at-welcome .masthead {
     display: flex;

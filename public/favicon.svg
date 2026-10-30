@@ -1,1 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 44"><rect width="40" height="44" rx="6" fill="#101719"/><path d="m20 5 14 8v17l-14 9-14-9V13l14-8Zm-14 8 14 9 14-9M20 22v17" fill="none" stroke="#d7b579" stroke-width="2"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" color="#d3b176">
+  <defs>
+    <g id="orlog-die" stroke="currentColor" stroke-linejoin="round">
+      <path d="M24 4 42 14.5 24 25 6 14.5Z" fill="currentColor" fill-opacity=".16" stroke="none"/>
+      <path d="m6 14.5 18 10.5v19L6 33.5Z" fill="currentColor" fill-opacity=".08" stroke="none"/>
+      <path d="M24 4 42 14.5v19L24 44 6 33.5v-19Z M6 14.5 24 25l18-10.5M24 25v19" fill="none" stroke-width="2.3"/>
+      <g fill="currentColor" stroke="none">
+        <path d="m14 14 3-1.75L20 14l-3 1.75Zm7 0 3-1.75L27 14l-3 1.75Zm7 0 3-1.75L34 14l-3 1.75Z"/>
+        <path d="m11 21 4 2.3v4.6l-4-2.3Zm6 10 4 2.3v4.6l-4-2.3Zm13-3 5-2.9v5.8L30 34Z"/>
+      </g>
+    </g>
+  </defs>
+  <rect width="48" height="48" rx="10" fill="#17221c"/>
+  <use href="#orlog-die"/>
+</svg>

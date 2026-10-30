@@ -1,4 +1,6 @@
 import { randomInt, randomUUID } from 'node:crypto'
+import { createRoomCode } from './roomCodes'
+import { isRoomCode } from '../src/network/roomCode'
 import type { Server as HttpServer } from 'node:http'
 import type { Http2SecureServer } from 'node:http2'
 import { Server } from 'socket.io'
@@ -22,7 +24,6 @@ interface Room {
 }
 interface SocketData { code?: string; playerId?: PlayerId }
 type GameSocket = Socket<ClientEvents, ServerEvents, Record<string, never>, SocketData>
-const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const failure = (error: string) => ({ ok: false as const, error })
 const success = () => ({ ok: true as const, data: undefined })
 
@@ -162,8 +163,8 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       if (typeof ack !== 'function') return
       if (membership(socket)) { ack(failure('Önce mevcut odadan ayrıl.')); return }
       if (rooms.size >= (options.maxRooms ?? 500)) { ack(failure('Odalar şu an dolu. Biraz sonra yeniden dene.')); return }
-      let code: string
-      do { code = Array.from({ length: 6 }, () => alphabet[randomInt(alphabet.length)]).join('') } while (rooms.has(code))
+      const code = createRoomCode(rooms)
+      if (code === null) { ack(failure('Odalar şu an dolu. Biraz sonra yeniden dene.')); return }
       const room: Room = { code, stage: 'lobby', seats: [], firstPlayerId: null, game: null, waiting: false, presented: new Set(), updatedAt: Date.now() }
       const seat: Seat = { id: 'player-1', token: randomUUID(), name: 'Oyuncu I', connected: true, ready: false, favors: [], socketId: null, disconnectedAt: null, visible: true }
       room.seats.push(seat)
@@ -173,7 +174,8 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
     socket.on('room:join', (code, ack) => {
       if (typeof ack !== 'function') return
       if (membership(socket)) { ack(failure('Önce mevcut odadan ayrıl.')); return }
-      const room = typeof code === 'string' && /^[A-Z0-9]{6}$/.test(code.trim().toUpperCase()) ? rooms.get(code.trim().toUpperCase()) : undefined
+      const normalized = typeof code === 'string' ? code.trim() : code
+      const room = isRoomCode(normalized) ? rooms.get(normalized) : undefined
       if (!room) { ack(failure('Bu kodla bir oda bulunamadı.')); return }
       if (room.stage !== 'lobby' || room.seats.length >= 2) { ack(failure('Bu oda dolu veya oyun başlamış.')); return }
       const seat: Seat = { id: 'player-2', token: randomUUID(), name: 'Oyuncu II', connected: true, ready: false, favors: [], socketId: null, disconnectedAt: null, visible: true }

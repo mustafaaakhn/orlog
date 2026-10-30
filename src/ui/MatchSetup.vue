@@ -17,6 +17,7 @@ import {
 import type { FavorId, GameOptions, PlayerId } from "../core";
 import { FAVOR_ART_IDS } from "../scene/favorArt";
 import type { OpponentOptions } from "../ai/computer";
+import { isRoomCode } from "../network/roomCode";
 import type { OnlineClient } from "../network/client";
 type Screen = "welcome" | "mode" | "gods" | "coin";
 const props = defineProps<{
@@ -96,7 +97,7 @@ const friendPaths = [
 ] as const;
 const roomStatus = computed(() => room.value && !props.online.connected.value ? "Odaya yeniden bağlanılıyor…" : isHost.value
   ? guestPresent.value ? "Arkadaşın geldi. Masanız hazır." : "Arkadaşın bekleniyor…"
-  : roomJoined.value ? "Odaya katıldın. Oda sahibinin başlatması bekleniyor." : "Arkadaşının paylaştığı 6 karakterli kodu gir.");
+  : roomJoined.value ? "Odaya katıldın. Oda sahibinin başlatması bekleniyor." : "Arkadaşının paylaştığı 4 rakamlı kodu gir.");
 const local = computed(() => selectedMode.value !== "computer");
 watch(local, (isLocal) => {
   if (!isLocal) {
@@ -221,8 +222,8 @@ async function choosePath(path: typeof friendMode.value) {
   if (path === "host") await props.online.create();
 }
 function joinRoom() {
-  if (!/^[A-Z0-9]{6}$/.test(roomCode.value.trim().toUpperCase())) {
-    roomError.value = "6 harf veya rakamdan oluşan bir oda kodu gir.";
+  if (!isRoomCode(roomCode.value.trim())) {
+    roomError.value = "4 rakamdan oluşan bir oda kodu gir.";
     void nextTick(() => {
       document.getElementById("room-error")?.scrollIntoView({ block: "nearest" });
       document.getElementById("room-code")?.focus({ preventScroll: true });
@@ -230,7 +231,7 @@ function joinRoom() {
     return;
   }
   roomError.value = "";
-  void props.online.join(roomCode.value.trim().toUpperCase());
+  void props.online.join(roomCode.value.trim());
 }
 async function copyCode() {
   try {
@@ -391,7 +392,7 @@ function start() {
             </div>
             <form v-else-if="!roomJoined" class="friend-join-form" @submit.prevent="joinRoom">
               <label for="room-code">Oda kodu</label>
-              <div class="friend-code-entry"><input id="room-code" v-model="roomCode" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" placeholder="Örn. SKAL26"
+              <div class="friend-code-entry"><input id="room-code" v-model="roomCode" autocomplete="off" inputmode="numeric" spellcheck="false" maxlength="4" placeholder="Örn. 0427"
                 :disabled="networkBusy" :aria-invalid="!!networkError" :aria-describedby="networkError ? 'room-note room-error' : 'room-note'" />
                 <button class="secondary-action" type="submit" :disabled="networkBusy">{{ networkBusy ? 'Katılıyor…' : 'Katıl' }}</button></div>
             </form>

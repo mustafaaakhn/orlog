@@ -146,15 +146,15 @@ describe('two-player Socket.IO rooms', () => {
     expect((await actor.emitWithAck('game:command', { revision: 2, command: { type: 'RollDice', playerId: phase.activePlayerId } })).ok).toBe(false)
   })
 
-  it('creates distinct six-character codes, rejects missing/full rooms, and only lets the creator start', async () => {
+  it('creates distinct four-digit codes, rejects missing/full rooms, and only lets the creator start', async () => {
     const h = await setup()
-    expect(h.joined.room.code).toMatch(/^[A-Z2-9]{6}$/)
+    expect(h.joined.room.code).toMatch(/^\d{4}$/)
     expect(h.joined.session.token).toBeTruthy()
     expect(JSON.stringify(h.views.get(h.guest))).not.toContain(h.joined.session.token)
     expect((await h.guest.emitWithAck('room:start')).ok).toBe(false)
     const third = await h.peer()
     expect((await third.emitWithAck('room:join', h.joined.room.code)).ok).toBe(false)
-    expect((await third.emitWithAck('room:join', 'XXXXXX')).ok).toBe(false)
+    expect((await third.emitWithAck('room:join', 'AB12')).ok).toBe(false)
     const secondRoom = data(await third.emitWithAck('room:create'))
     expect(secondRoom.room.code).not.toBe(h.joined.room.code)
     data(await h.host.emitWithAck('room:start'))
