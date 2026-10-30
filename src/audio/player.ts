@@ -80,7 +80,11 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
       if (unlocked && !hidden) void Howler.ctx?.resume().then(loops).catch(() => onError(true))
       loops()
     },
-    event(event) { const id = soundForEvent(event); if (id) play(id, 1, event.sequence) },
+    event(event, resourceStep = 1) {
+      const id = soundForEvent(event)
+      if (!id || (id === 'earn-money' && resourceStep !== 1)) return
+      play(id, 1, id === 'earn-money' ? undefined : event.sequence)
+    },
     impact(index, strength) { play(`dice-${index % 4}` as SoundId, strength, index) },
     coinFlip() { play('coin-flip') },
     gameStart() { play('game-start') },

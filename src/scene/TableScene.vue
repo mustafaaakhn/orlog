@@ -69,7 +69,7 @@ const combat = createCombatPresenter(
       if (sceneClosed || !props.batch || props.paused) return;
       shown = applyResourceProgress(shown, event, step);
       board.syncResources(shown);
-      props.audio.event(event);
+      props.audio.event(event, step);
       emit('progress', props.batch.id, event, step);
       invalidate();
     },

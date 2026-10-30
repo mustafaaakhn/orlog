@@ -20,6 +20,7 @@ vi.mock('howler', () => ({
 import { createAudioPlayer } from '../player'
 import { soundForEvent } from '../catalog'
 import { Game, PLAYER_IDS } from '../../core'
+import type { GameEvent } from '../../core'
 
 beforeEach(() => { mocks.sounds.length = 0; mocks.resume.mockClear() })
 function combatEvents() {
@@ -39,7 +40,7 @@ describe('owned audio lifecycle', () => {
     player.impact(0, 1)
     expect(mocks.sounds).toHaveLength(0)
     player.unlock(); player.unlock()
-    expect(mocks.sounds).toHaveLength(14)
+    expect(mocks.sounds).toHaveLength(15)
     mocks.sounds.forEach(sound => sound.options.onload())
     const loops = mocks.sounds.filter(s => s.options.loop)
     expect(loops.every(s => s.play.mock.calls.length === 1)).toBe(true)
@@ -48,7 +49,7 @@ describe('owned audio lifecycle', () => {
     player.dispose()
     expect(mocks.sounds.every(s => s.unload.mock.calls.length === 1)).toBe(true)
     player.unlock()
-    expect(mocks.sounds).toHaveLength(14)
+    expect(mocks.sounds).toHaveLength(15)
   })
   it('applies separate levels, silence and visibility without queuing late contacts', () => {
     const player = createAudioPlayer()
@@ -229,5 +230,40 @@ describe('match start sound', () => {
     player.dispose()
     player.gameStart()
     expect(start.play).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('earning money sound', () => {
+  const base = { id: 'earn-test', sequence: 6, round: 1, revision: 3, playerId: 'player-1' } as const
+  const gained: Extract<GameEvent, { type: 'TokensGained' }> = { ...base, type: 'TokensGained', dieIds: ['player-1/die-1', 'player-1/die-2'], tokens: 2 }
+  const granted: Extract<GameEvent, { type: 'TokensGranted' }> = { ...base, type: 'TokensGranted', favorId: 'bragis-verve', amount: 3, tokens: 5 }
+  const stolen: Extract<GameEvent, { type: 'TokensStolen' }> = { ...base, type: 'TokensStolen', targetId: 'player-2', dieIds: ['player-1/die-3'], amount: 2, tokens: 7, targetTokens: 0 }
+  it('uses the new recording only for positive earnings, preserving spending sounds', () => {
+    for (const event of [gained, granted, stolen]) expect(soundForEvent(event)).toBe('earn-money')
+    expect(soundForEvent({ ...gained, dieIds: [] })).toBeUndefined()
+    expect(soundForEvent({ ...granted, amount: 0 })).toBeUndefined()
+    expect(soundForEvent({ ...stolen, amount: 0 })).toBeUndefined()
+    expect(soundForEvent({ ...base, type: 'TokensDestroyed', targetId: 'player-2', favorId: 'skulds-claim', amount: 1, tokens: 0 })).toBe('token')
+  })
+  it('plays once on the first arrival of each earnings event, at the original speed', () => {
+    const player = createAudioPlayer()
+    player.unlock()
+    player.configure({ music: .2, effects: .4, muted: false })
+    const earn = mocks.sounds.find(s => s.options.src[0].endsWith('earn-money.wav'))
+    expect(earn.options.loop).toBe(false)
+    expect(earn.play).not.toHaveBeenCalled()
+    player.event(granted, 1)
+    player.event(granted, 2)
+    player.event(granted, 3)
+    expect(earn.play).toHaveBeenCalledTimes(1)
+    expect(earn.rate).toHaveBeenLastCalledWith(1, 1)
+    expect(earn.volume).toHaveBeenLastCalledWith(.4, 1)
+    player.event(gained, 1)
+    player.event(stolen, 1)
+    expect(earn.play).toHaveBeenCalledTimes(3)
+    player.configure({ music: .2, effects: 0, muted: false })
+    player.event(granted, 1)
+    expect(earn.play).toHaveBeenCalledTimes(3)
+    player.dispose()
   })
 })
