@@ -42,6 +42,8 @@ import {
   playerAngle,
   seatPosition,
   tokenSlot,
+  TABLE_WIDTH, TABLE_NARROW_WIDTH, TABLE_DEPTH,
+  CLOTH_WIDTH, CLOTH_NARROW_WIDTH,
 } from "./tableLayout";
 import {
   createClothTexture,
@@ -147,7 +149,7 @@ export function createBoard(invalidate: () => void = () => {}) {
 
   const table = mesh(
     root,
-    geometry(new RoundedBoxGeometry(30, 0.48, 23.5, 2, 0.12)),
+    geometry(new RoundedBoxGeometry(TABLE_WIDTH, 0.48, TABLE_DEPTH, 2, 0.12)),
     wood,
     [0, -0.235, 0],
   );
@@ -703,8 +705,8 @@ export function createBoard(invalidate: () => void = () => {}) {
     setNarrow(narrow: boolean) {
       // Keep both players facing each other at every width. Only the table's
       // peripheral resources move inward; physics and battle lines stay fixed.
-      table.scale.x = narrow ? 17 / 30 : 1;
-      fabric.scale.x = narrow ? 13.8 / 17.8 : 1;
+      table.scale.x = narrow ? TABLE_NARROW_WIDTH / TABLE_WIDTH : 1;
+      fabric.scale.x = narrow ? CLOTH_NARROW_WIDTH / CLOTH_WIDTH : 1;
       dock.scale.x = narrow ? 0.6 : 1;
       const layout = resourceLayout(narrow);
       for (const [index, player] of (

@@ -75,6 +75,35 @@ describe("player-facing table layout", () => {
 });
 
 import { tokenSlot } from '../tableLayout'
+import { CLOTH_WIDTH, CLOTH_NARROW_WIDTH, CLOTH_DEPTH, resourceLayout } from '../tableLayout'
+describe('cloth coverage', () => {
+  it.each([false, true])('contains both complete loadouts, all health stones and dice (narrow=%s)', narrow => {
+    const halfWidth = (narrow ? CLOTH_NARROW_WIDTH : CLOTH_WIDTH) / 2
+    const layout = resourceLayout(narrow)
+    function inside(x: number, z: number, rx: number, rz = rx) {
+      expect(Math.abs(x) + rx).toBeLessThan(halfWidth)
+      expect(Math.abs(z) + rz).toBeLessThan(CLOTH_DEPTH / 2)
+    }
+    for (const player of ['player-1', 'player-2'] as const) {
+      inside(0, bowlCenter(player)[2], 3.25)
+      for (let i = 0; i < 15; i++) {
+        const [x, , z] = lifeStoneSlot(i)
+        inside(layout.lifeX + x, layout.lifeZ + z, 0.22)
+      }
+      for (let i = 0; i < 3; i++) inside(layout.godX + i * layout.godGap, layout.godZ, 0.66, 1.05)
+      for (let i = 0; i < 9; i++) {
+        const [x, , z] = collectionSlot(player, i)
+        inside(x, z, 0.63)
+        const [bx, , bz] = reserveSlot(player, i)
+        inside(bx, bz, 0.63)
+      }
+      for (let i = 0; i < 127; i++) {
+        const [x, , z] = tokenSlot(i)
+        inside(layout.tokenX + x, layout.tokenZ + z, 0.24)
+      }
+    }
+  })
+})
 describe('physical gold plate stacks', () => {
   it.each([5, 6, 10, 11, 12, 41, 127])('places all %i plates in stacks of at most five without truncation', count => {
     const stacks = new Map<string, number[]>()

@@ -4,6 +4,13 @@ import type { PlayerId } from "../core";
 export const TABLE_HALF_WIDTH = 13.2;
 export const TABLE_NARROW_HALF_WIDTH = 7.4;
 export const TABLE_HALF_DEPTH = 10.4;
+// Visible outer bounds, separate from the gameplay/contact area above.
+export const TABLE_WIDTH = 30;
+export const TABLE_NARROW_WIDTH = 17;
+export const TABLE_DEPTH = 23.5;
+export const CLOTH_WIDTH = 24;
+export const CLOTH_NARROW_WIDTH = 14.8;
+export const CLOTH_DEPTH = 21.7;
 export const BOWL_DISTANCE = 6.7;
 export const playerSide = (player: PlayerId) =>
   player === "player-1" ? 1 : -1;

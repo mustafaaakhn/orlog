@@ -22,12 +22,7 @@ import type { PresentationBatch } from "../app/rollSession";
 import type { DieId, GameState, GameEvent, PlayerId } from "../core";
 
 import type { SceneDieTarget } from "./dieTargets";
-import {
-  TABLE_HALF_WIDTH,
-  TABLE_NARROW_HALF_WIDTH,
-  TABLE_HALF_DEPTH,
-  playerSide,
-} from "./tableLayout";
+import { frameTableCamera } from './tableCamera';
 
 const props = defineProps<{
   audio: AudioPort;
@@ -205,8 +200,6 @@ watch(
   },
 );
 const camera = new PerspectiveCamera(42, 1, 0.1, 100);
-const direction = new Vector3();
-const up = new Vector3();
 function publishTargets() {
   if (sceneClosed || props.batch || !sizes.width.value || !sizes.height.value)
     return;
@@ -238,35 +231,9 @@ watch(
   ],
   () => {
     const aspect = Math.max(sizes.aspectRatio.value, 0.25);
-    const side = playerSide(props.viewerId);
     const narrow = sizes.width.value < 620 && aspect < 1.1;
     board.setNarrow(narrow);
-    direction.set(0, 1, (narrow ? 0.9 : 1.16) * side).normalize();
-    up.set(0, Math.abs(direction.z), -direction.y * side);
-    const target = new Vector3(0, 0.2, 1.1 * side);
-    // Fit both seats in one oblique view; no optional zoom mode.
-    const halfWidth = narrow ? TABLE_NARROW_HALF_WIDTH : TABLE_HALF_WIDTH;
-    const halfDepth = TABLE_HALF_DEPTH;
-    const centerZ = 0;
-    const tangent = Math.tan((camera.fov * Math.PI) / 360);
-    let distance = 0;
-    for (const x of [-halfWidth, halfWidth]) {
-      for (const z of [centerZ - halfDepth, centerZ + halfDepth]) {
-        for (const y of [0, 2]) {
-          const point = new Vector3(x, y, z).sub(target);
-          const depth = point.dot(direction);
-          distance = Math.max(
-            distance,
-            depth + Math.abs(x) / (tangent * aspect),
-            depth + Math.abs(point.dot(up)) / tangent,
-          );
-        }
-      }
-    }
-    camera.position.copy(target).addScaledVector(direction, distance * 1.16);
-    camera.aspect = aspect;
-    camera.lookAt(target);
-    camera.updateProjectionMatrix();
+    frameTableCamera(camera, sizes.width.value, sizes.height.value, props.viewerId, narrow);
     invalidate();
     publishTargets();
   },
