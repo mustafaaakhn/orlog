@@ -2722,7 +2722,6 @@ input[type="radio"] {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.match-winner { color: var(--text); background: var(--panel); padding: 8px 12px; }
 @media (max-width: 600px) {
   .in-match .scene-layer { inset: 90px 0 76px; }
   .match-actions .primary-action { min-height: 48px; }

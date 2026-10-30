@@ -17,6 +17,7 @@ import SymbolIcon from "./ui/SymbolIcon.vue";
 import { SYMBOL_GUIDE } from "./scene/symbols";
 import SceneLoaderState from "./ui/SceneLoaderState.vue";
 import MatchSetup from "./ui/MatchSetup.vue";
+import MatchResult from "./ui/MatchResult.vue";
 import { eventText } from "./presentation/eventText";
 import type {
   GameOptions,
@@ -173,6 +174,9 @@ watch(passivePresentation, (passive, previous) => {
 }, { immediate: true, flush: 'sync' });
 const { state, pending, error, lastEvent } = session;
 const phase = computed(() => state.value.phase);
+const resultAvailable = computed(() => !preparing.value && phase.value.name === 'ended' && !pending.value);
+const resultOpen = ref(false);
+watch(resultAvailable, available => { resultOpen.value = available; });
 const activePlayer = computed(() =>
   phase.value.name === "roll" || phase.value.name === "favor"
     ? state.value.players[phase.value.activePlayerId]
@@ -450,13 +454,14 @@ function confirm() {
           <button class="primary-action" @click="skip">Devam et <UiIcon name="arrow" /></button>
         </template>
         <template v-if="!busy && phase.name === 'ended'">
-          <p class="match-winner">{{ names[phase.winnerId] }} kazandı.</p>
-          <button class="primary-action" @click="restart">Yeni oyun <UiIcon name="arrow" /></button>
+          <button v-if="!resultOpen" class="secondary-action" @click="resultOpen = true">Sonucu göster</button>
         </template>
         <p v-if="error" class="field-error" role="alert">{{ error }}</p>
         <p v-if="onlineError" class="field-error" role="alert">{{ onlineError }}</p>
       </section>
     </section>
+    <MatchResult v-if="resultAvailable && resultOpen && phase.name === 'ended'"
+      :winner="names[phase.winnerId]" :round="state.round" @restart="restart" @close="resultOpen = false" />
     <dialog
       ref="dialog"
       class="utility-dialog"
@@ -555,4 +560,5 @@ function confirm() {
 @import "./ui/entry-tools.css";
 @import "./ui/setup-refresh.css";
 @import "./ui/fjord-table.css";
+@import "./ui/match-moments.css";
 </style>
