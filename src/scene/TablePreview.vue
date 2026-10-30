@@ -1,8 +1,6 @@
 <script setup lang="ts">
 import FavorPicker from "../ui/FavorPicker.vue";
 import GameMark from "../ui/GameMark.vue";
-import SymbolIcon from '../ui/SymbolIcon.vue';
-import UiIcon from '../ui/UiIcon.vue';
 import type { PresentationCue } from '../presentation/combatPresenter';
 import { getDieFace } from "../core";
 import { SYMBOL_GUIDE } from "./symbols";
@@ -234,18 +232,8 @@ onErrorCaptured(() => {
         :state="state" :player="state.players[menuFavor.playerId]" :disabled="false" :preview="!menuPinned"
         @choose="(id, level, input) => emit('choose', id, level, input)" />
     </section>
-    <div class="resolution-cue" :class="{ 'is-title': cue?.title }" role="status" aria-live="polite" aria-atomic="true">
-      <template v-if="cue">
-        <h2 v-if="cue.title">{{ cue.title }}</h2>
-        <template v-else>
-          <span v-if="cue.symbol" class="cue-symbols" aria-hidden="true">
-            <SymbolIcon :symbol="cue.symbol" />
-            <UiIcon v-if="cue.targetSymbol" name="arrow" />
-            <SymbolIcon v-if="cue.targetSymbol" :symbol="cue.targetSymbol" />
-          </span>
-          <p>{{ cue.text }} <span v-if="cue.progress" class="cue-progress">{{ cue.progress }}</span></p>
-        </template>
-      </template>
+    <div v-if="cue?.title" class="resolution-cue is-title" role="status" aria-live="polite" aria-atomic="true">
+      <h2>{{ cue.title }}</h2>
     </div>
     <section
       v-if="status === 'ready'"

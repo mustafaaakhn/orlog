@@ -77,10 +77,10 @@ const unlockAudio = () => {
 };
 const visibility = () => {
   paused.value = document.hidden;
-  audio.visibility(paused.value || introActive.value || !!overlay.value);
+  audio.visibility(paused.value || introActive.value);
 };
-watch([introActive, overlay, paused], () => {
-  audio.visibility(paused.value || introActive.value || !!overlay.value);
+watch([introActive, paused], () => {
+  audio.visibility(paused.value || introActive.value);
 });
 onMounted(() => {
   online.restore();

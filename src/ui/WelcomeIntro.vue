@@ -154,16 +154,15 @@ onBeforeUnmount(() => {
       @error="reveal(false)"
     />
     <button
-      v-if="phase === 'idle' || phase === 'loading'"
+      v-if="phase === 'idle'"
       class="welcome-play intro-start"
-      :disabled="phase === 'loading'"
       @click="start"
     >
-      <span>{{ phase === 'loading' ? 'Sahne açılıyor…' : 'Oyuna Başla' }}</span>
-      <UiIcon v-if="phase === 'idle'" name="arrow" />
+      <span>Oyuna Başla</span>
+      <UiIcon name="arrow" />
     </button>
     <p class="sr-only" role="status" aria-live="polite">
-      {{ phase === 'loading' ? 'Oyun girişi yükleniyor.' : phase === 'playing' ? 'Zarlar atılıyor.' : '' }}
+      {{ phase === 'playing' ? 'Zarlar atılıyor.' : '' }}
     </p>
   </section>
 </template>

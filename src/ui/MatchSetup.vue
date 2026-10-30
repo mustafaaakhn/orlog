@@ -151,10 +151,6 @@ const canContinueGods = computed(
       !!names.value[editingPlayer.value].trim()) &&
     (!!room.value || (local.value && editingPlayer.value === "player-1") || valid.value),
 );
-const steps = ["Rakibin", "Tanrıların", "İlk hamle"];
-const stepIndex = computed(() =>
-  screen.value === "coin" ? 2 : screen.value === "gods" ? 1 : 0,
-);
 const shortName = (id: FavorId) => FAVOR_CATALOG[id].name.split("'")[0];
 const playerName = (id: PlayerId) =>
   id === "player-2" && !local.value
@@ -337,20 +333,6 @@ function start() {
       <button v-if="screen !== 'mode' || !desktopWelcome || friendOpen" class="text-button back-button" @click="goBack">
         <UiIcon name="back" /> Geri
       </button>
-      <ol v-if="screen !== 'mode' || !desktopWelcome">
-        <li
-          v-for="(step, index) in steps"
-          :key="step"
-          :aria-current="index === stepIndex ? 'step' : undefined"
-          :class="{ complete: index < stepIndex }"
-        >
-          <span class="step-number"
-            ><UiIcon v-if="index < stepIndex" name="check" /><template v-else>{{
-              index + 1
-            }}</template></span
-          ><span>{{ step }}</span>
-        </li>
-      </ol>
       <span class="flow-nav-spacer"></span>
     </nav>
     <template v-if="screen === 'mode'">
@@ -439,13 +421,12 @@ function start() {
           <h1 tabindex="-1">Tanrılarını yanına al.</h1>
           <p>Yirmi tanrıdan üçü seninle masaya oturacak.</p>
         </div>
-        <div class="player-tabs" aria-label="Tanrılarını seçtiğin oyuncu">
+        <div v-if="local || room" class="player-tabs" aria-label="Tanrılarını seçtiğin oyuncu">
           <button
             v-for="id in PLAYER_IDS"
             :key="id"
             :aria-pressed="editingPlayer === id"
             :disabled="room ? id !== ownId : !local && id === 'player-2'"
-            :title="!local && id === 'player-2' ? 'Bilgisayarın tanrıları sabittir.' : undefined"
             @click="editingPlayer = id"
           >
             {{ playerName(id) }} <span>{{ loadouts[id].length }}/3</span>
