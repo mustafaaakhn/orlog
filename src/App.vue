@@ -218,6 +218,11 @@ let announcedResult: string | null = null;
 watch([resultAvailable, () => state.value.gameId], ([available, gameId]) => {
   if (available && announcedResult !== gameId) {
     announcedResult = gameId;
+    const ended = session.history.value.findLast(event => event.type === 'GameEnded');
+    if (ended?.type === 'GameEnded') {
+      const listener = online.identity.value?.playerId ?? (opponent.value.mode === 'computer' ? 'player-1' : null);
+      audio.result(ended, listener);
+    }
     resultOpen.value = true;
   } else if (phase.value.name !== 'ended') resultOpen.value = false;
 });

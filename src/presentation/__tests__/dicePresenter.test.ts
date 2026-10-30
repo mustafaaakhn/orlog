@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { Group, Vector3 } from "three";
 import { Game, createSeededRandom } from "../../core";
 import type { CommandResult, DieId, GameState } from "../../core";
@@ -300,3 +300,35 @@ it.each(["player-1", "player-2"] as const)(
   },
   10000,
 );
+
+
+it.each(['finish', 'pause', 'dispose', 'reduced'] as const)('owns the roll bed through %s without sounding during physics preparation', async mode => {
+  const game = new Game({ random: () => .35 })
+  const result = batch(game.dispatch({ type: 'RollDice', playerId: 'player-1' }))
+  const event = result.events.find(event => event.type === 'DiceRolled')!
+  if (event.type !== 'DiceRolled') throw new Error('Expected a real roll')
+  const stop = vi.fn(), roll = vi.fn(() => stop)
+  const recording: Awaited<ReturnType<typeof recordRoll>> = {
+    dice: event.dice, attempts: 1, controlled: false, impacts: [],
+    frames: [0, 1].map(() => event.dice.map((die, i) => ({ position: [i, .765, 0], rotation: faceUpRotation(die.faceId).toArray() }))),
+  }
+  let release!: (value: typeof recording) => void
+  const presenter = createDicePresenter(pieces(result.state), () => {}, {
+    record: () => new Promise(resolve => { release = resolve }),
+    reduced: () => mode === 'reduced',
+    audio: { event() {}, impact() {}, roll },
+  })
+  try {
+    const pending = presenter.play(result)
+    expect(roll).not.toHaveBeenCalled()
+    if (mode !== 'reduced') {
+      release(recording)
+      await Promise.resolve()
+      expect(roll).toHaveBeenCalledTimes(1)
+      if (mode === 'pause') { presenter.setPaused(true); expect(stop).toHaveBeenCalledTimes(1); presenter.setPaused(false) }
+      if (mode === 'dispose') presenter.dispose()
+    }
+    await pending
+    expect(stop).toHaveBeenCalledTimes(mode === 'reduced' ? 0 : 1)
+  } finally { presenter.dispose() }
+})

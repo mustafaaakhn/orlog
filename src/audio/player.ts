@@ -1,5 +1,6 @@
 import { Howl, Howler } from 'howler'
-import { MUSIC_PLAYLIST, SOUND_CATALOG, soundForEvent } from './catalog'
+import { MUSIC_PLAYLIST, SOUND_CATALOG, soundForEvent, soundForResult } from './catalog'
+import type { GameEvent, PlayerId } from '../core'
 import type { AudioPort, AudioSettings, SoundId } from './catalog'
 
 // Each application owns its Howls; never unload another application's global pool.
@@ -11,6 +12,7 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
   let settings: AudioSettings = { muted: false, music: .35, effects: .65 }
   let unlocked = false, hidden = false, disposed = false
   let musicIndex = 0
+  let announcedResult: string | null = null
   const background = (id: SoundId) => id === 'music-1' || id === 'music-2' || id === 'ambience'
   function loops() {
     for (const id of [...MUSIC_PLAYLIST, 'ambience'] as const) {
@@ -33,7 +35,9 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
     const voice = sound.play()
     sound.volume(settings.effects * Math.max(.15, Math.min(1, strength)), voice)
     sound.rate(variation === undefined ? 1 : 1 + (variation % 5 - 2) * .035, voice)
-    voices.push({ howl: sound, id: voice })
+    const playing = { howl: sound, id: voice }
+    voices.push(playing)
+    return playing
   }
   return {
     unlock() {
@@ -83,10 +87,26 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
     },
     event(event, resourceStep = 1) {
       const id = soundForEvent(event)
-      if (!id || (id === 'earn-money' && resourceStep !== 1)) return
-      play(id, 1, id === 'earn-money' ? undefined : event.sequence)
+      if (!id || resourceStep !== 1) return
+      if (event.type === 'FavorInvoked' && event.cost > 0) play('token', .65)
+      play(id)
     },
     impact(index, strength) { play(`dice-${index % 4}` as SoundId, strength, index) },
+    roll() {
+      const voice = play('dice-roll', .35)
+      return () => {
+        if (!voice) return
+        const index = voices.indexOf(voice)
+        if (index < 0) return
+        voices.splice(index, 1)
+        voice.howl.stop(voice.id)
+      }
+    },
+    result(event: Extract<GameEvent, { type: 'GameEnded' }>, listener: PlayerId | null) {
+      if (announcedResult === event.id) return
+      announcedResult = event.id
+      play(soundForResult(event, listener))
+    },
     coinFlip() { play('coin-flip') },
     gameStart() { play('game-start') },
     stopEffects,
