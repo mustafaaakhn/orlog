@@ -4,6 +4,12 @@ import { defineConfig } from 'vite'
 import { attachRoomServer } from './server/rooms'
 
 export default defineConfig({
+  server: {
+    fs: {
+      // Keep Vite's default sensitive-file exclusions when adding the archive.
+      deny: ['.env', '.env.*', '*.{crt,pem,key,p12,pfx,cer,der}', '.npmrc', '.yarnrc.yml', '**/.git/**', '**/local-archive/**'],
+    },
+  },
   plugins: [vue({ ...templateCompilerOptions }), {
     name: 'orlog-rooms',
     configureServer(server) {

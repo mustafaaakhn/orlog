@@ -12,5 +12,8 @@ coverage/
 .vscode/*
 !.vscode/extensions.json
 
-# Yerel ses taslakları ve üretim kayıtları
-/output/elevenlabs/
+# Yayına dahil edilmeyen raporlar, üretim araçları, anahtarlar ve eski varlıklar
+/local-archive/
+
+# Yeniden oluşturulabilecek yerel taslaklar
+/output/
