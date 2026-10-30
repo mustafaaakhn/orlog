@@ -16,7 +16,7 @@ const emit = defineEmits<{
 type Phase = "idle" | "loading" | "playing" | "revealing";
 const phase = ref<Phase>("idle");
 const video = ref<HTMLVideoElement | null>(null);
-const skipButton = ref<HTMLButtonElement | null>(null);
+const intro = ref<HTMLElement | null>(null);
 const posterFailed = ref(false);
 let disposed = false;
 let entered = false;
@@ -75,7 +75,7 @@ async function start() {
   emit("active", true);
   await nextTick();
   if (disposed) return;
-  skipButton.value?.focus({ preventScroll: true });
+  intro.value?.focus({ preventScroll: true });
   await play();
 }
 function onPlaying() {
@@ -119,6 +119,8 @@ onBeforeUnmount(() => {
 
 <template>
   <section
+    ref="intro"
+    tabindex="-1"
     class="welcome-intro"
     :class="[`is-${phase}`, { 'poster-unavailable': posterFailed }]"
     aria-labelledby="welcome-title"
@@ -160,14 +162,8 @@ onBeforeUnmount(() => {
       <span>{{ phase === 'loading' ? 'Sahne açılıyor…' : 'Oyuna Başla' }}</span>
       <UiIcon v-if="phase === 'idle'" name="arrow" />
     </button>
-    <button
-      v-if="phase === 'loading' || phase === 'playing'"
-      ref="skipButton"
-      class="intro-skip"
-      @click="reveal(false)"
-    >Girişi geç <UiIcon name="arrow" /></button>
     <p class="sr-only" role="status" aria-live="polite">
-      {{ phase === 'loading' ? 'Oyun girişi yükleniyor.' : phase === 'playing' ? 'Zarlar atılıyor. Girişi geçebilir veya Escape tuşuna basabilirsin.' : '' }}
+      {{ phase === 'loading' ? 'Oyun girişi yükleniyor.' : phase === 'playing' ? 'Zarlar atılıyor.' : '' }}
     </p>
   </section>
 </template>
@@ -225,25 +221,7 @@ onBeforeUnmount(() => {
 .intro-start:focus-visible { outline: 2px solid #fff1ce; outline-offset: 6px; }
 .intro-start:disabled { opacity: 1; cursor: wait; }
 .intro-start svg { width: 23px; height: 23px; flex: 0 0 auto; }
-.intro-skip {
-  position: absolute;
-  right: 3.3%;
-  bottom: 28px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 10px 16px;
-  border: 1px solid #d3b17680;
-  border-radius: 4px;
-  background: #302016;
-  color: #fff1ce;
-  font: 400 15px/1.4 var(--body);
-  cursor: pointer;
-}
-.intro-skip svg { width: 18px; height: 18px; }
-.intro-skip:hover { background: #4b3220; }
-.intro-skip:focus-visible { outline: 2px solid #fff1ce; outline-offset: 4px; }
+.welcome-intro:focus { outline: none; }
 .is-loading,
 .is-playing,
 .is-revealing { z-index: 6; }

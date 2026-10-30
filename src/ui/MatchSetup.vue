@@ -6,6 +6,7 @@ import UiIcon from "./UiIcon.vue";
 import SymbolIcon from "./SymbolIcon.vue";
 import TokenIcon from "./TokenIcon.vue";
 import GameMark from "./GameMark.vue";
+import { favorSummary } from "./favorSummary";
 import {
   DEFAULT_FAVORS,
   FAVOR_CATALOG,
@@ -80,18 +81,13 @@ const roomReady = computed(
   () => !roomPreview.value || (isHost.value ? guestPresent.value : roomJoined.value),
 );
 const friendPaths = [
-  { id: "local", label: "Aynı bilgisayarda" },
-  { id: "host", label: "Oda kur" },
-  { id: "join", label: "Odaya katıl" },
+  { id: "local", label: "Aynı bilgisayarda", icon: "monitor" },
+  { id: "host", label: "Oda kur", icon: "room-add" },
+  { id: "join", label: "Odaya katıl", icon: "door" },
 ] as const;
-const roomStatus = computed(() => {
-  if (isHost.value) return guestPresent.value
-    ? "Oda sahibi: Sen · Misafir: Arkadaşın · 2 / 2 (önizleme)"
-    : "Oda sahibi: Sen · Arkadaş bekleniyor · 1 / 2 (önizleme)";
-  return roomJoined.value
-    ? `Oda: ${roomCode.value.toUpperCase()} · Misafir: Sen · Oda sahibinin başlatması bekleniyor (önizleme)`
-    : "6 harf veya rakamdan oluşan örnek bir kod gir.";
-});
+const roomStatus = computed(() => isHost.value
+  ? guestPresent.value ? "Arkadaşın geldi. Masanız hazır." : "Arkadaşın bekleniyor…"
+  : roomJoined.value ? "Odaya katıldın. Oda sahibinin başlatması bekleniyor." : "Arkadaşının paylaştığı 6 karakterli kodu gir.");
 const local = computed(() => selectedMode.value !== "computer");
 const currentLoadout = computed(() => loadouts.value[editingPlayer.value]);
 const valid = computed(() =>
@@ -309,12 +305,16 @@ function start() {
           </button>
         </div>
         <div v-if="selectedMode === 'friend' && (!desktopWelcome || friendOpen)" class="friend-area">
-          <h1 v-if="desktopWelcome" class="mode-friend-title" tabindex="-1">Arkadaşınla</h1>
+          <div class="friend-heading"><h1 v-if="desktopWelcome" class="mode-friend-title" tabindex="-1">Arkadaşınla</h1><p>Nasıl buluşacaksınız?</p></div>
           <div class="segmented-control" role="group" aria-label="Arkadaşınla oynama şekli">
             <button v-for="path in friendPaths"
-              :key="path.id" :aria-pressed="friendMode === path.id" @click="friendMode = path.id; roomError = ''">{{ path.label }}</button>
+              :key="path.id" :aria-pressed="friendMode === path.id" @click="friendMode = path.id; roomError = ''"><UiIcon :name="path.icon" />{{ path.label }}</button>
           </div>
-          <p v-if="friendMode === 'local'">Yan yana oturun. Sırayla zar atıp aynı masayı paylaşın.</p>
+          <div v-if="friendMode === 'local'" class="friend-local">
+            <div class="friend-seats" aria-hidden="true"><UiIcon name="people" /><span></span><UiIcon name="monitor" /><span></span><UiIcon name="people" /></div>
+            <h2>Bir masa, iki oyuncu.</h2>
+            <p>Yan yana oturun. Sırayla zar atıp aynı masayı paylaşın.</p>
+          </div>
           <template v-else>
             <p id="room-preview-note" class="preview-note">Oda önizlemesi · Gerçek bağlantı kurulmaz. Devam ederseniz aynı bilgisayarda oynarsınız.</p>
             <div v-if="isHost" class="friend-room-inline">
@@ -328,7 +328,14 @@ function start() {
                 :aria-invalid="!!roomError" :aria-describedby="roomError ? 'room-preview-note room-error' : 'room-preview-note'" />
                 <button class="secondary-action" type="submit">Katıl</button></div>
             </form>
-            <p role="status" class="friend-room-status">{{ roomStatus }}</p>
+            <div v-if="isHost || roomJoined" class="room-players" aria-label="Odadaki oyuncular">
+              <div class="room-player"><UiIcon name="people" /><span><strong>Oda sahibi</strong><small>{{ isHost ? 'Sen' : 'Arkadaşın' }}</small></span><UiIcon name="check" /></div>
+              <div class="room-player" :class="{ 'is-waiting': isHost && !guestPresent }"><UiIcon :name="isHost && !guestPresent ? 'people' : 'check'" /><span><strong>Misafir</strong><small>{{ isHost ? guestPresent ? 'Arkadaşın' : 'Henüz katılmadı' : 'Sen' }}</small></span><span class="room-presence" :class="{ ready: !isHost || guestPresent }"></span></div>
+            </div>
+            <div class="friend-room-status" role="status" aria-live="polite" :class="{ 'is-waiting': isHost && !guestPresent, 'is-ready': roomReady }">
+              <span class="room-status-mark" aria-hidden="true"><UiIcon :name="roomReady ? 'check' : 'people'" /></span>
+              <span>{{ roomStatus }}<small v-if="isHost || roomJoined">{{ isHost && !guestPresent ? '1 / 2' : '2 / 2' }} oyuncu · Oda önizlemesi</small></span>
+            </div>
             <p v-if="roomError" id="room-error" class="field-error" role="alert">{{ roomError }}</p>
           </template>
         </div>
@@ -364,19 +371,14 @@ function start() {
             class="god-tile"
             :class="{ browsing: browsing === id }"
             :aria-pressed="currentLoadout.includes(id)"
-            :aria-label="`${shortName(id)}${currentLoadout.includes(id) ? ', kuşanıldı; kaldır' : currentLoadout.length === 3 ? ', gücü incele' : ', kuşan'}`"
+            :aria-label="`${shortName(id)}, ${favorSummary(id).label}${currentLoadout.includes(id) ? ', kuşanıldı; kaldır' : currentLoadout.length === 3 ? ', gücü incele' : ', kuşan'}`"
             @click="toggleFavor(id)"
           >
-            <FavorPortrait :id="id" /><span class="god-tile-name"
-              >{{ shortName(id)
-              }}<UiIcon v-if="currentLoadout.includes(id)" name="check" /></span
-            ><span class="god-tile-power">{{
-              FAVOR_CATALOG[id].name
-                .split("'")
-                .slice(1)
-                .join("'")
-                .replace(/^[a-zıiuü]+\s/, "") || "Tanrı gücü"
-            }}</span>
+            <FavorPortrait :id="id" />
+            <span v-if="currentLoadout.includes(id)" class="god-equipped"><UiIcon name="check" /><span class="sr-only">Kuşanıldı</span></span>
+            <span class="god-tile-copy"><span class="god-tile-name">{{ shortName(id) }}</span>
+              <span class="god-tile-power" :data-tone="favorSummary(id).tone"><UiIcon :name="favorSummary(id).icon" /><span>{{ favorSummary(id).label }}</span></span>
+            </span>
           </button>
         </div>
         <aside
@@ -419,7 +421,7 @@ function start() {
             </div>
           </div>
           <section class="god-description" aria-live="polite">
-            <div class="description-heading"><FavorPortrait :id="browsing" /><h2>{{ FAVOR_CATALOG[browsing].name }}</h2></div>
+            <div class="description-heading"><FavorPortrait :id="browsing" /><div><h2>{{ shortName(browsing) }}</h2><p class="god-effect-summary" :data-tone="favorSummary(browsing).tone"><UiIcon :name="favorSummary(browsing).icon" />{{ favorSummary(browsing).label }}</p></div></div>
             <p class="favor-timing">
               {{
                 FAVOR_CATALOG[browsing].timing === "before-resolution"

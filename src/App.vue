@@ -275,6 +275,7 @@ function confirm() {
       'in-match': !preparing,
       'at-welcome': preparing && setupScreen === 'welcome',
       'at-mode': preparing && setupScreen === 'mode',
+      'at-preparation': preparing && (setupScreen === 'gods' || setupScreen === 'coin'),
       'is-intro-active': introActive,
     }"
     :data-reduced-motion="reduced"
@@ -515,4 +516,5 @@ function confirm() {
 @import "./ui/styles.css";
 @import "./ui/mode-selection.css";
 @import "./ui/entry-tools.css";
+@import "./ui/setup-refresh.css";
 </style>
