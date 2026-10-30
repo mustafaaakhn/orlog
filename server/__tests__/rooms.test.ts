@@ -66,6 +66,86 @@ async function setup(options: Parameters<typeof attachRoomServer>[1] = {}) {
 }
 
 describe('two-player Socket.IO rooms', () => {
+  it('runs automatic third-roll and battle transitions with both renderers hidden and no presentation receipts', async () => {
+    const h = await setup()
+    await h.play()
+    h.host.emit('game:visibility', false)
+    h.guest.emit('game:visibility', false)
+    async function submit(command: GameCommand) {
+      const revision = h.views.get(h.host)!.revision
+      const actor = command.playerId === 'player-1' ? h.host : h.guest
+      data(await actor.emitWithAck('game:command', { revision, command }))
+      await vi.waitFor(() => expect(h.views.get(h.host)!.revision > revision && !h.views.get(h.host)!.waiting).toBe(true))
+    }
+    while (h.matches.get(h.host)!.state.phase.name === 'roll') {
+      const phase = h.matches.get(h.host)!.state.phase
+      if (phase.name !== 'roll') throw new Error('roll expected')
+      await submit({ type: phase.step === 'awaiting-roll' ? 'RollDice' : 'ConfirmRoll', playerId: phase.activePlayerId })
+    }
+    while (h.matches.get(h.host)!.state.phase.name === 'favor') {
+      const phase = h.matches.get(h.host)!.state.phase
+      if (phase.name !== 'favor') throw new Error('favor expected')
+      await submit({ type: 'SkipFavor', playerId: phase.activePlayerId })
+    }
+    expect(h.matches.get(h.host)!.state.round).toBe(2)
+    await vi.waitFor(() => expect(h.matches.get(h.guest)!.state).toEqual(h.matches.get(h.host)!.state))
+  })
+
+  it('does not wait for a hidden peer and restores visible presentation receipts on return', async () => {
+    const h = await setup()
+    await h.play()
+    const phase = h.matches.get(h.host)!.state.phase
+    if (phase.name !== 'roll') throw new Error('roll expected')
+    const actor = phase.activePlayerId === 'player-1' ? h.host : h.guest
+    const other = actor === h.host ? h.guest : h.host
+    other.emit('game:visibility', false)
+    data(await actor.emitWithAck('game:command', { revision: 0, command: { type: 'RollDice', playerId: phase.activePlayerId } }))
+    actor.emit('game:presented', 1)
+    await vi.waitFor(() => expect(h.views.get(actor)?.waiting).toBe(false))
+    // Returning does not reopen an already completed barrier.
+    other.emit('game:visibility', true)
+    data(await actor.emitWithAck('game:command', { revision: 1, command: { type: 'ConfirmRoll', playerId: phase.activePlayerId } }))
+    actor.emit('game:presented', 2)
+    // A socket ACK acts as an ordered round-trip after the receipt packet.
+    expect((await actor.emitWithAck('game:command', { revision: 2, command: { type: 'RollDice', playerId: phase.activePlayerId } })).ok).toBe(false)
+    expect(h.views.get(actor)?.waiting).toBe(true)
+    other.emit('game:presented', 2)
+    await vi.waitFor(() => expect(h.views.get(actor)?.waiting).toBe(false))
+  })
+
+  it('releases a pending barrier immediately when the unfinished peer switches tabs', async () => {
+    const h = await setup()
+    await h.play()
+    const phase = h.matches.get(h.host)!.state.phase
+    if (phase.name !== 'roll') throw new Error('roll expected')
+    const actor = phase.activePlayerId === 'player-1' ? h.host : h.guest
+    const other = actor === h.host ? h.guest : h.host
+    data(await actor.emitWithAck('game:command', { revision: 0, command: { type: 'RollDice', playerId: phase.activePlayerId } }))
+    actor.emit('game:presented', 1)
+    other.emit('game:visibility', false)
+    await vi.waitFor(() => expect(h.views.get(actor)?.waiting).toBe(false))
+    expect(h.matches.get(other)?.state).toEqual(h.matches.get(actor)?.state)
+  })
+
+  it('recovers a stalled visible renderer with a snapshot instead of an unlimited presentation wait', async () => {
+    const h = await setup({ presentationMs: 150 })
+    await h.play()
+    const phase = h.matches.get(h.host)!.state.phase
+    if (phase.name !== 'roll') throw new Error('roll expected')
+    const actor = phase.activePlayerId === 'player-1' ? h.host : h.guest
+    const other = actor === h.host ? h.guest : h.host
+    const snapshot = new Promise<MatchUpdate>(resolve => other.once('game:snapshot', resolve))
+    data(await actor.emitWithAck('game:command', { revision: 0, command: { type: 'RollDice', playerId: phase.activePlayerId } }))
+    actor.emit('game:presented', 1)
+    const recovered = await snapshot
+    expect(recovered.state.revision).toBe(1)
+    expect(recovered.events).toEqual([])
+    await vi.waitFor(() => expect(h.views.get(actor)?.waiting).toBe(false))
+    data(await actor.emitWithAck('game:command', { revision: 1, command: { type: 'ConfirmRoll', playerId: phase.activePlayerId } }))
+    other.emit('game:presented', 1) // the old renderer cannot unlock revision 2
+    expect((await actor.emitWithAck('game:command', { revision: 2, command: { type: 'RollDice', playerId: phase.activePlayerId } })).ok).toBe(false)
+  })
+
   it('creates distinct six-character codes, rejects missing/full rooms, and only lets the creator start', async () => {
     const h = await setup()
     expect(h.joined.room.code).toMatch(/^[A-Z2-9]{6}$/)

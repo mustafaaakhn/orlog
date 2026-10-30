@@ -75,6 +75,7 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
       if (unlocked) loops()
     },
     visibility(isHidden: boolean) {
+      if (hidden === isHidden) return
       hidden = isHidden
       stopEffects()
       if (unlocked && !hidden) void Howler.ctx?.resume().then(loops).catch(() => onError(true))

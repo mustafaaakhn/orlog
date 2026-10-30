@@ -35,6 +35,21 @@ function combatEvents() {
   return result.events
 }
 describe('owned audio lifecycle', () => {
+  it('keeps playing effects and music through repeated visible notifications', () => {
+    const player = createAudioPlayer()
+    player.unlock()
+    player.impact(0, 1)
+    const effect = mocks.sounds[0]
+    const track = mocks.sounds.find(s => s.options.src[0].endsWith('background-1.opus'))
+    player.visibility(false)
+    player.visibility(false)
+    expect(effect.stop).not.toHaveBeenCalled()
+    expect(track.pause).not.toHaveBeenCalled()
+    player.visibility(true)
+    expect(effect.stop).toHaveBeenCalledTimes(1)
+    expect(track.pause).toHaveBeenCalledTimes(1)
+    player.dispose()
+  })
   it('creates audio only after interaction, starts each loaded loop once, and caps contact polyphony', () => {
     const player = createAudioPlayer()
     player.impact(0, 1)

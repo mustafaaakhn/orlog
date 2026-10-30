@@ -43,9 +43,11 @@ export interface ClientEvents {
   'room:play': (ack: Ack) => void
   'game:command': (request: { revision: number; command: GameCommand }, ack: Ack) => void
   'game:presented': (revision: number) => void
+  'game:visibility': (visible: boolean) => void
 }
 export interface ServerEvents {
   'room:update': (room: RoomView) => void
   'room:closed': (message: string) => void
   'game:batch': (update: MatchUpdate) => void
+  'game:snapshot': (update: MatchUpdate) => void
 }

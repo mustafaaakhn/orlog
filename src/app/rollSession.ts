@@ -24,9 +24,26 @@ export function createRollSession(options: GameOptions = {}) {
   const state = shallowRef(game.state)
   const pending = shallowRef<PresentationBatch | null>(null)
   const error = shallowRef('')
+  let background = false
   let remote: { dispatch(command: GameCommand, revision: number): boolean; settled(revision: number): void } | null = null
   let remoteState: GameState | null = null
   const currentState = () => remoteState ?? game.state
+  function flushBackground() {
+    if (!background || !pending.value) return
+    const batch = pending.value
+    const unseen = batch.events.filter(event => event.sequence > appliedSequence)
+    history.value = [...history.value, ...unseen].slice(-120)
+    if (unseen.length) lastEvent.value = unseen.at(-1)!
+    appliedSequence = batch.state.eventSequence
+    contactSequence = 0
+    contactStep = 0
+    settle(batch.id)
+  }
+  function offer(batch: PresentationBatch) {
+    pending.value = batch
+    // Avoid recursively advancing local automatic phases in a Vue sync watcher.
+    if (background) queueMicrotask(flushBackground)
+  }
   function dispatch(command: GameCommand) {
     if (pending.value) return false
     if (remote) return remote.dispatch(command, state.value.revision)
@@ -36,12 +53,12 @@ export function createRollSession(options: GameOptions = {}) {
       return false
     }
     error.value = ''
-    pending.value = {
+    offer({
       id: ++batchSequence,
       revision: result.state.revision,
       state: result.state,
       events: result.events,
-    }
+    })
     return true
   }
   function settle(batchId: number) {
@@ -56,11 +73,15 @@ export function createRollSession(options: GameOptions = {}) {
     error,
     lastEvent,
     history,
+    setBackground(value: boolean) {
+      background = value
+      if (value) flushBackground()
+    },
     startRemote(snapshot: GameState, port: NonNullable<typeof remote>) {
       remote = port
       remoteState = snapshot
       state.value = snapshot
-      pending.value = { id: ++batchSequence, revision: snapshot.revision, state: snapshot, events: [] }
+      offer({ id: ++batchSequence, revision: snapshot.revision, state: snapshot, events: [] })
       appliedSequence = snapshot.eventSequence
       contactSequence = 0
       contactStep = 0
@@ -70,8 +91,9 @@ export function createRollSession(options: GameOptions = {}) {
     },
     receive(snapshot: GameState, events: readonly GameEvent[]) {
       if (!remote || snapshot.gameId !== remoteState?.gameId || snapshot.revision <= remoteState.revision) return
+      if (background) flushBackground()
       remoteState = snapshot
-      pending.value = { id: ++batchSequence, revision: snapshot.revision, state: snapshot, events }
+      offer({ id: ++batchSequence, revision: snapshot.revision, state: snapshot, events })
     },
     progress(batchId: number, event: GameEvent, step: number) {
       if (pending.value?.id !== batchId || !pending.value.events.includes(event) ||
@@ -108,7 +130,7 @@ export function createRollSession(options: GameOptions = {}) {
     resume() {
       const current = currentState()
       if (!pending.value && (remote || ['round-complete', 'ended'].includes(current.phase.name)))
-        pending.value = { id: ++batchSequence, revision: current.revision, state: current, events: [] }
+        offer({ id: ++batchSequence, revision: current.revision, state: current, events: [] })
     },
     finishLastRoll(blocked = false) {
       if (remote) return false

@@ -18,6 +18,7 @@ export function createOnlineClient(callbacks: {
   const socket: Socket<ServerEvents, ClientEvents> = io({ autoConnect: false, timeout: 8000 })
   let joining = false
   let generation = 0
+  let visible = true
   function save(session: RoomSession | null) {
     identity.value = session
     try {
@@ -29,6 +30,7 @@ export function createOnlineClient(callbacks: {
     save(joined.session)
     room.value = joined.room
     error.value = ''
+    socket.emit('game:visibility', visible)
     if (joined.match) callbacks.snapshot(joined.match)
   }
   function clear(message = '') {
@@ -92,6 +94,9 @@ export function createOnlineClient(callbacks: {
     else callbacks.batch(match)
   })
   const bothConnected = computed(() => connected.value && room.value?.players.length === 2 && room.value.players.every(player => player.connected))
+  socket.on('game:snapshot', match => {
+    if (identity.value && room.value?.stage === 'playing') callbacks.snapshot(match)
+  })
   async function enter(code?: string) {
     joining = true
     try {
@@ -115,6 +120,10 @@ export function createOnlineClient(callbacks: {
       return true
     },
     presented(revision: number) { if (socket.connected && identity.value) socket.emit('game:presented', revision) },
+    visibility(value: boolean) {
+      visible = value
+      if (socket.connected && identity.value) socket.emit('game:visibility', value)
+    },
     async leave() {
       // Never buffer a leave and accidentally send it after joining a different room.
       if (socket.connected && identity.value) {

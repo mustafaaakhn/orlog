@@ -70,17 +70,19 @@ const audio = createAudioPlayer((failed) => {
 watch(setupScreen, (_screen, previous) => {
   if (previous === "coin") audio.stopEffects();
 });
-const paused = ref(document.hidden);
+const pageHidden = ref(document.hidden);
+const paused = ref(document.hidden || !document.hasFocus());
 watch(settings, (value) => audio.configure(value), { immediate: true });
 const unlockAudio = () => {
   if (!preparing.value || setupScreen.value !== "welcome") audio.unlock();
 };
 const visibility = () => {
-  paused.value = document.hidden;
-  audio.visibility(paused.value || introActive.value);
+  pageHidden.value = document.hidden;
+  paused.value = document.hidden || !document.hasFocus();
+  audio.visibility(document.hidden || introActive.value);
 };
 watch([introActive, paused], () => {
-  audio.visibility(paused.value || introActive.value);
+  audio.visibility(document.hidden || introActive.value);
 });
 onMounted(() => {
   online.restore();
@@ -88,12 +90,16 @@ onMounted(() => {
   document.addEventListener("pointerdown", unlockAudio, { capture: true });
   document.addEventListener("keydown", unlockAudio, { capture: true });
   document.addEventListener("visibilitychange", visibility);
+  window.addEventListener('blur', visibility);
+  window.addEventListener('focus', visibility);
 });
 onUnmounted(() => {
   online.dispose();
   document.removeEventListener("pointerdown", unlockAudio, { capture: true });
   document.removeEventListener("keydown", unlockAudio, { capture: true });
   document.removeEventListener("visibilitychange", visibility);
+  window.removeEventListener('blur', visibility);
+  window.removeEventListener('focus', visibility);
   audio.dispose();
 });
 const names = ref<Record<PlayerId, string>>({
@@ -156,6 +162,15 @@ const online = createOnlineClient({
 });
 const onlineRoom = online.room;
 const onlineError = online.error;
+const passivePresentation = computed(() => paused.value || (!!onlineRoom.value && !!overlay.value));
+watch(passivePresentation, (passive, previous) => {
+  online.visibility(!passive);
+  session.setBackground(passive);
+  if (paused.value || (!passive && previous && !preparing.value)) {
+    sceneReady.value = false;
+    sceneGeneration.value++;
+  }
+}, { immediate: true, flush: 'sync' });
 const { state, pending, error, lastEvent } = session;
 const phase = computed(() => state.value.phase);
 const activePlayer = computed(() =>
@@ -163,7 +178,7 @@ const activePlayer = computed(() =>
     ? state.value.players[phase.value.activePlayerId]
     : null,
 );
-const busy = computed(() => !!pending.value || !sceneReady.value ||
+const busy = computed(() => !!pending.value || (!sceneReady.value && !paused.value) ||
   (!!onlineRoom.value && (online.busy.value || onlineRoom.value.waiting || !online.bothConnected.value)));
 watch([activePlayer, opponent], ([player, options]) => {
   if (!onlineRoom.value && options.mode === "local" && player) localViewer.value = player.id;
@@ -192,7 +207,7 @@ watch(
       state: state.value,
       playerId: opponent.value.mode === "computer" ? "player-2" : null,
       difficulty: opponent.value.difficulty,
-      blocked: preparing.value || busy.value || paused.value || !!overlay.value,
+      blocked: preparing.value || busy.value || (!paused.value && !!overlay.value),
     });
   },
   { immediate: true, flush: "sync" },
@@ -287,7 +302,7 @@ function availability(ready: boolean) {
   }
 }
 watch([state, pending, sceneReady, paused, preparing, overlay], () => {
-  if (!preparing.value && !busy.value && !paused.value && !overlay.value) {
+  if (!preparing.value && !busy.value && (paused.value || !overlay.value)) {
     session.finishLastRoll();
     session.resolveReady();
     session.advanceRound();
@@ -362,7 +377,7 @@ function confirm() {
       </nav>
     </header>
     <div
-      v-if="!preparing"
+      v-if="!preparing && !pageHidden"
       class="scene-layer"
       :aria-hidden="preparing"
       :inert="preparing"

@@ -8,7 +8,7 @@ import { isFavorId } from '../src/core/favors/catalog'
 import type { GameCommand, GameEvent, GameState, PlayerId } from '../src/core'
 import type { Ack, ClientEvents, JoinedRoom, RoomPlayer, RoomSession, RoomStage, RoomView, ServerEvents } from '../src/network/protocol'
 
-interface Seat extends RoomPlayer { token: string; socketId: string | null; disconnectedAt: number | null }
+interface Seat extends RoomPlayer { token: string; socketId: string | null; disconnectedAt: number | null; visible: boolean }
 interface Room {
   code: string
   stage: RoomStage
@@ -18,6 +18,7 @@ interface Room {
   waiting: boolean
   presented: Set<PlayerId>
   updatedAt: number
+  presentationTimer?: ReturnType<typeof setTimeout>
 }
 interface SocketData { code?: string; playerId?: PlayerId }
 type GameSocket = Socket<ClientEvents, ServerEvents, Record<string, never>, SocketData>
@@ -25,7 +26,7 @@ const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
 const failure = (error: string) => ({ ok: false as const, error })
 const success = () => ({ ok: true as const, data: undefined })
 
-export function attachRoomServer(http: HttpServer | Http2SecureServer, options: { reconnectMs?: number; idleMs?: number; sweepMs?: number; maxRooms?: number } = {}) {
+export function attachRoomServer(http: HttpServer | Http2SecureServer, options: { reconnectMs?: number; idleMs?: number; sweepMs?: number; maxRooms?: number; presentationMs?: number } = {}) {
   const io = new Server<ClientEvents, ServerEvents, Record<string, never>, SocketData>(http, {
     maxHttpBufferSize: 16_384,
     serveClient: false,
@@ -45,6 +46,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
   }
   function publish(room: Room) { io.to(channel(room.code)).emit('room:update', view(room)) }
   function closeRoom(room: Room, message: string) {
+    clearTimeout(room.presentationTimer)
     rooms.delete(room.code)
     io.to(channel(room.code)).emit('room:closed', message)
     for (const seat of room.seats) {
@@ -57,10 +59,28 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
     const other = playerId === 'player-1' ? 'player-2' : 'player-1'
     return { ...state, players: { ...state.players, [other]: { ...state.players[other], favorChoice: { status: 'pending' } } } }
   }
+  function armPresentation(room: Room) {
+    if (!room.game) return
+    clearTimeout(room.presentationTimer)
+    const revision = room.game.state.revision
+    // A frozen/crashed renderer must not own the room forever. Normal visible
+    // animations retain their receipts; hidden peers are already acknowledged.
+    room.presentationTimer = setTimeout(() => {
+      if (!room.waiting || room.game?.state.revision !== revision || rooms.get(room.code) !== room) return
+      for (const seat of room.seats) {
+        if (room.presented.has(seat.id)) continue
+        if (seat.socketId) io.to(seat.socketId).emit('game:snapshot', { state: forPlayer(room.game.state, seat.id), events: [] })
+        room.presented.add(seat.id)
+      }
+      advance(room)
+    }, options.presentationMs ?? 120_000)
+    room.presentationTimer.unref()
+  }
   function batch(room: Room, events: readonly GameEvent[]) {
     if (!room.game) return
+    clearTimeout(room.presentationTimer)
     room.waiting = true
-    room.presented.clear()
+    room.presented = new Set(room.seats.filter(seat => seat.connected && !seat.visible).map(seat => seat.id))
     room.updatedAt = Date.now()
     publish(room)
     for (const seat of room.seats) {
@@ -70,6 +90,8 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
         events: events.filter(event => event.type !== 'FavorChosen' || event.playerId === seat.id || room.game!.state.phase.name !== 'favor'),
       })
     }
+    armPresentation(room)
+    queueMicrotask(() => advance(room))
   }
   function apply(room: Room, command: GameCommand) {
     const result = room.game!.dispatch(command)
@@ -78,7 +100,8 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
     return success()
   }
   function advance(room: Room) {
-    if (!room.waiting || !connected(room) || room.presented.size !== 2 || !room.game) return
+    if (rooms.get(room.code) !== room || !room.waiting || !connected(room) || room.presented.size !== 2 || !room.game) return
+    clearTimeout(room.presentationTimer)
     const state = room.game.state
     const phase = state.phase
     // The server owns automatic commands; clients cannot advance the other player.
@@ -99,6 +122,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       if (previous) { previous.data = {}; previous.leave(channel(room.code)); previous.emit('room:closed', 'Bu oda başka bir sekmede açıldı.'); previous.disconnect(true) }
     }
     seat.connected = true
+    seat.visible = true
     seat.socketId = socket.id
     seat.disconnectedAt = null
     socket.data = { code: room.code, playerId: seat.id }
@@ -110,6 +134,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
         room.presented = new Set(room.seats.filter(s => s.id !== seat.id && s.connected).map(s => s.id))
       }
       room.presented.delete(seat.id)
+      armPresentation(room)
     }
     publish(room)
     return {
@@ -140,7 +165,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       let code: string
       do { code = Array.from({ length: 6 }, () => alphabet[randomInt(alphabet.length)]).join('') } while (rooms.has(code))
       const room: Room = { code, stage: 'lobby', seats: [], firstPlayerId: null, game: null, waiting: false, presented: new Set(), updatedAt: Date.now() }
-      const seat: Seat = { id: 'player-1', token: randomUUID(), name: 'Oyuncu I', connected: true, ready: false, favors: [], socketId: null, disconnectedAt: null }
+      const seat: Seat = { id: 'player-1', token: randomUUID(), name: 'Oyuncu I', connected: true, ready: false, favors: [], socketId: null, disconnectedAt: null, visible: true }
       room.seats.push(seat)
       rooms.set(code, room)
       ack({ ok: true, data: bind(socket, room, seat) })
@@ -151,7 +176,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       const room = typeof code === 'string' && /^[A-Z0-9]{6}$/.test(code.trim().toUpperCase()) ? rooms.get(code.trim().toUpperCase()) : undefined
       if (!room) { ack(failure('Bu kodla bir oda bulunamadı.')); return }
       if (room.stage !== 'lobby' || room.seats.length >= 2) { ack(failure('Bu oda dolu veya oyun başlamış.')); return }
-      const seat: Seat = { id: 'player-2', token: randomUUID(), name: 'Oyuncu II', connected: true, ready: false, favors: [], socketId: null, disconnectedAt: null }
+      const seat: Seat = { id: 'player-2', token: randomUUID(), name: 'Oyuncu II', connected: true, ready: false, favors: [], socketId: null, disconnectedAt: null, visible: true }
       room.seats.push(seat)
       ack({ ok: true, data: bind(socket, room, seat) })
     })
@@ -205,6 +230,15 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       member.room.presented.add(member.seat.id)
       advance(member.room)
     })
+    socket.on('game:visibility', visible => {
+      const member = membership(socket)
+      if (!member || typeof visible !== 'boolean') return
+      member.seat.visible = visible
+      if (!visible && member.room.waiting) {
+        member.room.presented.add(member.seat.id)
+        advance(member.room)
+      }
+    })
     socket.on('disconnect', () => {
       const member = membership(socket)
       if (!member) return
@@ -220,6 +254,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
     }
   }, options.sweepMs ?? 5000)
   sweep.unref()
-  http.once('close', () => clearInterval(sweep))
-  return { io, close: async () => { clearInterval(sweep); await io.close() } }
+  function clearTimers() { clearInterval(sweep); rooms.forEach(room => clearTimeout(room.presentationTimer)); rooms.clear() }
+  http.once('close', clearTimers)
+  return { io, close: async () => { clearTimers(); await io.close() } }
 }
