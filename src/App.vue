@@ -539,4 +539,5 @@ function confirm() {
 @import "./ui/mode-selection.css";
 @import "./ui/entry-tools.css";
 @import "./ui/setup-refresh.css";
+@import "./ui/fjord-table.css";
 </style>

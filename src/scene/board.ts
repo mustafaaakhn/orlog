@@ -56,6 +56,7 @@ import {
 export function createBoard(invalidate: () => void = () => {}) {
   const root = new Group();
   root.name = "Orlog table";
+  let disposed = false;
   const textures = new Set<Texture>();
   const geometries = new Set<BufferGeometry>();
   const materials = new Set<MeshStandardMaterial>();
@@ -94,6 +95,17 @@ export function createBoard(invalidate: () => void = () => {}) {
     bumpScale: 0.045,
   });
   wood.bumpMap = wood.map;
+  // Keep the procedural surface as a loading/error fallback. The photo-style
+  // generated scan is shared by table, tablets and dock, with one GPU texture.
+  const walnut = keepTexture(new TextureLoader().load('/assets/art/weathered-walnut.webp', loaded => {
+    if (disposed) return;
+    wood.map = wood.bumpMap = loaded;
+    dockWood.map = dockWood.bumpMap = loaded;
+    wood.needsUpdate = dockWood.needsUpdate = true;
+    invalidate();
+  }, undefined, () => { /* The existing procedural wood stays usable. */ }));
+  walnut.colorSpace = SRGBColorSpace;
+  walnut.anisotropy = 4;
   const bowlWood = material({
     map: keepTexture(createBowlTexture()),
     roughness: 0.76,
@@ -142,10 +154,25 @@ export function createBoard(invalidate: () => void = () => {}) {
   table.castShadow = false;
   const fabric = mesh(root, geometry(createClothGeometry()), cloth, [0, 0, 0]);
   fabric.name = 'Lichen woven runner with worn border';
-  // The dark surroundings are separate from the cut fabric and the wooden table.
-  const surround = mesh(root, geometry(new PlaneGeometry(200, 200)), darkWood, [0, -0.58, 0]);
-  surround.rotation.x = -Math.PI / 2;
-  surround.castShadow = false;
+  // A finite dock, below the table. Distant scenery is an HTML background;
+  // it cannot enter the physics recorder or intercept dice selection.
+  const dock = new Group();
+  dock.name = 'Fjord dock boards';
+  root.add(dock);
+  const dockWood = material({ color: '#798078', map: wood.map, roughness: 0.98 });
+  dockWood.bumpMap = wood.map;
+  dockWood.bumpScale = 0.025;
+  const dockParts: BoxGeometry[] = [];
+  for (let i = 0; i < 19; i++) {
+    const plank = new BoxGeometry(39, 0.22, 1.45);
+    const uv = plank.getAttribute('uv');
+    for (let vertex = 0; vertex < uv.count; vertex++)
+      uv.setY(vertex, (uv.getY(vertex) * 0.88 + (i % 6) + 0.06) / 6);
+    plank.translate(0, -1.3, (i - 9) * 1.5);
+    dockParts.push(plank);
+  }
+  mesh(dock, geometry(mergeGeometries(dockParts)!), dockWood, [0, 0, 0]).castShadow = false;
+  dockParts.forEach(part => part.dispose());
   const bowlProfile = [
     [0.01, 0.08],
     [2.2, 0.08],
@@ -250,7 +277,6 @@ export function createBoard(invalidate: () => void = () => {}) {
   const inscriptionShape = geometry(new PlaneGeometry(0.8, 0.8));
   // Six carved relief steles share the atlas image and cached favor materials.
   // Their transforms remain owned by combatPresenter during favor activation.
-  let disposed = false;
   const atlas = keepTexture(
     new TextureLoader().load(FAVOR_ART_URL, () => {
       if (!disposed) invalidate();
@@ -678,7 +704,8 @@ export function createBoard(invalidate: () => void = () => {}) {
       // Keep both players facing each other at every width. Only the table's
       // peripheral resources move inward; physics and battle lines stay fixed.
       table.scale.x = narrow ? 17 / 30 : 1;
-      fabric.scale.x = narrow ? 14.8 / 27 : 1;
+      fabric.scale.x = narrow ? 13.8 / 17.8 : 1;
+      dock.scale.x = narrow ? 0.6 : 1;
       const layout = resourceLayout(narrow);
       for (const [index, player] of (
         ["player-1", "player-2"] as const

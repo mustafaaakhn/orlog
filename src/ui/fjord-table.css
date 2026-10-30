@@ -1,0 +1,11 @@
+/* The distant plate is decorative; all playable pieces remain in WebGL. */
+.experience.in-match {
+  background: #202e28;
+}
+.in-match .table-viewport {
+  background-color: #202e28;
+  background-image: linear-gradient(#13251f66, #14251eaa), url('/assets/art/fjord-panorama.webp');
+  background-position: center, center top;
+  background-size: cover, auto 100%;
+  background-repeat: no-repeat;
+}
