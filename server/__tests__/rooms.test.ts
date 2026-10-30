@@ -94,6 +94,17 @@ describe('two-player Socket.IO rooms', () => {
       h.host.emitWithAck('game:rematch', previousId),
     ])
     expect(replies.filter(reply => reply.ok)).toHaveLength(1)
+    await vi.waitFor(() => expect(h.views.get(h.guest)!.stage).toBe('gods'))
+    expect(h.matches.get(h.host)!.state.gameId).toBe(previousId)
+    expect(h.views.get(h.host)!.players.every(player => !player.ready && player.favors.length === 3)).toBe(true)
+    const editing = data(await h.host.emitWithAck('room:resume', h.joined.session))
+    expect(editing.match).toBeNull()
+    expect(editing.room).toMatchObject({ stage: 'gods', waiting: false, code: h.joined.room.code })
+    const changed = ['thors-strike', 'baldrs-invulnerability', 'vidars-might'] as const
+    data(await h.host.emitWithAck('room:ready', { name: 'Kurucu', favors: [...changed] }))
+    expect(h.matches.get(h.host)!.state.gameId).toBe(previousId)
+    expect((await h.host.emitWithAck('room:ready', { name: 'Kurucu', favors: [...DEFAULT_FAVORS] })).ok).toBe(false)
+    data(await h.guest.emitWithAck('room:ready', { name: 'Misafir', favors: [...DEFAULT_FAVORS] }))
     await vi.waitFor(() => expect(h.matches.get(h.guest)!.state.gameId).not.toBe(previousId))
     const next = h.matches.get(h.host)!.state
     expect(h.matches.get(h.guest)!.state).toEqual(next)
@@ -102,7 +113,7 @@ describe('two-player Socket.IO rooms', () => {
     expect(next.firstPlayerId).not.toBe(previousFirst)
     for (const player of Object.values(next.players)) {
       expect([player.health, player.tokens, player.rollsUsed]).toEqual([15, 0, 0])
-      expect(player.favors).toEqual(DEFAULT_FAVORS)
+      expect(player.favors).toEqual(player.id === 'player-1' ? changed : DEFAULT_FAVORS)
       expect(player.dice.every(die => !die.faceId && !die.kept && !die.selected && !die.removed)).toBe(true)
     }
     expect(h.views.get(h.host)).toMatchObject({ code: h.joined.room.code, stage: 'playing', waiting: true })

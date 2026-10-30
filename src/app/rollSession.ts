@@ -130,13 +130,13 @@ export function createRollSession(options: GameOptions = {}) {
       history.value = [...history.value, event].slice(-120)
     },
     start,
-    rematch() {
-      if (remote || pending.value || state.value.phase.name !== 'ended') return false
-      return start({
+    prepareRematch(): GameOptions | null {
+      if (remote || pending.value || state.value.phase.name !== 'ended') return null
+      return {
         ...matchOptions,
         firstPlayerId: initialFirstPlayer === 'player-1' ? 'player-2' : 'player-1',
-        loadouts: { 'player-1': state.value.players['player-1'].favors, 'player-2': state.value.players['player-2'].favors },
-      })
+        loadouts: { 'player-1': [...state.value.players['player-1'].favors], 'player-2': [...state.value.players['player-2'].favors] },
+      }
     },
     dispatch,
     settle,

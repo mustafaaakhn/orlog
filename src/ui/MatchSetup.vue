@@ -19,6 +19,7 @@ import { FAVOR_ART_IDS } from "../scene/favorArt";
 import type { OpponentOptions } from "../ai/computer";
 import { isRoomCode } from "../network/roomCode";
 import type { OnlineClient } from "../network/client";
+import type { RematchSetup } from '../app/rematchSetup';
 type Screen = "welcome" | "mode" | "gods" | "coin";
 const props = defineProps<{
   reduced: boolean;
@@ -26,6 +27,7 @@ const props = defineProps<{
   muted: boolean;
   volume: number;
   online: OnlineClient;
+  rematch?: RematchSetup;
 }>();
 const emit = defineEmits<{
   start: [
@@ -36,8 +38,9 @@ const emit = defineEmits<{
   screen: [screen: Screen];
   cinematic: [active: boolean];
   toss: [];
+  cancelRematch: [];
 }>();
-const screen = ref<Screen>("welcome");
+const screen = ref<Screen>(props.rematch ? 'gods' : 'welcome');
 const welcomeArtFailed = ref(false);
 const desktopQuery = window.matchMedia("(min-width: 1024px)");
 const desktopWelcome = ref(desktopQuery.matches);
@@ -59,22 +62,24 @@ function finishIntro() {
   setIntroActive(false);
   void nextTick(() => document.querySelector<HTMLElement>(screen.value === "welcome" ? ".welcome-play" : ".setup-screen h1")?.focus({ preventScroll: true }));
 }
-const selectedMode = ref<"computer" | "friend">("computer");
+const selectedMode = ref<"computer" | "friend">(props.rematch?.opponent.mode === 'local' ? 'friend' : 'computer');
 const friendOpen = ref(false);
 const friendMode = ref<"local" | "host" | "join">("local");
 const names = ref<Record<PlayerId, string>>({
-  "player-1": "Oyuncu I",
-  "player-2": "Oyuncu II",
+  "player-1": props.rematch?.names['player-1'] ?? "Oyuncu I",
+  "player-2": props.rematch?.names['player-2'] ?? "Oyuncu II",
 });
 const loadouts = ref<Record<PlayerId, FavorId[]>>({
-  "player-1": [],
-  "player-2": [...DEFAULT_FAVORS],
+  "player-1": [...(props.rematch?.options.loadouts?.['player-1'] ?? [])],
+  "player-2": [...(props.rematch?.options.loadouts?.['player-2'] ?? DEFAULT_FAVORS)],
 });
+const readyPlayers = ref<Record<PlayerId, boolean>>({ 'player-1': false, 'player-2': false });
+for (const id of PLAYER_IDS) watch(() => [names.value[id], loadouts.value[id].join(',')], () => { readyPlayers.value[id] = false; }, { flush: 'sync' });
 const editingPlayer = ref<PlayerId>("player-1");
 const selectionError = ref("");
 watch(editingPlayer, () => { selectionError.value = ""; });
 const browsing = ref<FavorId>(FAVOR_ART_IDS[0]!);
-const firstPlayer = ref<PlayerId | null>(null);
+const firstPlayer = ref<PlayerId | null>(props.rematch?.options.firstPlayerId ?? null);
 const roomCode = ref("");
 const roomError = ref("");
 const room = computed(() => props.online.room.value);
@@ -117,7 +122,7 @@ watch(room, (value, old) => {
   friendMode.value = ownId.value === "player-1" ? "host" : "join";
   editingPlayer.value = ownId.value;
   for (const player of value.players) {
-    if (player.id !== ownId.value || player.ready) {
+    if (player.id !== ownId.value || player.ready || !old) {
       names.value[player.id] = player.name;
       loadouts.value[player.id] = [...player.favors];
     }
@@ -137,6 +142,7 @@ watch(() => props.online.error.value, message => {
   }
 }, { immediate: true });
 const loadoutLocked = computed(() => !!room.value && !!ownSeat.value?.ready);
+const rematching = computed(() => !!props.rematch || (room.value?.stage === 'gods' && !!room.value.firstPlayerId));
 const valid = computed(() =>
   PLAYER_IDS.every(
     (id) =>
@@ -170,6 +176,7 @@ watch(
   { immediate: true },
 );
 function goBack() {
+  if (props.rematch) { emit('cancelRematch'); return; }
   if (room.value) {
     void props.online.leave();
     screen.value = "mode";
@@ -259,6 +266,15 @@ function continueGods() {
     void props.online.ready(names.value[ownId.value], [...currentLoadout.value]);
     return;
   }
+  if (props.rematch) {
+    readyPlayers.value[editingPlayer.value] = true;
+    if (local.value && !PLAYER_IDS.every(id => readyPlayers.value[id])) {
+      editingPlayer.value = editingPlayer.value === 'player-1' ? 'player-2' : 'player-1';
+      return;
+    }
+    start();
+    return;
+  }
   if (local.value && editingPlayer.value === "player-1") {
     editingPlayer.value = "player-2";
     return;
@@ -288,7 +304,7 @@ function start() {
       },
       {
         mode: local.value ? "local" : "computer",
-        difficulty: "normal",
+        difficulty: props.rematch?.opponent.difficulty ?? "normal",
       },
     );
 }
@@ -332,7 +348,7 @@ function start() {
   >
     <nav class="flow-navigation" aria-label="Hazırlık adımları">
       <button v-if="screen !== 'mode' || !desktopWelcome || friendOpen" class="text-button back-button" @click="goBack">
-        <UiIcon name="back" /> Geri
+        <UiIcon name="back" /> {{ rematching && room ? 'Odadan ayrıl' : 'Geri' }}
       </button>
       <span class="flow-nav-spacer"></span>
     </nav>
@@ -430,7 +446,7 @@ function start() {
             :disabled="room ? id !== ownId : !local && id === 'player-2'"
             @click="editingPlayer = id"
           >
-            {{ playerName(id) }} <span>{{ loadouts[id].length }}/3</span>
+            {{ playerName(id) }} <span>{{ readyPlayers[id] || (room?.players.find(player => player.id === id)?.ready) ? 'Hazır' : `${loadouts[id].length}/3` }}</span>
           </button>
         </div>
       </div>
@@ -540,7 +556,7 @@ function start() {
           @click="continueGods"
         >
           {{
-            room ? 'Hazırım' : local && editingPlayer === "player-1"
+            room || rematching ? 'Hazırım' : local && editingPlayer === "player-1"
               ? "İkinci oyuncunun tanrıları"
               : "İlk hamleyi belirle"
           }}<UiIcon name="arrow" />

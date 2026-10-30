@@ -19,7 +19,7 @@ describe('online presentation session', () => {
     session.startRemote(previous.state, oldPort)
     const oldBatch = session.pending.value!.id
     session.settle(oldBatch)
-    expect(session.rematch()).toBe(false)
+    expect(session.prepareRematch()).toBeNull()
     expect(session.state.value.gameId).toBe('previous')
     const next = new Game({ gameId: 'next' }), nextPort = { dispatch: vi.fn(() => true), settled: vi.fn() }
     session.startRemote(next.state, nextPort)
@@ -37,7 +37,7 @@ describe('online presentation session', () => {
     const session = createRollSession()
     const port = { dispatch: vi.fn(() => true), settled: vi.fn() }
     session.startRemote(game.state, port)
-    expect(session.rematch()).toBe(false)
+    expect(session.prepareRematch()).toBeNull()
     const initialId = session.pending.value!.id
     expect(session.dispatch({ type: 'RollDice', playerId: 'player-1' })).toBe(false)
     session.settle(initialId)

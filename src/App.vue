@@ -31,6 +31,7 @@ import { createComputerDriver } from "./app/computerDriver";
 import type { OpponentOptions } from "./ai/computer";
 import { createOnlineClient } from "./network/client";
 import type { MatchUpdate } from "./network/protocol";
+import type { RematchSetup } from './app/rematchSetup';
 
 const TablePreview = defineAsyncComponent({
   loader: () => import("./scene/TablePreview.vue"),
@@ -40,6 +41,7 @@ const TablePreview = defineAsyncComponent({
   timeout: 30000,
 });
 const preparing = ref(true);
+const rematchSetup = ref<RematchSetup | null>(null);
 const setupScreen = ref("welcome");
 const introActive = ref(false);
 const languagePicker = ref<HTMLElement | null>(null);
@@ -117,6 +119,7 @@ function start(
   opponentOptions: OpponentOptions,
 ) {
   if (session.start(options)) {
+    rematchSetup.value = null;
     audio.stopEffects();
     pendingStartSound.value = true;
     localViewer.value = options.firstPlayerId ?? "player-1";
@@ -128,6 +131,7 @@ function start(
 }
 const sceneGeneration = ref(0);
 function restart() {
+  rematchSetup.value = null;
   if (online.identity.value) void online.leave();
   pendingStartSound.value = false;
   audio.stopEffects();
@@ -146,14 +150,22 @@ async function rematch() {
     await online.rematch(state.value.gameId);
     return;
   }
-  if (!session.rematch()) return;
+  const options = session.prepareRematch();
+  if (!options) return;
   audio.stopEffects();
-  pendingStartSound.value = true;
-  localViewer.value = state.value.firstPlayerId;
+  rematchSetup.value = { options, names: { ...names.value }, opponent: { ...opponent.value } };
+  resultOpen.value = false;
+  sceneReady.value = false;
+  overlay.value = null;
+  setupScreen.value = 'gods';
+  preparing.value = true;
+}
+function cancelRematch() {
+  rematchSetup.value = null;
+  preparing.value = false;
+  resultOpen.value = true;
   sceneReady.value = false;
   sceneGeneration.value++;
-  overlay.value = null;
-  void nextTick(focusAction);
 }
 const sceneReady = ref(false);
 const turningSeat = ref(false);
@@ -180,6 +192,15 @@ const online = createOnlineClient({
 });
 const onlineRoom = online.room;
 const onlineError = online.error;
+watch(() => onlineRoom.value?.stage, stage => {
+  if (stage === 'gods' && !preparing.value) {
+    rematchSetup.value = null;
+    resultOpen.value = false;
+    sceneReady.value = false;
+    setupScreen.value = 'gods';
+    preparing.value = true;
+  }
+});
 const passivePresentation = computed(() => paused.value || (!!onlineRoom.value && !!overlay.value));
 watch(passivePresentation, (passive, previous) => {
   online.visibility(!passive);
@@ -450,6 +471,8 @@ function confirm() {
       :muted="settings.muted"
       :volume="settings.effects"
       :online="online"
+      :rematch="rematchSetup ?? undefined"
+      @cancel-rematch="cancelRematch"
       @start="start"
       @toss="audio.coinFlip()"
       @screen="setupScreen = $event"

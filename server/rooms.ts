@@ -139,7 +139,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
     socket.data = { code: room.code, playerId: seat.id }
     socket.join(channel(room.code))
     room.updatedAt = Date.now()
-    if (room.game) {
+    if (room.game && room.stage === 'playing') {
       if (!room.waiting) {
         room.waiting = true
         room.presented = new Set(room.seats.filter(s => s.id !== seat.id && s.connected).map(s => s.id))
@@ -150,7 +150,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
     publish(room)
     return {
       session: { code: room.code, token: seat.token, playerId: seat.id }, room: view(room),
-      match: room.game ? { state: forPlayer(room.game.state, seat.id), events: [] } : null,
+      match: room.game && room.stage === 'playing' ? { state: forPlayer(room.game.state, seat.id), events: [] } : null,
     }
   }
   io.on('connection', socket => {
@@ -209,10 +209,14 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
     }))
     socket.on('room:ready', (loadout, ack) => action((room, seat) => {
       if (room.stage !== 'gods' || seat.ready) return failure('Tanrı seçimi şu an değiştirilemez.')
+      if (room.game && !connected(room)) return failure('Hazır olmak için iki oyuncu da bağlı olmalı.')
       if (!loadout || typeof loadout.name !== 'string' || !loadout.name.trim() || loadout.name.trim().length > 28 ||
         !Array.isArray(loadout.favors) || loadout.favors.length !== 3 || new Set(loadout.favors).size !== 3 || !loadout.favors.every(isFavorId)) return failure('Bir oyuncu adı ve üç farklı tanrı seç.')
       seat.name = loadout.name.trim(); seat.favors = [...loadout.favors]; seat.ready = true
-      if (room.seats.every(seat => seat.ready)) room.stage = 'coin'
+      if (room.seats.every(seat => seat.ready)) {
+        if (room.game) { startMatch(room); return success() }
+        room.stage = 'coin'
+      }
       publish(room); return success()
     })(ack))
     socket.on('room:toss', action((room, seat) => {
@@ -230,7 +234,9 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
         return failure('Yeni oyun için mevcut maçın ve sunumunun bitmesini bekle.')
       if (typeof gameId !== 'string' || gameId !== room.game.state.gameId) return failure('Bu maç zaten yenilendi.')
       room.firstPlayerId = room.firstPlayerId === 'player-1' ? 'player-2' : 'player-1'
-      startMatch(room)
+      room.stage = 'gods'
+      room.seats.forEach(seat => { seat.ready = false })
+      publish(room)
       return success()
     })(ack))
     socket.on('game:command', (request, ack) => action((room, seat) => {
