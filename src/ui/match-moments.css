@@ -21,6 +21,7 @@
 .result-actions { display: grid; justify-items: center; gap: 8px; }
 .result-actions .primary-action { min-width: min(240px, 100%); }
 .result-actions button { max-width: 100%; }
+.match-result .field-error { margin: 16px 0 0; color: var(--danger); }
 @keyframes result-arrival { from { opacity: 0; } to { opacity: 1; } }
 @media (max-height: 500px) and (orientation: landscape) {
   .match-result { padding: 20px 32px; }

@@ -140,19 +140,35 @@ function restart() {
   overlay.value = null;
   void nextTick(() => document.querySelector<HTMLElement>(".welcome-play")?.focus());
 }
+async function rematch() {
+  if (phase.value.name !== 'ended' || pending.value) return;
+  if (online.identity.value) {
+    await online.rematch(state.value.gameId);
+    return;
+  }
+  if (!session.rematch()) return;
+  audio.stopEffects();
+  pendingStartSound.value = true;
+  localViewer.value = state.value.firstPlayerId;
+  sceneReady.value = false;
+  sceneGeneration.value++;
+  overlay.value = null;
+  void nextTick(focusAction);
+}
 const sceneReady = ref(false);
 const turningSeat = ref(false);
 const pendingStartSound = ref(false);
 const session = createRollSession();
 const online = createOnlineClient({
   snapshot(match: MatchUpdate) {
+    const newMatch = preparing.value || state.value.gameId !== match.state.gameId;
     session.startRemote(match.state, {
-      dispatch: (command, revision) => online.command(command, revision),
-      settled: (revision) => online.presented(revision),
+      dispatch: (command, revision) => online.command(command, revision, match.state.gameId),
+      settled: (revision) => online.presented(revision, match.state.gameId),
     });
     for (const player of online.room.value?.players ?? []) names.value[player.id] = player.name;
     opponent.value = { mode: "local", difficulty: "normal" };
-    if (preparing.value) pendingStartSound.value = true;
+    if (newMatch) pendingStartSound.value = true;
     sceneReady.value = false;
     sceneGeneration.value++;
     preparing.value = false;
@@ -312,6 +328,7 @@ function availability(ready: boolean) {
   if (ready && pendingStartSound.value && !preparing.value) {
     pendingStartSound.value = false;
     audio.gameStart();
+    void nextTick(focusAction);
   }
   if (!ready) {
     turningSeat.value = false;
@@ -476,7 +493,10 @@ function confirm() {
       </section>
     </section>
     <MatchResult v-if="resultAvailable && resultOpen && phase.name === 'ended'"
-      :winner="names[phase.winnerId]" :round="state.round" @restart="restart" @close="resultOpen = false" />
+      :winner="names[phase.winnerId]" :round="state.round"
+      :busy="!!onlineRoom && (online.busy.value || onlineRoom.waiting || !online.bothConnected.value)"
+      :error="onlineRoom ? onlineError || (!online.bothConnected.value ? 'Yeni oyun için iki oyuncu da bağlı olmalı.' : '') : ''"
+      @restart="rematch" @close="resultOpen = false" />
     <dialog
       ref="dialog"
       class="utility-dialog"

@@ -46,6 +46,15 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
     }
   }
   function publish(room: Room) { io.to(channel(room.code)).emit('room:update', view(room)) }
+  function startMatch(room: Room) {
+    room.game = new Game({
+      gameId: randomUUID(), firstPlayerId: room.firstPlayerId!,
+      random: () => randomInt(0x1_0000_0000) / 0x1_0000_0000,
+      loadouts: Object.fromEntries(room.seats.map(s => [s.id, s.favors])),
+    })
+    room.stage = 'playing'
+    batch(room, [])
+  }
   function closeRoom(room: Room, message: string) {
     clearTimeout(room.presentationTimer)
     rooms.delete(room.code)
@@ -64,10 +73,11 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
     if (!room.game) return
     clearTimeout(room.presentationTimer)
     const revision = room.game.state.revision
+    const gameId = room.game.state.gameId
     // A frozen/crashed renderer must not own the room forever. Normal visible
     // animations retain their receipts; hidden peers are already acknowledged.
     room.presentationTimer = setTimeout(() => {
-      if (!room.waiting || room.game?.state.revision !== revision || rooms.get(room.code) !== room) return
+      if (!room.waiting || room.game?.state.gameId !== gameId || room.game.state.revision !== revision || rooms.get(room.code) !== room) return
       for (const seat of room.seats) {
         if (room.presented.has(seat.id)) continue
         if (seat.socketId) io.to(seat.socketId).emit('game:snapshot', { state: forPlayer(room.game.state, seat.id), events: [] })
@@ -212,23 +222,27 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
     }))
     socket.on('room:play', action((room, seat) => {
       if (seat.id !== 'player-1' || room.stage !== 'coin' || !room.firstPlayerId || !connected(room)) return failure('Masayı açmak için yazı turayı ve iki oyuncuyu bekle.')
-      room.game = new Game({
-        gameId: randomUUID(), firstPlayerId: room.firstPlayerId,
-        random: () => randomInt(0x1_0000_0000) / 0x1_0000_0000,
-        loadouts: Object.fromEntries(room.seats.map(s => [s.id, s.favors])),
-      })
-      room.stage = 'playing'; batch(room, []); return success()
+      startMatch(room); return success()
     }))
+    socket.on('game:rematch', (gameId, ack) => action(room => {
+      if (!connected(room)) return failure('Yeni oyun için iki oyuncu da bağlı olmalı.')
+      if (!room.game || room.stage !== 'playing' || room.waiting || room.game.state.phase.name !== 'ended')
+        return failure('Yeni oyun için mevcut maçın ve sunumunun bitmesini bekle.')
+      if (typeof gameId !== 'string' || gameId !== room.game.state.gameId) return failure('Bu maç zaten yenilendi.')
+      room.firstPlayerId = room.firstPlayerId === 'player-1' ? 'player-2' : 'player-1'
+      startMatch(room)
+      return success()
+    })(ack))
     socket.on('game:command', (request, ack) => action((room, seat) => {
       if (!room.game || room.stage !== 'playing' || !connected(room) || room.waiting) return failure('Diğer oyuncu ve masa bekleniyor.')
-      if (!request || request.revision !== room.game.state.revision) return failure('Maç durumu yenileniyor. Hamleni yeniden dene.')
+      if (!request || request.gameId !== room.game.state.gameId || request.revision !== room.game.state.revision) return failure('Maç durumu yenileniyor. Hamleni yeniden dene.')
       const command = request.command
       if (!command || command.playerId !== seat.id || !['RollDice', 'SetDieSelection', 'ConfirmRoll', 'ChooseFavor', 'SkipFavor'].includes(command.type)) return failure('Yalnız kendi hamleni yapabilirsin.')
       try { return apply(room, command) } catch { return failure('Geçersiz oyun komutu.') }
     })(ack))
-    socket.on('game:presented', revision => {
+    socket.on('game:presented', (revision, gameId) => {
       const member = membership(socket)
-      if (!member?.room.game || member.room.game.state.revision !== revision) return
+      if (!member?.room.game || member.room.game.state.gameId !== gameId || member.room.game.state.revision !== revision) return
       member.room.presented.add(member.seat.id)
       advance(member.room)
     })

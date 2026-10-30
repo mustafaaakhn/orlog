@@ -7,13 +7,19 @@ import { DEFAULT_FAVORS } from '../../src/core'
 import type { GameCommand, PlayerId } from '../../src/core'
 import type { ClientEvents, JoinedRoom, MatchUpdate, Reply, RoomView, ServerEvents } from '../../src/network/protocol'
 
+const fixedDice = vi.hoisted(() => ({ value: false }))
+vi.mock('node:crypto', async importOriginal => {
+  const actual = await importOriginal<typeof import('node:crypto')>()
+  return { ...actual, randomInt: (max: number) => fixedDice.value && max === 0x1_0000_0000 ? 0 : actual.randomInt(max) }
+})
+
 type Peer = Socket<ServerEvents, ClientEvents>
 function data<T>(reply: Reply<T>): T {
   if (!reply.ok) throw new Error(reply.error)
   return reply.data
 }
 const disposers: (() => Promise<void>)[] = []
-afterEach(async () => { for (const dispose of disposers.splice(0)) await dispose() })
+afterEach(async () => { fixedDice.value = false; for (const dispose of disposers.splice(0)) await dispose() })
 
 async function setup(options: Parameters<typeof attachRoomServer>[1] = {}) {
   const http = createServer()
@@ -50,7 +56,7 @@ async function setup(options: Parameters<typeof attachRoomServer>[1] = {}) {
   async function settle() {
     for (let index = 0; index < 5; index++) {
       const revision = views.get(host)!.revision
-      host.emit('game:presented', revision); guest.emit('game:presented', revision)
+      host.emit('game:presented', revision, matches.get(host)!.state.gameId); guest.emit('game:presented', revision, matches.get(host)!.state.gameId)
       await vi.waitFor(() => expect(!views.get(host)!.waiting || views.get(host)!.revision !== revision).toBe(true))
       if (!views.get(host)!.waiting) return
     }
@@ -58,7 +64,7 @@ async function setup(options: Parameters<typeof attachRoomServer>[1] = {}) {
   }
   async function command(command: GameCommand) {
     const actor = command.playerId === 'player-1' ? host : guest
-    const reply = await actor.emitWithAck('game:command', { revision: views.get(host)!.revision, command })
+    const reply = await actor.emitWithAck('game:command', { gameId: matches.get(host)!.state.gameId, revision: views.get(host)!.revision, command })
     data(reply)
     await settle()
   }
@@ -66,6 +72,61 @@ async function setup(options: Parameters<typeof attachRoomServer>[1] = {}) {
 }
 
 describe('two-player Socket.IO rooms', () => {
+  it('starts exactly one fresh match in the same room, preserving seats and rejecting packets from the previous match', async () => {
+    fixedDice.value = true
+    const h = await setup()
+    await h.play()
+    const previousId = h.matches.get(h.host)!.state.gameId
+    const previousFirst = h.matches.get(h.host)!.state.firstPlayerId
+    const stranger = await h.peer()
+    expect((await stranger.emitWithAck('game:rematch', previousId)).ok).toBe(false)
+    expect((await h.guest.emitWithAck('game:rematch', previousId)).ok).toBe(false)
+    for (let step = 0; step < 100; step++) {
+      const phase = h.matches.get(h.host)!.state.phase
+      if (phase.name === 'ended') break
+      if (phase.name === 'roll') await h.command({ type: phase.step === 'awaiting-roll' ? 'RollDice' : 'ConfirmRoll', playerId: phase.activePlayerId })
+      else if (phase.name === 'favor') await h.command({ type: 'SkipFavor', playerId: phase.activePlayerId })
+      else throw new Error('Expected an unlocked player phase')
+    }
+    expect(h.matches.get(h.host)!.state.phase.name).toBe('ended')
+    const replies = await Promise.all([
+      h.guest.emitWithAck('game:rematch', previousId),
+      h.host.emitWithAck('game:rematch', previousId),
+    ])
+    expect(replies.filter(reply => reply.ok)).toHaveLength(1)
+    await vi.waitFor(() => expect(h.matches.get(h.guest)!.state.gameId).not.toBe(previousId))
+    const next = h.matches.get(h.host)!.state
+    expect(h.matches.get(h.guest)!.state).toEqual(next)
+    expect(next.revision).toBe(0)
+    expect(next.round).toBe(1)
+    expect(next.firstPlayerId).not.toBe(previousFirst)
+    for (const player of Object.values(next.players)) {
+      expect([player.health, player.tokens, player.rollsUsed]).toEqual([15, 0, 0])
+      expect(player.favors).toEqual(DEFAULT_FAVORS)
+      expect(player.dice.every(die => !die.faceId && !die.kept && !die.selected && !die.removed)).toBe(true)
+    }
+    expect(h.views.get(h.host)).toMatchObject({ code: h.joined.room.code, stage: 'playing', waiting: true })
+    expect(h.views.get(h.host)!.players.map(player => player.name)).toEqual(['Kurucu', 'Misafir'])
+    expect(h.closed.size).toBe(0)
+    // Both old revision-zero receipts are invalid for the new revision zero.
+    h.host.emit('game:presented', 0, previousId)
+    h.guest.emit('game:presented', 0, previousId)
+    const actor = next.firstPlayerId === 'player-1' ? h.host : h.guest
+    const command = { type: 'RollDice' as const, playerId: next.firstPlayerId }
+    expect((await actor.emitWithAck('game:command', { gameId: next.gameId, revision: 0, command })).ok).toBe(false)
+    await h.settle()
+    expect((await actor.emitWithAck('game:command', { gameId: previousId, revision: 0, command })).ok).toBe(false)
+    await h.command(command)
+    h.guest.disconnect()
+    await vi.waitFor(() => expect(h.views.get(h.host)!.players[1]!.connected).toBe(false))
+    expect((await h.host.emitWithAck('game:rematch', next.gameId)).ok).toBe(false)
+    const restored = await h.peer()
+    const resumed = data(await restored.emitWithAck('room:resume', h.guestJoined.session))
+    expect(resumed.session).toEqual(h.guestJoined.session)
+    expect(resumed.room.code).toBe(h.joined.room.code)
+    expect(resumed.match!.state.gameId).toBe(next.gameId)
+  }, 30000)
+
   it('runs automatic third-roll and battle transitions with both renderers hidden and no presentation receipts', async () => {
     const h = await setup()
     await h.play()
@@ -74,7 +135,7 @@ describe('two-player Socket.IO rooms', () => {
     async function submit(command: GameCommand) {
       const revision = h.views.get(h.host)!.revision
       const actor = command.playerId === 'player-1' ? h.host : h.guest
-      data(await actor.emitWithAck('game:command', { revision, command }))
+      data(await actor.emitWithAck('game:command', { gameId: h.matches.get(h.host)!.state.gameId, revision, command }))
       await vi.waitFor(() => expect(h.views.get(h.host)!.revision > revision && !h.views.get(h.host)!.waiting).toBe(true))
     }
     while (h.matches.get(h.host)!.state.phase.name === 'roll') {
@@ -99,17 +160,17 @@ describe('two-player Socket.IO rooms', () => {
     const actor = phase.activePlayerId === 'player-1' ? h.host : h.guest
     const other = actor === h.host ? h.guest : h.host
     other.emit('game:visibility', false)
-    data(await actor.emitWithAck('game:command', { revision: 0, command: { type: 'RollDice', playerId: phase.activePlayerId } }))
-    actor.emit('game:presented', 1)
+    data(await actor.emitWithAck('game:command', { gameId: h.matches.get(h.host)!.state.gameId, revision: 0, command: { type: 'RollDice', playerId: phase.activePlayerId } }))
+    actor.emit('game:presented', 1, h.matches.get(h.host)!.state.gameId)
     await vi.waitFor(() => expect(h.views.get(actor)?.waiting).toBe(false))
     // Returning does not reopen an already completed barrier.
     other.emit('game:visibility', true)
-    data(await actor.emitWithAck('game:command', { revision: 1, command: { type: 'ConfirmRoll', playerId: phase.activePlayerId } }))
-    actor.emit('game:presented', 2)
+    data(await actor.emitWithAck('game:command', { gameId: h.matches.get(h.host)!.state.gameId, revision: 1, command: { type: 'ConfirmRoll', playerId: phase.activePlayerId } }))
+    actor.emit('game:presented', 2, h.matches.get(h.host)!.state.gameId)
     // A socket ACK acts as an ordered round-trip after the receipt packet.
-    expect((await actor.emitWithAck('game:command', { revision: 2, command: { type: 'RollDice', playerId: phase.activePlayerId } })).ok).toBe(false)
+    expect((await actor.emitWithAck('game:command', { gameId: h.matches.get(h.host)!.state.gameId, revision: 2, command: { type: 'RollDice', playerId: phase.activePlayerId } })).ok).toBe(false)
     expect(h.views.get(actor)?.waiting).toBe(true)
-    other.emit('game:presented', 2)
+    other.emit('game:presented', 2, h.matches.get(h.host)!.state.gameId)
     await vi.waitFor(() => expect(h.views.get(actor)?.waiting).toBe(false))
   })
 
@@ -120,8 +181,8 @@ describe('two-player Socket.IO rooms', () => {
     if (phase.name !== 'roll') throw new Error('roll expected')
     const actor = phase.activePlayerId === 'player-1' ? h.host : h.guest
     const other = actor === h.host ? h.guest : h.host
-    data(await actor.emitWithAck('game:command', { revision: 0, command: { type: 'RollDice', playerId: phase.activePlayerId } }))
-    actor.emit('game:presented', 1)
+    data(await actor.emitWithAck('game:command', { gameId: h.matches.get(h.host)!.state.gameId, revision: 0, command: { type: 'RollDice', playerId: phase.activePlayerId } }))
+    actor.emit('game:presented', 1, h.matches.get(h.host)!.state.gameId)
     other.emit('game:visibility', false)
     await vi.waitFor(() => expect(h.views.get(actor)?.waiting).toBe(false))
     expect(h.matches.get(other)?.state).toEqual(h.matches.get(actor)?.state)
@@ -135,15 +196,15 @@ describe('two-player Socket.IO rooms', () => {
     const actor = phase.activePlayerId === 'player-1' ? h.host : h.guest
     const other = actor === h.host ? h.guest : h.host
     const snapshot = new Promise<MatchUpdate>(resolve => other.once('game:snapshot', resolve))
-    data(await actor.emitWithAck('game:command', { revision: 0, command: { type: 'RollDice', playerId: phase.activePlayerId } }))
-    actor.emit('game:presented', 1)
+    data(await actor.emitWithAck('game:command', { gameId: h.matches.get(h.host)!.state.gameId, revision: 0, command: { type: 'RollDice', playerId: phase.activePlayerId } }))
+    actor.emit('game:presented', 1, h.matches.get(h.host)!.state.gameId)
     const recovered = await snapshot
     expect(recovered.state.revision).toBe(1)
     expect(recovered.events).toEqual([])
     await vi.waitFor(() => expect(h.views.get(actor)?.waiting).toBe(false))
-    data(await actor.emitWithAck('game:command', { revision: 1, command: { type: 'ConfirmRoll', playerId: phase.activePlayerId } }))
-    other.emit('game:presented', 1) // the old renderer cannot unlock revision 2
-    expect((await actor.emitWithAck('game:command', { revision: 2, command: { type: 'RollDice', playerId: phase.activePlayerId } })).ok).toBe(false)
+    data(await actor.emitWithAck('game:command', { gameId: h.matches.get(h.host)!.state.gameId, revision: 1, command: { type: 'ConfirmRoll', playerId: phase.activePlayerId } }))
+    other.emit('game:presented', 1, h.matches.get(h.host)!.state.gameId) // the old renderer cannot unlock revision 2
+    expect((await actor.emitWithAck('game:command', { gameId: h.matches.get(h.host)!.state.gameId, revision: 2, command: { type: 'RollDice', playerId: phase.activePlayerId } })).ok).toBe(false)
   })
 
   it('creates distinct four-digit codes, rejects missing/full rooms, and only lets the creator start', async () => {
@@ -185,17 +246,17 @@ describe('two-player Socket.IO rooms', () => {
     if (phase.name !== 'roll') throw new Error('roll expected')
     const actor = phase.activePlayerId === 'player-1' ? h.host : h.guest
     const other = actor === h.host ? h.guest : h.host
-    const request = { revision: 0, command: { type: 'RollDice' as const, playerId: phase.activePlayerId } }
+    const request = { gameId: h.matches.get(h.host)!.state.gameId, revision: 0, command: { type: 'RollDice' as const, playerId: phase.activePlayerId } }
     expect((await other.emitWithAck('game:command', request)).ok).toBe(false)
     expect((await actor.emitWithAck('game:command', { ...request, revision: 50 })).ok).toBe(false)
     expect((await actor.emitWithAck('game:command', { ...request, command: { type: 'NextRound', playerId: phase.activePlayerId } })).ok).toBe(false)
     data(await actor.emitWithAck('game:command', request))
     await vi.waitFor(() => expect(h.matches.get(other)?.state.revision).toBe(1))
     expect(h.matches.get(actor)).toEqual(h.matches.get(other))
-    const confirm = { revision: 1, command: { type: 'ConfirmRoll' as const, playerId: phase.activePlayerId } }
-    actor.emit('game:presented', 1)
+    const confirm = { gameId: h.matches.get(h.host)!.state.gameId, revision: 1, command: { type: 'ConfirmRoll' as const, playerId: phase.activePlayerId } }
+    actor.emit('game:presented', 1, h.matches.get(h.host)!.state.gameId)
     expect((await actor.emitWithAck('game:command', confirm)).ok).toBe(false)
-    other.emit('game:presented', 0) // stale receipt cannot open the current revision
+    other.emit('game:presented', 0, h.matches.get(h.host)!.state.gameId) // stale receipt cannot open the current revision
     expect((await actor.emitWithAck('game:command', confirm)).ok).toBe(false)
     await h.settle()
     data(await actor.emitWithAck('game:command', confirm))
@@ -234,12 +295,12 @@ describe('two-player Socket.IO rooms', () => {
     const phase = original.phase
     if (phase.name !== 'roll') throw new Error('roll expected')
     const actor = phase.activePlayerId === 'player-1' ? h.host : h.guest
-    data(await actor.emitWithAck('game:command', { revision: 0, command: { type: 'RollDice', playerId: phase.activePlayerId } }))
+    data(await actor.emitWithAck('game:command', { gameId: h.matches.get(h.host)!.state.gameId, revision: 0, command: { type: 'RollDice', playerId: phase.activePlayerId } }))
     await vi.waitFor(() => expect(h.matches.get(h.host)?.state.revision).toBe(1))
-    h.host.emit('game:presented', 1)
+    h.host.emit('game:presented', 1, h.matches.get(h.host)!.state.gameId)
     h.guest.disconnect()
     await vi.waitFor(() => expect(h.views.get(h.host)!.players[1]!.connected).toBe(false))
-    expect((await h.host.emitWithAck('game:command', { revision: 1, command: { type: 'ConfirmRoll', playerId: 'player-1' } })).ok).toBe(false)
+    expect((await h.host.emitWithAck('game:command', { gameId: h.matches.get(h.host)!.state.gameId, revision: 1, command: { type: 'ConfirmRoll', playerId: 'player-1' } })).ok).toBe(false)
     const rejoined = await h.peer()
     const resumed = data(await rejoined.emitWithAck('room:resume', h.guestJoined.session))
     expect(resumed.session.playerId).toBe('player-2')
@@ -247,7 +308,7 @@ describe('two-player Socket.IO rooms', () => {
     expect(resumed.match!.state.revision).toBe(1)
     expect(resumed.match!.events).toEqual([])
     expect(resumed.room.waiting).toBe(true)
-    rejoined.emit('game:presented', 1)
+    rejoined.emit('game:presented', 1, h.matches.get(h.host)!.state.gameId)
     await vi.waitFor(() => expect(h.views.get(h.host)!.waiting).toBe(false))
   })
 

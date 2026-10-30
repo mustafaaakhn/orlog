@@ -114,12 +114,13 @@ export function createOnlineClient(callbacks: {
     ready: (name: string, favors: FavorId[]) => request(() => socket.timeout(8000).emitWithAck('room:ready', { name, favors })),
     toss: () => request(() => socket.timeout(8000).emitWithAck('room:toss')),
     play: () => request(() => socket.timeout(8000).emitWithAck('room:play')),
-    command(command: GameCommand, revision: number) {
+    rematch: (gameId: string) => request(() => socket.timeout(8000).emitWithAck('game:rematch', gameId)),
+    command(command: GameCommand, revision: number, gameId: string) {
       if (!bothConnected.value || busy.value || room.value?.waiting) return false
-      void request(() => socket.timeout(8000).emitWithAck('game:command', { command, revision }))
+      void request(() => socket.timeout(8000).emitWithAck('game:command', { command, revision, gameId }))
       return true
     },
-    presented(revision: number) { if (socket.connected && identity.value) socket.emit('game:presented', revision) },
+    presented(revision: number, gameId: string) { if (socket.connected && identity.value) socket.emit('game:presented', revision, gameId) },
     visibility(value: boolean) {
       visible = value
       if (socket.connected && identity.value) socket.emit('game:visibility', value)

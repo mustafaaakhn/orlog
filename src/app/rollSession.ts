@@ -15,6 +15,8 @@ export interface PresentationBatch {
 export function createRollSession(options: GameOptions = {}) {
   let matchSequence = 0
   let game = new Game(options)
+  let matchOptions = options
+  let initialFirstPlayer = game.state.firstPlayerId
   let appliedSequence = 0
   let contactSequence = 0
   let contactStep = 0
@@ -67,6 +69,22 @@ export function createRollSession(options: GameOptions = {}) {
     pending.value = null
     remote?.settled(state.value.revision)
   }
+  function start(nextOptions: GameOptions) {
+    if (pending.value) return false
+    remote = null
+    remoteState = null
+    matchOptions = nextOptions
+    game = new Game({ ...nextOptions, gameId: `local-match-${++matchSequence}` })
+    initialFirstPlayer = game.state.firstPlayerId
+    state.value = game.state
+    appliedSequence = 0
+    contactSequence = 0
+    contactStep = 0
+    lastEvent.value = null
+    history.value = []
+    error.value = ''
+    return true
+  }
   return {
     state,
     pending,
@@ -111,19 +129,14 @@ export function createRollSession(options: GameOptions = {}) {
       lastEvent.value = event
       history.value = [...history.value, event].slice(-120)
     },
-    start(options: GameOptions) {
-      if (pending.value) return false
-      remote = null
-      remoteState = null
-      game = new Game({ ...options, gameId: `local-match-${++matchSequence}` })
-      state.value = game.state
-      appliedSequence = 0
-      contactSequence = 0
-      contactStep = 0
-      lastEvent.value = null
-      history.value = []
-      error.value = ''
-      return true
+    start,
+    rematch() {
+      if (remote || pending.value || state.value.phase.name !== 'ended') return false
+      return start({
+        ...matchOptions,
+        firstPlayerId: initialFirstPlayer === 'player-1' ? 'player-2' : 'player-1',
+        loadouts: { 'player-1': state.value.players['player-1'].favors, 'player-2': state.value.players['player-2'].favors },
+      })
     },
     dispatch,
     settle,
@@ -175,6 +188,8 @@ export function createRollSession(options: GameOptions = {}) {
       remote = null
       remoteState = null
       game = new Game({ ...options, gameId: `local-match-${++matchSequence}` })
+      matchOptions = options
+      initialFirstPlayer = game.state.firstPlayerId
       appliedSequence = 0
       contactSequence = 0
       contactStep = 0

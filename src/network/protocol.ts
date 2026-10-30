@@ -41,8 +41,9 @@ export interface ClientEvents {
   'room:ready': (loadout: { name: string; favors: FavorId[] }, ack: Ack) => void
   'room:toss': (ack: Ack) => void
   'room:play': (ack: Ack) => void
-  'game:command': (request: { revision: number; command: GameCommand }, ack: Ack) => void
-  'game:presented': (revision: number) => void
+  'game:rematch': (gameId: string, ack: Ack) => void
+  'game:command': (request: { gameId: string; revision: number; command: GameCommand }, ack: Ack) => void
+  'game:presented': (revision: number, gameId: string) => void
   'game:visibility': (visible: boolean) => void
 }
 export interface ServerEvents {

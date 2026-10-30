@@ -3,7 +3,7 @@ import { onMounted, ref } from 'vue'
 import GameMark from './GameMark.vue'
 import UiIcon from './UiIcon.vue'
 
-defineProps<{ winner: string; round: number }>()
+defineProps<{ winner: string; round: number; busy?: boolean; error?: string }>()
 const emit = defineEmits<{ restart: []; close: [] }>()
 const dialog = ref<HTMLDialogElement | null>(null)
 onMounted(() => dialog.value?.showModal())
@@ -15,8 +15,9 @@ onMounted(() => dialog.value?.showModal())
     <h2 id="result-title">{{ winner }}<br /><span>kazandı.</span></h2>
     <p id="result-description">{{ round }} turluk mücadele sona erdi.</p>
     <div class="result-actions">
-      <button class="primary-action" autofocus @click="emit('restart')">Yeni oyun <UiIcon name="arrow" /></button>
+      <button class="primary-action" autofocus :disabled="busy" @click="emit('restart')">Yeni oyun <UiIcon name="arrow" /></button>
       <button class="secondary-action" @click="dialog?.close()">Masayı incele</button>
     </div>
+    <p v-if="error" class="field-error" role="alert">{{ error }}</p>
   </dialog>
 </template>
