@@ -241,7 +241,7 @@ watch(
     const side = playerSide(props.viewerId);
     const narrow = sizes.width.value < 620 && aspect < 1.1;
     board.setNarrow(narrow);
-    direction.set(0, 1, (narrow ? 0.95 : 1.3) * side).normalize();
+    direction.set(0, 1, (narrow ? 0.9 : 1.16) * side).normalize();
     up.set(0, Math.abs(direction.z), -direction.y * side);
     const target = new Vector3(0, 0.2, 1.1 * side);
     // Fit both seats in one oblique view; no optional zoom mode.
@@ -263,7 +263,7 @@ watch(
         }
       }
     }
-    camera.position.copy(target).addScaledVector(direction, distance * 1.025);
+    camera.position.copy(target).addScaledVector(direction, distance * 1.16);
     camera.aspect = aspect;
     camera.lookAt(target);
     camera.updateProjectionMatrix();
