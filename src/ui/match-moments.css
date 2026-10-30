@@ -34,3 +34,29 @@
   .match-result[open] { animation: none; }
 }
 [data-reduced-motion="true"] .match-result[open] { animation: none; }
+
+.seat-turn-cue {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  background: #10201933;
+  cursor: wait;
+}
+.seat-turn-cue > div {
+  width: 100%;
+  padding: 24px 16px;
+  background: #15231deb;
+  color: var(--ink);
+  text-align: center;
+  animation: seat-title-arrival 180ms ease-out;
+}
+.seat-turn-cue h2 { margin: 0; font: 400 clamp(28px, 4vw, 48px)/1.25 var(--display); }
+.seat-turn-cue p { margin: 12px 0 0; color: var(--gold); font-size: 14px; }
+@keyframes seat-title-arrival { from { opacity: 0; } to { opacity: 1; } }
+@media (max-height: 500px) and (orientation: landscape) {
+  .seat-turn-cue > div { padding: 16px; }
+  .seat-turn-cue h2 { font-size: 28px; }
+  .seat-turn-cue p { margin-top: 8px; }
+}

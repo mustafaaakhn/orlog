@@ -141,6 +141,7 @@ function restart() {
   void nextTick(() => document.querySelector<HTMLElement>(".welcome-play")?.focus());
 }
 const sceneReady = ref(false);
+const turningSeat = ref(false);
 const pendingStartSound = ref(false);
 const session = createRollSession();
 const online = createOnlineClient({
@@ -176,13 +177,19 @@ const { state, pending, error, lastEvent } = session;
 const phase = computed(() => state.value.phase);
 const resultAvailable = computed(() => !preparing.value && phase.value.name === 'ended' && !pending.value);
 const resultOpen = ref(false);
-watch(resultAvailable, available => { resultOpen.value = available; });
+let announcedResult: string | null = null;
+watch([resultAvailable, () => state.value.gameId], ([available, gameId]) => {
+  if (available && announcedResult !== gameId) {
+    announcedResult = gameId;
+    resultOpen.value = true;
+  } else if (phase.value.name !== 'ended') resultOpen.value = false;
+});
 const activePlayer = computed(() =>
   phase.value.name === "roll" || phase.value.name === "favor"
     ? state.value.players[phase.value.activePlayerId]
     : null,
 );
-const busy = computed(() => !!pending.value || (!sceneReady.value && !paused.value) ||
+const busy = computed(() => turningSeat.value || !!pending.value || (!sceneReady.value && !paused.value) ||
   (!!onlineRoom.value && (online.busy.value || onlineRoom.value.waiting || !online.bothConnected.value)));
 watch([activePlayer, opponent], ([player, options]) => {
   if (!onlineRoom.value && options.mode === "local" && player) localViewer.value = player.id;
@@ -205,7 +212,7 @@ const networkStatus = computed(() => {
 });
 const driver = createComputerDriver((command) => session.dispatch(command));
 watch(
-  [state, pending, preparing, sceneReady, paused, opponent, overlay],
+  [state, pending, preparing, sceneReady, paused, opponent, overlay, turningSeat],
   () => {
     driver.update({
       state: state.value,
@@ -251,6 +258,12 @@ function focusAction() {
     ) ?? panel?.querySelector<HTMLElement>(".restart-action:not(:disabled)");
   action?.focus({ preventScroll: true });
 }
+watch(turningSeat, async (turning, previous) => {
+  if (!turning && previous && !paused.value && !overlay.value && !preparing.value) {
+    await nextTick();
+    focusAction();
+  }
+});
 let previousFocus: HTMLElement | null = null;
 watch(
   pending,
@@ -301,11 +314,12 @@ function availability(ready: boolean) {
     audio.gameStart();
   }
   if (!ready) {
+    turningSeat.value = false;
     audio.stopEffects();
     session.recover();
   }
 }
-watch([state, pending, sceneReady, paused, preparing, overlay], () => {
+watch([state, pending, sceneReady, paused, preparing, overlay, turningSeat], () => {
   if (!preparing.value && !busy.value && (paused.value || !overlay.value)) {
     session.finishLastRoll();
     session.resolveReady();
@@ -406,6 +420,7 @@ function confirm() {
         @presented="session.present"
         @progress="session.progress"
         @settled="session.settle($event)"
+        @seat-turn="turningSeat = $event !== null"
         :favor-player="!preparing && humanTurn && !busy && phase.name === 'favor' ? phase.activePlayerId : null"
         @choose="choose"
         @select="selectDie"
@@ -453,7 +468,7 @@ function confirm() {
           <p class="favor-prompt">Bir tanrı seç veya devam et.</p>
           <button class="primary-action" @click="skip">Devam et <UiIcon name="arrow" /></button>
         </template>
-        <template v-if="!busy && phase.name === 'ended'">
+        <template v-if="resultAvailable">
           <button v-if="!resultOpen" class="secondary-action" @click="resultOpen = true">Sonucu göster</button>
         </template>
         <p v-if="error" class="field-error" role="alert">{{ error }}</p>

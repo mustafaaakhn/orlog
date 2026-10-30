@@ -23,6 +23,7 @@ import type { DieId, GameState, GameEvent, PlayerId } from "../core";
 
 import type { SceneDieTarget } from "./dieTargets";
 import { frameTableCamera } from './tableCamera';
+import { createSeatTurn } from '../presentation/seatTurn';
 
 const props = defineProps<{
   audio: AudioPort;
@@ -46,6 +47,7 @@ const emit = defineEmits<{
   favors: [targets: import("./dieTargets").SceneFavorTarget[]];
   cue: [cue: PresentationCue | null];
   collected: [ids: DieId[]];
+  seatTurn: [player: PlayerId | null];
 }>();
 const { sizes, invalidate, renderer, scene } = useTres();
 const board = createBoard(invalidate);
@@ -200,8 +202,24 @@ watch(
   },
 );
 const camera = new PerspectiveCamera(42, 1, 0.1, 100);
+let seatTurning = false;
+const seatTurn = createSeatTurn(props.viewerId, {
+  frame: angle => frameCamera(angle),
+  active: player => {
+    seatTurning = player !== null;
+    pointer = undefined;
+    if (seatTurning) {
+      board.highlightDie(null);
+      board.highlightFavor(null, null);
+      emit('targets', []);
+      emit('favors', []);
+    }
+    emit('seatTurn', player);
+    if (!seatTurning) publishTargets();
+  },
+});
 function publishTargets() {
-  if (sceneClosed || props.batch || !sizes.width.value || !sizes.height.value)
+  if (sceneClosed || seatTurning || props.batch || !sizes.width.value || !sizes.height.value)
     return;
   board.object.updateMatrixWorld(true);
   camera.updateMatrixWorld(true);
@@ -222,20 +240,26 @@ function publishTargets() {
   }));
 }
 
+function frameCamera(angle: number) {
+  if (sceneClosed) return;
+  const aspect = Math.max(sizes.aspectRatio.value, 0.25);
+  const narrow = sizes.width.value < 620 && aspect < 1.1;
+  board.setNarrow(narrow);
+  frameTableCamera(camera, sizes.width.value, sizes.height.value, props.viewerId, narrow, angle);
+  invalidate();
+  publishTargets();
+}
+watch(() => props.viewerId, player => seatTurn.turn(player, props.reduced, props.paused));
+watch(() => props.paused, paused => { if (paused) seatTurn.snap(props.viewerId); });
+watch(() => props.reduced, reduced => { if (reduced) seatTurn.snap(props.viewerId); });
 watch(
   [
     () => sizes.aspectRatio.value,
     () => sizes.width.value,
-    () => props.viewerId,
-    () => props.state.players[props.viewerId].dice.length,
+    () => sizes.height.value,
   ],
   () => {
-    const aspect = Math.max(sizes.aspectRatio.value, 0.25);
-    const narrow = sizes.width.value < 620 && aspect < 1.1;
-    board.setNarrow(narrow);
-    frameTableCamera(camera, sizes.width.value, sizes.height.value, props.viewerId, narrow);
-    invalidate();
-    publishTargets();
+    frameCamera(seatTurn.angle);
   },
   { immediate: true },
 );
@@ -245,7 +269,7 @@ watch(() => props.highlightedFavor, value => board.highlightFavor(value?.playerI
 const raycaster = new Raycaster();
 let pointer: { x: number; y: number; id: number } | undefined;
 function pointerDown(event: PointerEvent) {
-  if (!props.batch && event.isPrimary && event.button === 0)
+  if (!props.batch && !props.paused && !seatTurning && event.isPrimary && event.button === 0)
     pointer = { x: event.clientX, y: event.clientY, id: event.pointerId };
 }
 function pointerUp(event: PointerEvent) {
@@ -255,6 +279,7 @@ function pointerUp(event: PointerEvent) {
     !start ||
     start.id !== event.pointerId ||
     props.batch ||
+    props.paused || seatTurning ||
     Math.hypot(start.x - event.clientX, start.y - event.clientY) > 12
   )
     return;
@@ -287,6 +312,7 @@ onMounted(() => {
 function dispose() {
   if (sceneClosed) return;
   sceneClosed = true;
+  seatTurn.dispose();
   queue.dispose();
   recorder.dispose();
   combat.dispose();

@@ -48,7 +48,13 @@ const emit = defineEmits<{
   progress: [batchId: number, event: GameEvent, step: number];
   select: [dieId: DieId];
   choose: [favorId: import("../core").FavorId, level: import("../core").FavorLevel, input?: import("../core").FavorInput];
+  seatTurn: [player: PlayerId | null];
 }>();
+const turningSeat = ref<PlayerId | null>(null);
+function seatTurn(player: PlayerId | null) {
+  turningSeat.value = player;
+  emit('seatTurn', player);
+}
 const targets = ref<SceneDieTarget[]>([]);
 const favors = ref<SceneFavorTarget[]>([]);
 const inspection = ref<FavorInspection>({ target: null, pinned: false });
@@ -56,7 +62,7 @@ const menuFavor = computed(() => inspection.value.target);
 const menuPinned = computed(() => inspection.value.pinned);
 const favorMenu = ref<HTMLElement | null>(null);
 function inspectFavor(target: SceneFavorTarget, activate: boolean) {
-  if (props.batch || props.paused) return;
+  if (props.batch || props.paused || turningSeat.value) return;
   inspection.value = inspect(inspection.value, target, activate, props.favorPlayer ?? null);
   if (inspection.value.pinned && activate) void nextTick(() => favorMenu.value?.focus());
 }
@@ -71,18 +77,22 @@ function closeFavor() {
   // Focusing the source is also a preview trigger; Escape must still close it.
   inspection.value = { target: null, pinned: false };
 }
-watch([() => props.batch, () => props.paused, () => props.favorPlayer, () => props.state.gameId], () => {
+watch([() => props.batch, () => props.paused, () => props.favorPlayer, () => props.state.gameId, turningSeat], () => {
   inspection.value = { target: null, pinned: false };
 });
 const highlightedDie = ref<DieId | null>(null);
 const highlightedFavor = ref<SceneFavorTarget | null>(null);
-watch([() => props.batch, () => props.paused], () => { highlightedFavor.value = null; });
+watch([() => props.batch, () => props.paused, turningSeat], () => {
+  highlightedFavor.value = null;
+  highlightedDie.value = null;
+});
 const cue = ref<PresentationCue | null>(null);
 const collected = ref<DieId[]>([]);
 const controlsDisabled = computed(
   () =>
     props.paused ||
     props.blocked ||
+    !!turningSeat.value ||
     !!props.batch ||
     props.state.phase.name !== "roll" ||
     props.state.phase.step !== "selecting-dice",
@@ -217,6 +227,7 @@ onErrorCaptured(() => {
         @progress="(id, event, step) => emit('progress', id, event, step)"
         @cue="cue = $event"
         @collected="collected = $event"
+        @seat-turn="seatTurn"
         @settled="emit('settled', $event)"
         @select="emit('select', $event)"
         @failed="failed"
@@ -224,7 +235,7 @@ onErrorCaptured(() => {
         @favors="favors = $event"
       />
     </TresCanvas>
-    <SceneFavorControls v-if="status === 'ready' && !batch && !paused" :targets="favors" :active-player="favorPlayer" :pinned-target="menuPinned ? menuFavor : null" @highlight="highlightFavor" @inspect="inspectFavor" />
+    <SceneFavorControls v-if="status === 'ready' && !batch && !paused && !turningSeat" :targets="favors" :active-player="favorPlayer" :pinned-target="menuPinned ? menuFavor : null" @highlight="highlightFavor" @inspect="inspectFavor" />
     <section v-if="menuFavor && status === 'ready' && !batch && !paused" ref="favorMenu"
       id="table-favor-menu" class="table-favor-menu" :class="{ 'is-preview': !menuPinned }" :role="menuPinned ? 'dialog' : 'region'" :aria-label="menuPinned ? 'Tanrı gücü seçimi' : 'Tanrı bilgileri'" tabindex="-1">
       <p class="favor-menu-help">{{ menuPinned ? 'Seviyeni seç · Escape ile kapat' : menuFavor.playerId === favorPlayer ? 'Seçmek için tanrıya tıkla' : 'Tanrı bilgileri' }}</p>
@@ -232,7 +243,10 @@ onErrorCaptured(() => {
         :state="state" :player="state.players[menuFavor.playerId]" :disabled="false" :preview="!menuPinned"
         @choose="(id, level, input) => emit('choose', id, level, input)" />
     </section>
-    <div v-if="cue?.title" class="resolution-cue is-title" role="status" aria-live="polite" aria-atomic="true">
+    <div v-if="turningSeat && !paused" class="seat-turn-cue" role="status" aria-live="polite" aria-atomic="true">
+      <div><h2>{{ turningSeat === 'player-1' ? '1. Oyuncu' : '2. Oyuncu' }}</h2><p>Sıra sende</p></div>
+    </div>
+    <div v-if="cue?.title && !turningSeat" class="resolution-cue is-title" role="status" aria-live="polite" aria-atomic="true">
       <h2>{{ cue.title }}</h2>
     </div>
     <section
