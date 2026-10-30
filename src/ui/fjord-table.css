@@ -1,6 +1,99 @@
 /* The distant plate is decorative; all playable pieces remain in WebGL. */
 .experience.in-match {
+  color-scheme: dark;
+  --background: #17221c;
+  --table-surround: #17221c;
+  --text: #f5ebd8;
+  --muted: #c6bca7;
+  --gold: #d3b176;
+  --gold-hover: #e3c78f;
+  --ink: #fff1ce;
+  --focus: #f4d899;
+  --line: #5c5847;
+  --field-border: #8e8061;
+  --panel-edge: #5c5847;
+  --field: #111b15;
+  --panel: #1c2921;
+  --hover: #303b2e;
+  --selected: #334534;
+  --ready: #a0cfad;
+  --danger: #f0a38f;
+  --cue-background: #15231df0;
+  --modal-backdrop: #0e1913c9;
   background: #202e28;
+  color: var(--text);
+}
+.in-match .masthead {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 72px;
+  margin: 0;
+  padding-inline: clamp(16px, 3vw, 48px);
+  border-color: #d3b17626;
+  background: #14211bd9;
+  color: var(--text);
+}
+.in-match .edition { display: none; }
+.in-match .wordmark { font-size: 30px; }
+.in-match .entry-tool { color: #f5ebd8; }
+.in-match .entry-tool:hover { color: #fff8e8; background: #f5ebd80d; }
+.in-match .scene-layer { inset: 0; }
+.in-match .match-screen { inset: 72px 0 0; }
+.in-match .table-round {
+  top: 16px;
+  left: clamp(16px, 3vw, 48px);
+  padding: 8px 12px;
+  background: #15231de8;
+  color: var(--text);
+}
+.in-match .match-actions { bottom: 24px; }
+.in-match .primary-action {
+  color: #fff1ce;
+  background: #302016;
+  border: 1px solid #d3b176;
+  box-shadow: 0 6px 24px #10191259;
+}
+.in-match .primary-action:hover:enabled { background: #4b3220; }
+.in-match .secondary-action { color: var(--text); }
+.in-match .secondary-action:hover:enabled { color: var(--gold); background: var(--hover); }
+.in-match .table-favor-menu {
+  top: 88px;
+  max-height: calc(100% - 112px);
+  background: #1c2921f7;
+  box-shadow: 0 10px 36px #0d17104d;
+}
+.in-match .table-favor-menu .favor-tier[aria-pressed="true"] {
+  background: var(--selected);
+  color: var(--text);
+  border-color: var(--gold);
+  outline: 1px solid var(--gold);
+}
+.in-match .table-favor-menu .favor-tier:hover:enabled { background: var(--hover); }
+.in-match .cue-symbols { color: #f4d899; filter: drop-shadow(0 2px 3px #14211b); }
+.in-match .utility-dialog::backdrop { background: var(--modal-backdrop); }
+.in-match input::placeholder { color: var(--muted); }
+.in-match ::selection { color: #17221c; background: #d3b176; }
+.in-match .language-option { color: var(--text); }
+@media (max-width: 600px) {
+  .in-match .masthead { height: 64px; }
+  .in-match .wordmark { font-size: 22px; }
+  .in-match .match-screen { inset: 64px 0 0; }
+  .in-match .table-round { top: 12px; left: 16px; font-size: 12px; }
+  .in-match .table-favor-menu { top: 112px; max-height: calc(100% - 208px); }
+  .in-match .match-actions { bottom: max(18px, env(safe-area-inset-bottom)); }
+}
+@media (max-height: 500px) and (orientation: landscape) {
+  .in-match .masthead { height: 56px; }
+  .in-match .match-screen { inset: 56px 0 0; }
+  .in-match .match-actions { bottom: 12px; }
+  .in-match .table-round { top: 8px; font-size: 12px; }
+  .in-match .table-favor-menu { top: 72px; max-height: calc(100% - 168px); }
+  .in-match .table-favor-menu.is-preview .favor-menu-help { display: none; }
+  .in-match .table-favor-menu.is-preview .favor-card-heading { margin-bottom: 8px; }
+  .in-match .table-favor-menu.is-preview .favor-card-heading h3 { font-size: 14px; }
+  .in-match .table-favor-menu.is-preview .favor-card-heading p { font-size: 10px; }
+  .in-match .table-favor-menu.is-preview .favor-tier { min-height: 44px; margin-top: 4px; padding: 4px 8px; font-size: 12px; }
+  .in-match .table-favor-menu.is-preview .tier-label { margin-top: 2px; font-size: 10px; }
 }
 .in-match .table-viewport {
   background-color: #202e28;
