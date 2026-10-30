@@ -90,14 +90,14 @@ export function createBoard(invalidate: () => void = () => {}) {
 
   const wood = material({
     map: keepTexture(createWoodTexture()),
-    roughness: 0.78,
-    bumpScale: 0.012,
+    roughness: 0.88,
+    bumpScale: 0.045,
   });
   wood.bumpMap = wood.map;
   const bowlWood = material({
     map: keepTexture(createBowlTexture()),
-    roughness: 0.82,
-    bumpScale: 0.008,
+    roughness: 0.76,
+    bumpScale: 0.035,
   });
   bowlWood.bumpMap = bowlWood.map;
   const darkWood = material({ color: "#3d3026", roughness: 0.9 });
@@ -113,12 +113,12 @@ export function createBoard(invalidate: () => void = () => {}) {
     map: keepTexture(createClothTexture()),
     roughness: 0.96,
     side: DoubleSide,
-    bumpScale: 0.055,
+    bumpScale: 0.018,
   });
   cloth.bumpMap = cloth.map;
   const bone = material({
     map: keepTexture(createSurfaceTexture("bone")),
-    roughness: 0.72,
+    roughness: 0.6,
   });
   const redStone = material({
     color: "#bf8168",
@@ -141,7 +141,7 @@ export function createBoard(invalidate: () => void = () => {}) {
   );
   table.castShadow = false;
   const fabric = mesh(root, geometry(createClothGeometry()), cloth, [0, 0, 0]);
-  fabric.name = 'Draped linen with raised irregular hem';
+  fabric.name = 'Lichen woven runner with worn border';
   // The dark surroundings are separate from the cut fabric and the wooden table.
   const surround = mesh(root, geometry(new PlaneGeometry(200, 200)), darkWood, [0, -0.58, 0]);
   surround.rotation.x = -Math.PI / 2;
@@ -185,7 +185,7 @@ export function createBoard(invalidate: () => void = () => {}) {
     bowl.name = `${player}: personal dice bowl`;
     bowl.position.set(...bowlCenter(player));
     root.add(bowl);
-    mesh(bowl, bowlShape, wood, [0, 0, 0]);
+    mesh(bowl, bowlShape, bowlWood, [0, 0, 0]);
     mesh(bowl, carvingShape, carvedWood, [0, 0, 0]);
     mesh(bowl, bowlFloor, bowlWood, [0, 0.31, 0]);
     mesh(bowl, rim, brass, [0, 1.035, 0]).rotation.x = -Math.PI / 2;
@@ -280,7 +280,7 @@ export function createBoard(invalidate: () => void = () => {}) {
     }
     portraitShapes.set(id, shape);
   }
-  const totemBody = geometry(new RoundedBoxGeometry(1.18, 0.18, 1.95, 2, 0.06));
+  const totemBody = geometry(new RoundedBoxGeometry(1.18, 0.24, 1.95, 2, 0.06));
   const nameShape = geometry(new PlaneGeometry(1.04, 0.24));
   const nameSurfaces = new Map<FavorId, MeshStandardMaterial>();
   const stoneGroups: Group[] = [];
@@ -364,7 +364,7 @@ export function createBoard(invalidate: () => void = () => {}) {
       const contour = mesh(totem, geometry(new RoundedBoxGeometry(1.32, 0.12, 2.09, 2, 0.08)), material({ color: '#f4d899', emissive: '#dbab48', emissiveIntensity: 0.8 }), [0, 0.13, 0]);
       contour.name = 'favor-contour';
       contour.visible = false;
-      mesh(totem, totemBody, wood, [0, 0.15, 0]);
+      mesh(totem, totemBody, wood, [0, 0.12, 0]);
       const portrait = mesh(
         totem,
         portraitShapes.get(DEFAULT_FAVORS[i]!)!,

@@ -243,7 +243,7 @@ watch(
     board.setNarrow(narrow);
     direction.set(0, 1, (narrow ? 0.78 : 1.3) * side).normalize();
     up.set(0, Math.abs(direction.z), -direction.y * side);
-    const target = new Vector3(0, 0.2, 0);
+    const target = new Vector3(0, 0.2, -0.65 * side);
     // Fit both seats in one oblique view; no optional zoom mode.
     const halfWidth = narrow ? TABLE_NARROW_HALF_WIDTH : TABLE_HALF_WIDTH;
     const halfDepth = TABLE_HALF_DEPTH;
@@ -263,7 +263,7 @@ watch(
         }
       }
     }
-    camera.position.copy(target).addScaledVector(direction, distance * 1.06);
+    camera.position.copy(target).addScaledVector(direction, distance * 1.025);
     camera.aspect = aspect;
     camera.lookAt(target);
     camera.updateProjectionMatrix();
@@ -340,14 +340,14 @@ onBeforeUnmount(dispose);
 <template>
   <primitive :object="camera" :position="camera.position" />
   <TresHemisphereLight
-    color="#e4e5df"
-    ground-color="#6c6050"
-    :intensity="0.85"
+    color="#d5e3e4"
+    ground-color="#333c30"
+    :intensity="1.05"
   />
   <TresDirectionalLight
-    color="#ffe5bf"
+    color="#ffdeb0"
     :position="keyPosition"
-    :intensity="2.1"
+    :intensity="2.65"
     cast-shadow
     :shadow-mapSize="shadowSize"
     :shadow-camera-left="-16"
@@ -356,14 +356,14 @@ onBeforeUnmount(dispose);
     :shadow-camera-bottom="-13"
     :shadow-camera-near="0.5"
     :shadow-camera-far="45"
-    :shadow-radius="4"
+    :shadow-radius="5"
     :shadow-normalBias="0.025"
     :shadow-bias="-0.0001"
   />
   <TresDirectionalLight
-    color="#d5e2ed"
+    color="#b6d1e2"
     :position="fillPosition"
-    :intensity="0.5"
+    :intensity="0.7"
   />
   <TresDirectionalLight
     color="#f3e4c9"

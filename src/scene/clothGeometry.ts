@@ -1,25 +1,19 @@
 import { PlaneGeometry } from 'three'
 
-// Only free fabric ripples. Every gameplay contact keeps its established Y plane.
+// The runner is decorative: flat contact patches preserve the gameplay Y plane.
 export function clothHeight(x: number, z: number) {
-  const az = Math.abs(z), ax = Math.abs(x)
-  // Narrow-seat peripheral pieces also sit on a flat patch; only the hem rises.
-  const protectedSeat = az < 10.35 && ax < 13.0
-  if (protectedSeat) return 0.025
-  const edge = Math.max(0, Math.min(1, (Math.max(ax / 13.2, az / 10.3) - 0.82) / 0.18))
-  const fold = Math.sin(x * 2.1 + z * 0.65) * 0.12 + Math.sin(z * 3.7 - x * 0.5) * 0.055
-  return 0.025 + edge * edge * (0.17 + fold)
+  const edge = Math.max(0, Math.min(1, (Math.abs(z) - 10.35) / 0.5))
+  return 0.025 - edge * edge * (0.11 + Math.sin(x * 2.1) * 0.025)
 }
 
 export function createClothGeometry() {
-  const shape = new PlaneGeometry(27, 21.2, 48, 48)
+  const shape = new PlaneGeometry(17.8, 21.7, 36, 44)
   shape.rotateX(-Math.PI / 2)
   const vertices = shape.getAttribute('position')
   for (let i = 0; i < vertices.count; i++) {
     let x = vertices.getX(i), z = vertices.getZ(i)
-    // A cut, irregular hem, without moving the flat play surface.
-    if (Math.abs(x) > 13.2) x += Math.sin(z * 3.1) * 0.055 + Math.sin(z * 7.3) * 0.018
-    if (Math.abs(z) > 10.3) z += Math.sin(x * 2.7) * 0.065 + Math.sin(x * 6.1) * 0.02
+    if (Math.abs(x) > 8.8) x += Math.sin(z * 4.1) * 0.018
+    if (Math.abs(z) > 10.7) z += Math.sin(x * 5.3) * 0.025
     vertices.setXYZ(i, x, clothHeight(x, z), z)
   }
   shape.computeVertexNormals()

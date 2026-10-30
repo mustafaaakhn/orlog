@@ -1,4 +1,4 @@
-import { CanvasTexture, RepeatWrapping, SRGBColorSpace } from "three";
+import { CanvasTexture, SRGBColorSpace } from "three";
 import type { DieFace, DieSymbol } from "../core";
 import { SYMBOL_PATHS } from "./symbols";
 
@@ -34,66 +34,74 @@ function noise(x: number, y: number) {
 }
 export function createClothTexture() {
   const { element, context: ctx } = canvas(1024);
-  ctx.fillStyle = "#c5b99f";
+  ctx.fillStyle = "#626b58";
   ctx.fillRect(0, 0, 1024, 1024);
-  // Fine flax warp/weft; low contrast keeps the weave quiet at table distance.
-  for (let y = 0; y < 1024; y += 4)
-    for (let x = 0; x < 1024; x += 4) {
+  // A quiet lichen-dyed field; decoration stays on the runner's free edges.
+  for (let y = 0; y < 1024; y += 3)
+    for (let x = 0; x < 1024; x += 3) {
       const shade = noise(x, y);
-      ctx.fillStyle = `rgba(238,225,200,${0.13 + shade * 0.14})`;
-      ctx.fillRect(x, y + ((x / 4) % 2) * 2, 3, 1);
-      ctx.fillStyle = `rgba(77,65,47,${0.09 + shade * 0.12})`;
-      ctx.fillRect(x + 3, y, 1, 4);
+      ctx.fillStyle = `rgba(216,207,167,${0.035 + shade * 0.09})`;
+      ctx.fillRect(x, y + ((x / 3) % 2), 2, 1);
+      ctx.fillStyle = `rgba(22,34,26,${0.04 + shade * 0.08})`;
+      ctx.fillRect(x + 2, y, 1, 3);
     }
-  for (let i = 0; i < 28; i++) {
-    const x = noise(i, 2) * 1024,
-      y = noise(i, 3) * 1024;
-    const gradient = ctx.createRadialGradient(
-      x,
-      y,
-      2,
-      x,
-      y,
-      40 + noise(i, 5) * 130,
-    );
-    gradient.addColorStop(0, "rgba(91,74,48,.025)");
-    gradient.addColorStop(1, "rgba(91,74,48,0)");
-    ctx.fillStyle = gradient;
-    ctx.fillRect(0, 0, 1024, 1024);
+  for (const edge of [54, 970]) {
+    ctx.fillStyle = "#484d3d";
+    ctx.fillRect(edge - 24, 0, 48, 1024);
+    ctx.strokeStyle = "#aa9870";
+    ctx.lineWidth = 2;
+    for (const offset of [-29, 29]) {
+      ctx.beginPath(); ctx.moveTo(edge + offset, 0); ctx.lineTo(edge + offset, 1024); ctx.stroke();
+    }
+    ctx.strokeStyle = "#9c8a65";
+    ctx.lineWidth = 3;
+    for (let y = -20; y < 1050; y += 58) {
+      ctx.beginPath();
+      ctx.moveTo(edge, y); ctx.lineTo(edge + 17, y + 22);
+      ctx.lineTo(edge, y + 44); ctx.lineTo(edge - 17, y + 22);
+      ctx.closePath(); ctx.stroke();
+    }
   }
-  const result = texture(element);
-  result.wrapS = result.wrapT = RepeatWrapping;
-  result.repeat.set(5, 5);
-  return result;
+  // Individual faded fibres soften the border along with the field.
+  for (let i = 0; i < 5500; i++) {
+    ctx.fillStyle = `rgba(203,190,153,${noise(i, 8) * 0.08})`;
+    ctx.fillRect(noise(i, 1) * 1024, noise(i, 2) * 1024, 1, 3);
+  }
+  return texture(element);
 }
 export function createWoodTexture() {
-  const { element, context: ctx } = canvas(512);
-  ctx.fillStyle = "#4d3d31";
-  ctx.fillRect(0, 0, 512, 512);
-  for (let y = 0; y < 512; y++) {
-    const grain = Math.sin(y * 0.52 + Math.sin(y * 0.071) * 3);
-    ctx.strokeStyle =
-      grain > 0
-        ? `rgba(159,137,102,${grain * 0.12})`
-        : `rgba(26,21,17,${-grain * 0.16})`;
-    ctx.lineWidth = 0.5 + noise(y, 5);
+  const { element, context: ctx } = canvas(1024);
+  ctx.fillStyle = "#614936";
+  ctx.fillRect(0, 0, 1024, 1024);
+  // Broad, unequal boards and long grain, rather than periodic dark stripes.
+  const joints = [0, 151, 324, 503, 671, 862, 1024];
+  for (let i = 0; i < joints.length - 1; i++) {
+    const y = joints[i]!, height = joints[i + 1]! - y;
+    ctx.fillStyle = `rgba(${i % 2 ? '156,121,79' : '31,26,21'},0.1)`;
+    ctx.fillRect(0, y, 1024, height);
+    ctx.fillStyle = "#302b23"; ctx.fillRect(0, y, 1024, 3);
+    ctx.fillStyle = "#b29970"; ctx.fillRect(0, y + 3, 1024, 1);
+  }
+  for (let i = 0; i < 1800; i++) {
+    const y = noise(i, 3) * 1024;
+    ctx.strokeStyle = i % 3
+      ? `rgba(25,23,19,${0.03 + noise(i, 5) * 0.11})`
+      : `rgba(201,167,116,${0.03 + noise(i, 6) * 0.1})`;
+    ctx.lineWidth = 0.4 + noise(i, 7) * 1.5;
     ctx.beginPath();
-    ctx.moveTo(0, y);
-    for (let x = 0; x <= 512; x += 4)
-      ctx.lineTo(
-        x,
-        y + Math.sin(x * 0.012 + y * 0.013) * 10 + Math.sin(x * 0.04) * 1.4,
-      );
+    const start = noise(i, 9) * -200;
+    for (let x = start; x <= 1024; x += 12) {
+      const knot = Math.exp(-Math.pow((x - 620) / 100, 2)) * Math.sin(y * 0.028) * 16;
+      const wave = Math.sin(x * 0.006 + y * 0.07) * (2 + noise(i, 4) * 5) + knot;
+      if (x === start) ctx.moveTo(x, y + wave); else ctx.lineTo(x, y + wave);
+    }
     ctx.stroke();
   }
-  for (let i = 0; i < 120; i++) {
-    ctx.strokeStyle = `rgba(197,178,144,${noise(i, 0) * 0.06})`;
-    ctx.beginPath();
-    const x = noise(i, 1) * 512,
-      y = noise(i, 2) * 512;
-    ctx.moveTo(x, y);
-    ctx.lineTo(x + 5 + noise(i, 3) * 50, y + 0.4);
-    ctx.stroke();
+  for (let i = 0; i < 420; i++) {
+    const x = noise(i, 1) * 1024, y = noise(i, 2) * 1024;
+    ctx.strokeStyle = `rgba(223,197,148,${noise(i, 0) * 0.11})`;
+    ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(x, y);
+    ctx.lineTo(x + 8 + noise(i, 3) * 75, y + 0.5); ctx.stroke();
   }
   return texture(element);
 }
@@ -102,20 +110,13 @@ export function createBowlTexture() {
   const pixels = ctx.createImageData(512, 512);
   for (let y = 0; y < 512; y++)
     for (let x = 0; x < 512; x++) {
-      const dx = (x - 210) * 1.1,
-        dy = (y - 265) * 0.86;
-      const radius = Math.hypot(dx, dy);
-      const grain = Math.sin(
-        radius * 0.48 +
-          Math.sin(Math.atan2(dy, dx) * 5) * 1.8 +
-          Math.sin(radius * 0.06) * 3,
-      );
-      const fine = noise(x, y) * 9;
-      const shade = grain * 8 + Math.sin(radius * 0.09) * 5 + fine;
+      const radius = Math.hypot((x - 215) * 0.8, (y - 270) * 1.1);
+      const grain = Math.sin(y * 0.15 + Math.sin(x * 0.014) * 3 + Math.sin(radius * 0.024) * 4);
+      const shade = grain * 3.5 + Math.sin(radius * 0.035) * 3 + noise(x, y) * 7;
       const i = (y * 512 + x) * 4;
-      pixels.data[i] = 80 + shade * 0.8;
-      pixels.data[i + 1] = 63 + shade * 0.65;
-      pixels.data[i + 2] = 48 + shade * 0.5;
+      pixels.data[i] = 92 + shade;
+      pixels.data[i + 1] = 65 + shade * 0.8;
+      pixels.data[i + 2] = 42 + shade * 0.6;
       pixels.data[i + 3] = 255;
     }
   ctx.putImageData(pixels, 0, 0);
