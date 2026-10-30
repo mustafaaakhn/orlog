@@ -65,6 +65,9 @@ const audioFailed = ref(false);
 const audio = createAudioPlayer((failed) => {
   audioFailed.value = failed;
 });
+watch(setupScreen, (_screen, previous) => {
+  if (previous === "coin") audio.stopEffects();
+});
 const paused = ref(document.hidden);
 watch(settings, (value) => audio.configure(value), { immediate: true });
 const unlockAudio = () => {
@@ -103,6 +106,7 @@ function start(
   opponentOptions: OpponentOptions,
 ) {
   if (session.start(options)) {
+    audio.stopEffects();
     localViewer.value = options.firstPlayerId ?? "player-1";
     names.value = playerNames;
     opponent.value = opponentOptions;
@@ -350,6 +354,7 @@ function confirm() {
       :muted="settings.muted"
       :volume="settings.effects"
       @start="start"
+      @toss="audio.coinFlip()"
       @screen="setupScreen = $event"
       @cinematic="introActive = $event"
     />

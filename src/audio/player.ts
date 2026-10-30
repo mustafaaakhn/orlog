@@ -25,14 +25,14 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
   function stopEffects() {
     voices.splice(0).forEach(v => v.howl.stop(v.id))
   }
-  function play(id: SoundId, strength = 1, variation = 0) {
+  function play(id: SoundId, strength = 1, variation?: number) {
     if (!unlocked || disposed || hidden || settings.muted || !settings.effects) return
     const sound = sounds.get(id)
     if (!sound || sound.state() !== 'loaded') return // Never replay a late contact after loading.
     while (voices.length >= 8) { const old = voices.shift()!; old.howl.stop(old.id) }
     const voice = sound.play()
     sound.volume(settings.effects * Math.max(.15, Math.min(1, strength)), voice)
-    sound.rate(1 + (variation % 5 - 2) * .035, voice)
+    sound.rate(variation === undefined ? 1 : 1 + (variation % 5 - 2) * .035, voice)
     voices.push({ howl: sound, id: voice })
   }
   return {
@@ -82,6 +82,7 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
     },
     event(event) { const id = soundForEvent(event); if (id) play(id, 1, event.sequence) },
     impact(index, strength) { play(`dice-${index % 4}` as SoundId, strength, index) },
+    coinFlip() { play('coin-flip') },
     stopEffects,
     dispose() { disposed = true; stopEffects(); sounds.forEach(sound => sound.unload()); sounds.clear() },
   } satisfies AudioPort & Record<string, unknown>

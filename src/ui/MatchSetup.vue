@@ -32,6 +32,7 @@ const emit = defineEmits<{
   ];
   screen: [screen: Screen];
   cinematic: [active: boolean];
+  toss: [];
 }>();
 const screen = ref<Screen>("welcome");
 const welcomeArtFailed = ref(false);
@@ -199,7 +200,9 @@ function continueGods() {
   if (valid.value) screen.value = "coin";
 }
 function toss() {
+  if (firstPlayer.value) return;
   firstPlayer.value = PLAYER_IDS[randomIndex(mathRandom, 2)]!;
+  emit("toss");
   void nextTick(() =>
     document
       .querySelector<HTMLElement>("[data-coin-start]")
