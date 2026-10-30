@@ -107,6 +107,7 @@ function start(
 ) {
   if (session.start(options)) {
     audio.stopEffects();
+    pendingStartSound.value = true;
     localViewer.value = options.firstPlayerId ?? "player-1";
     names.value = playerNames;
     opponent.value = opponentOptions;
@@ -116,6 +117,7 @@ function start(
 }
 const sceneGeneration = ref(0);
 function restart() {
+  pendingStartSound.value = false;
   audio.stopEffects();
   session.recover();
   session.restart();
@@ -127,6 +129,7 @@ function restart() {
   void nextTick(() => document.querySelector<HTMLElement>(".welcome-play")?.focus());
 }
 const sceneReady = ref(false);
+const pendingStartSound = ref(false);
 const session = createRollSession();
 const { state, pending, error, lastEvent } = session;
 const phase = computed(() => state.value.phase);
@@ -237,6 +240,10 @@ function skip() {
 function availability(ready: boolean) {
   if (ready) session.resume();
   sceneReady.value = ready;
+  if (ready && pendingStartSound.value && !preparing.value) {
+    pendingStartSound.value = false;
+    audio.gameStart();
+  }
   if (!ready) {
     audio.stopEffects();
     session.recover();

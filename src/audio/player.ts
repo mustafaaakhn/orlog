@@ -83,6 +83,7 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
     event(event) { const id = soundForEvent(event); if (id) play(id, 1, event.sequence) },
     impact(index, strength) { play(`dice-${index % 4}` as SoundId, strength, index) },
     coinFlip() { play('coin-flip') },
+    gameStart() { play('game-start') },
     stopEffects,
     dispose() { disposed = true; stopEffects(); sounds.forEach(sound => sound.unload()); sounds.clear() },
   } satisfies AudioPort & Record<string, unknown>

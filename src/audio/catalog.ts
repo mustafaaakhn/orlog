@@ -3,7 +3,7 @@ import type { GameEvent } from '../core'
 export const SOUND_CATALOG = {
   'dice-0': 'dice-0.wav', 'dice-1': 'dice-1.wav', 'dice-2': 'dice-2.wav', 'dice-3': 'dice-3.wav',
   attack: 'attack.wav', block: 'block.wav', token: 'token.wav', favor: 'favor.wav', heal: 'heal.wav',
-  'coin-flip': 'coin-flip.wav',
+  'coin-flip': 'coin-flip.wav', 'game-start': 'game-start.wav',
   ambience: 'ambience.wav',
   'music-1': 'background-1.opus', 'music-2': 'background-2.opus',
 } as const
