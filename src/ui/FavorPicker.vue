@@ -26,8 +26,10 @@ const props = defineProps<{
   disabled: boolean;
   favorId: FavorId;
   preview?: boolean;
+  active?: boolean;
 }>();
 const emit = defineEmits<{
+  select: [];
   choose: [favorId: FavorId, level: FavorLevel, input?: FavorInput];
 }>();
 const selected = ref<FavorId | null>(null),
@@ -71,7 +73,12 @@ watch(
 
   },
 );
+watch(() => props.active, active => {
+  if (active === false) selected.value = null;
+});
 function select(id: FavorId, tier: FavorLevel) {
+  if (props.disabled || props.preview) return;
+  emit("select");
   selected.value = id;
   level.value = tier;
   dieIds.value = [];
@@ -80,7 +87,7 @@ function select(id: FavorId, tier: FavorLevel) {
     majoritySymbols(props.state, props.player.id)[0] ?? "axe";
 }
 function confirm() {
-  if (valid.value && selected.value)
+  if (!props.disabled && !props.preview && valid.value && selected.value)
     emit("choose", selected.value, level.value, input.value);
 }
 </script>

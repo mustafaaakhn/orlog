@@ -19,6 +19,7 @@ import SceneLoaderState from "./ui/SceneLoaderState.vue";
 import MatchSetup from "./ui/MatchSetup.vue";
 import MatchResult from "./ui/MatchResult.vue";
 import MatchResources from "./ui/MatchResources.vue";
+import MobileFavorPanel from "./ui/MobileFavorPanel.vue";
 import { eventText } from "./presentation/eventText";
 import type {
   GameOptions,
@@ -509,6 +510,12 @@ function confirm() {
           class="match-actions"
           aria-label="Oyun kontrolleri"
         >
+          <MobileFavorPanel
+            :state="state" :viewer-id="viewerId" :names="names"
+            :blocked="busy || paused || !!overlay"
+            :can-choose="!busy && humanTurn && phase.name === 'favor' && phase.activePlayerId === viewerId"
+            @choose="choose" @skip="skip"
+          />
           <template v-if="!busy && humanTurn && phase.name === 'roll'">
             <button v-if="phase.step === 'awaiting-roll'" class="primary-action" @click="roll">
               Zar at <UiIcon name="arrow" />
@@ -518,8 +525,8 @@ function confirm() {
             </button>
           </template>
           <template v-if="!busy && humanTurn && phase.name === 'favor'">
-            <p class="favor-prompt">Bir tanrı seç veya devam et.</p>
-            <button class="primary-action" @click="skip">Devam et <UiIcon name="arrow" /></button>
+            <p class="favor-prompt desktop-favor-action">Bir tanrı seç veya devam et.</p>
+            <button class="primary-action desktop-favor-action" @click="skip">Devam et <UiIcon name="arrow" /></button>
           </template>
           <template v-if="resultAvailable">
             <button v-if="!resultOpen" class="secondary-action" @click="resultOpen = true">Sonucu göster</button>

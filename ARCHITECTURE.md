@@ -48,6 +48,21 @@ Sesler `src/audio/catalog.ts` üzerinden yerel dosyalardan yüklenir. İki müzi
 sırayla, ortam döngüyle oynar. Tarayıcı otomatik oynatmayı engellerse ilk
 etkileşim yeniden dener; gizli sekme sesi duraklatır.
 
+## Mobil güç paneli
+
+`MobileFavorPanel`, `App` içindeki mevcut sunum `state` ve `viewerId`
+değerlerinden beslenir; bedel, etki ve hedef doğrulaması mevcut `FavorPicker`
+ve core kataloğundan gelir. Yerel taslak aynı anda yalnız bir tanrıya aittir.
+Jeton yeterliliği UI'da tahmin edilmez. Onay/pas olayları `App` içindeki mevcut
+sıra, faz ve oturum kilitlerinden geçerek aynı komutlara dönüşür.
+
+Panel native modal `dialog` kullanır. Üst katman arkadaki DOM ve WebGL
+hedeflerini etkisiz bırakır, odağı panelde tutar; arka plan sunum kuyruğunu
+ayrı bir duraklatma/senkronizasyon yoluna taşımaz. Kapatma taslağı temizler
+ve açan düğmeye odak döndürür; oyun komutu göndermez. Koltuk/maç değişimi
+ve masaüstü genişliğine geçiş paneli kapatır. Kullanılabilir alan eşiği mobil
+kaynak göstergeleriyle aynıdır; telefon modeli veya tarayıcı kimliği okunmaz.
+
 ## Ağ ve çalıştırma
 
 Vite geliştirmede oyunla aynı HTTP sunucusuna Socket.IO ekler. Üretimde

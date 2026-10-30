@@ -36,7 +36,7 @@ koltuğu izler. Geniş masaüstü ve dikey tablet düzeninde bu ek satırlar giz
 Dikey mobilde alt kaynak satırı ve ana eylem aynı akıştadır; açıklama veya
 hata metni satırı yukarı iter. Kısa yatayda kaynaklar solda, tur/sıra sağ üstte,
 ana eylem sağ alttadır. Maç başlığı ve kontroller güvenli ekran kenarlarını
-(`safe-area-inset-*`) hesaba katar. Kamera ve güç menüsü bu düzen için değişmez.
+(`safe-area-inset-*`) hesaba katar. Kaynak düzeni kamerayı değiştirmez.
 HUD, fiziksel kaynaklarla aynı sunum durumunu okur; bekleyen olay grubunun
 nihai değerini erkenden göstermez. Mevcut ekran okuyucu bildirimi korunur,
 görsel kopyalar tekrar okutulmaz.
@@ -44,6 +44,21 @@ görsel kopyalar tekrar okutulmaz.
 Zarlar doğrudan masada seçilir; saklananlar merkez sırasına geçer. İki tarafın
 zarları hover/odakla incelenebilir. Tanrı önizlemesi geçicidir; güç seçimi
 bilinçli tıklama, dokunma veya klavye eylemiyle sabitlenir.
+
+Mobil maçta **Tanrı gücü** düğmesi alttan açılan bir panel sunar. Oyuncunun
+üç kuşanılmış tanrısı portre, öncelik, zamanlama ve üç seviyenin bedel/etki
+metniyle listelenir. Senin tanrıların / Rakibin tanrıları düğmeleriyle iki
+taraf incelenir. Sıra/faz ve sunum kilitleri yalnız güç kullanma eylemlerini
+sınırlar; sıra dışında kendi tanrıların da salt okunur gösterilir. Mevcut
+jeton sunum durumundan okunur; bedeli yüksek seviyeler engellenmez.
+
+Panelin başlığı, **Kapat** düğmesi ve sıra uygunsa **Güç kullanmadan devam et**
+eylemi sabit kalır; uzun liste ve hedef alanları iç bölümde kayar. Kapat,
+dış alana basıp bırakma ve Escape yalnız paneli kapatır, odağı açan düğmeye
+döndürür. İnceleme ve kapatma pas geçme veya güç seçme komutu üretmez.
+Seçim yalnız **Gücü onayla**, pas yalnız **Güç kullanmadan devam et** ile
+kesinleşir. Yerel iki kişide panel koltuk değişiminde kapanır. Masaüstünde
+mevcut levha menüsü ve Devam et eylemi korunur.
 
 Tek ana eylem görünür tutulur. Geniş masada eylem altta, kısa yatay ekranda
 sağdadır. Yardım/ayar/sonuç pencereleri kendi içlerinde kayar. Sonuç penceresi

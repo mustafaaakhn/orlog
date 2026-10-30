@@ -81,3 +81,8 @@ tsx ve sirv için önceki kaynak kaydı MIT lisansını belirtir. Referans
 [sansarc/orlog](https://github.com/sansarc/orlog) deposundan kod veya medya
 otomatik kopyalanmamıştır. Kullanılmayan eski fontların lisansları ilgili
 fontlarla birlikte yerel arşivde korunur.
+
+Mobil panelin DOM davranış testleri için [happy-dom](https://github.com/capricorn86/happy-dom)
+21.0.4 kullanılır; MIT, © 2019 David Ortner (capricorn86). Sürüm ve lisans
+kurulu paketin `package.json` ve `LICENSE` dosyalarından doğrulandı. Yalnız
+geliştirme bağımlılığıdır; yeni görsel, model veya ses eklenmedi.

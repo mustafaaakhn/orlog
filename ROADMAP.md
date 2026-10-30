@@ -75,19 +75,19 @@ okuyabilir. Göstergeler animasyonla tutarlıdır ve masaüstü düzeni korunur.
 
 Bağımlılık: Aşama 1. Maç içindeki üç kuşanılmış tanrıyı kapsar.
 
-- [ ] Mobilde açık bir “Tanrı gücü” düğmesinden alttan açılan seçim paneli
+- [x] Mobilde açık bir “Tanrı gücü” düğmesinden alttan açılan seçim paneli
   sun; üç tanrıyı okunaklı bir listede, seviyeleri ve etkileriyle göster.
-- [ ] Mevcut jetonu ve seviye bedellerini göster. Oyunun mevcut ödeme,
+- [x] Mevcut jetonu ve seviye bedellerini göster. Oyunun mevcut ödeme,
   öncelik ve hedef seçimi kurallarını koru; ileri aşamadaki jeton kazanımını
   yok sayan yeni bir seçim engeli ekleme.
-- [ ] “Kapat” düğmesi, dış alana dokunma ve Escape ile kapatmayı sağla;
+- [x] “Kapat” düğmesi, dış alana dokunma ve Escape ile kapatmayı sağla;
   odağı açan düğmeye döndür. Panel açıkken arkadaki zarlar seçilmesin.
-- [ ] Tanrıyı incelemek ve paneli kapatmak oyun komutu üretmesin; kapatmak
+- [x] Tanrıyı incelemek ve paneli kapatmak oyun komutu üretmesin; kapatmak
   pas geçme sayılmasın. Güç seçimi ve güç kullanmadan devam etme yalnız
   ilgili açık eylemle işlensin.
-- [ ] Rakibin tanrılarını ve kendi güçlerini sıra dışında salt okunur
+- [x] Rakibin tanrılarını ve kendi güçlerini sıra dışında salt okunur
   incelemeyi koru; kendi güç kullanma eylemini sıra/faz kilitlerine bağla.
-- [ ] Hedef isteyen güçler dahil panel kaydırma, aç/kapat ve seçim akışını
+- [x] Hedef isteyen güçler dahil panel kaydırma, aç/kapat ve seçim akışını
   doğrula; masaüstü davranışını kontrol et, zorunlu komutları çalıştır,
   belgeleri güncelle ve commit et.
 
@@ -178,8 +178,20 @@ durumunu izler. Kamera, güç seçimi ve oyun kuralları değiştirilmedi.
 - Ayrıntı ve ekran görüntüsü konumları: [Aşama 1 doğrulaması](docs/review/mobile-hud.md).
   Tarayıcı boyutu/güvenli alan benzetimi fiziksel cihaz testi değildir.
   iPhone/Safari, Android/Chrome ve gerçek dokunma kabulü Aşama 5'te açık kalır.
-- Sıradaki iş **Aşama 2**; ayrıca istenmeden başlanmaz. Mevcut örtüşen zar
-  hedefleri Aşama 4 kapsamında kalır.
+- Mevcut örtüşen zar hedefleri Aşama 4 kapsamında kalır.
+
+**Aşama 2 tamamlandı — 30 Ekim 2026.** Mobil güç paneli, mevcut üç tanrı,
+seviye/bedel/etki, hedef seçimi ve salt okunur iki taraf incelemesini sunar.
+Kapatma ve inceleme komut üretmez; mevcut ödeme/öncelik kuralları korunur.
+
+- Node 24.22.1 ile `npm run check` geçti; `npm run test:ci`: 33 dosya,
+  439 test başarılı. Aşama 1 HUD'u ile birleşik sürüm doğrulandı.
+- Chromium 143: 360×800, 390×844, 844×390 ve 1440×900 üzerinde gerçek
+  3B masa, panel kaydırma, kapatma, odak dönüşü, hedef seçimi ve masaüstü
+  menüsü kontrol edildi. Ayrıntılar: [Aşama 2 doğrulaması](docs/review/mobile-favor-panel.md).
+- Tarayıcı boyutu benzetimi fiziksel dokunma testi değildir; iPhone/Safari
+  ve Android/Chrome kabulü Aşama 5'te açık kalır.
+- Sıradaki iş **Aşama 3**; ayrıca istenmeden başlanmaz.
 
 ## Bu planın dışında
 

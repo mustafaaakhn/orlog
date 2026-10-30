@@ -281,3 +281,12 @@ yerini alır. İki oyuncu bağlıyken ve son sunum tamamlanınca iki koltuktan b
 Yeni oyun isteyebilir. Aynı oda, adlar ve oturumlar korunur; eşzamanlı istek
 tek tanrı hazırlığı açar. İki hazır onayı gelmeden yeni maç oluşturulmaz.
 Ana menüye dön ayrı bir odadan ayrılma eylemidir.
+
+## 30 Ekim — Mobil güç seçimi
+
+Mobil maçtaki Tanrı gücü paneli aynı üç kuşanılmış gücü ve aynı core hedef
+doğrulamasını kullanır. Mevcut jeton gösterilir; bedeli yüksek seviyeler de
+seçilebilir. Gücü onayla mevcut güç komutunu, Güç kullanmadan devam et mevcut
+pas komutunu gönderir. İnceleme ve paneli kapatma komut üretmez. Bu arayüz
+uyarlaması ödeme/öncelik, hedef, jeton kazanımı veya başarısızlık kurallarını
+değiştirmez; gerçek yeterlilik yalnız gücün çalışma sırasında denetlenir.
