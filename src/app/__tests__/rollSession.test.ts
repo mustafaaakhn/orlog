@@ -386,3 +386,52 @@ describe('grouped favor damage session contacts', () => {
     expect(session.advanceRound()).toBe(true)
   })
 })
+
+describe('grouped god payment session contact', () => {
+  it('deducts a real ten-token payment once and rejects old or duplicated contacts', () => {
+    const session = createRollSession({ random: () => .6 })
+    for (let round = 0; round < 3; round++) {
+      const batch = resolveSession(session)
+      session.settle(batch.id)
+      expect(session.advanceRound()).toBe(true)
+      settle(session)
+    }
+    while (session.state.value.phase.name === 'roll') {
+      const phase = session.state.value.phase
+      session.dispatch({ type: phase.step === 'awaiting-roll' ? 'RollDice' : 'ConfirmRoll', playerId: phase.activePlayerId })
+      settle(session)
+    }
+    while (session.state.value.phase.name === 'favor') {
+      const phase = session.state.value.phase
+      expect(session.dispatch({ type: 'ChooseFavor', playerId: phase.activePlayerId, favorId: 'iduns-rejuvenation', level: 3 })).toBe(true)
+      settle(session)
+    }
+    expect(session.resolveReady()).toBe(true)
+    const batch = session.pending.value!, payments = batch.events.filter(e => e.type === 'FavorInvoked')
+    expect(payments).toHaveLength(2)
+    const paid = payments[0]!
+    if (paid.type !== 'FavorInvoked') throw new Error('Expected payment')
+    for (const event of batch.events) {
+      if (event === paid) break
+      session.present(batch.id, event)
+    }
+    const before = session.state.value
+    expect(paid.cost).toBe(10)
+    expect(before.players[paid.playerId].tokens).toBe(paid.tokens + 10)
+    session.progress(batch.id + 1, paid, 1)
+    session.progress(batch.id, { ...paid }, 1)
+    session.progress(batch.id, paid, 2)
+    expect(session.state.value).toBe(before)
+    session.progress(batch.id, paid, 1)
+    expect(session.state.value.players[paid.playerId].tokens).toBe(paid.tokens)
+    const after = session.state.value
+    session.progress(batch.id, paid, 1)
+    expect(session.state.value).toBe(after)
+    session.present(batch.id, paid)
+    session.present(batch.id, paid)
+    expect(session.history.value.filter(e => e.id === paid.id)).toHaveLength(1)
+    session.recover()
+    session.progress(batch.id, paid, 1)
+    expect(session.state.value).toBe(batch.state)
+  })
+})

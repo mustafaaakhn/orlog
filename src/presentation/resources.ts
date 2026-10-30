@@ -4,7 +4,7 @@ export function resourceSteps(event: GameEvent): number {
   if (event.type === 'TokensGained') return event.dieIds.length > 0 ? 1 : 0
   if (event.type === 'TokensStolen') return event.amount > 0 ? 1 : 0
   if (event.type === 'DamageDealt' && event.favorId) return event.amount > 0 ? 1 : 0
-  if (event.type === 'FavorInvoked') return event.cost
+  if (event.type === 'FavorInvoked') return event.cost > 0 ? 1 : 0
   if (['DamageDealt', 'HealthRestored', 'HealthSacrificed', 'TokensGranted', 'TokensDestroyed'].includes(event.type))
     return 'amount' in event ? event.amount : 0
   return 0
@@ -22,9 +22,9 @@ export function applyResourceProgress(state: GameState, event: GameEvent, step: 
     case 'HealthRestored': return applyResourceEvent(state, { ...event, health: event.health - remaining })
     case 'TokensGained':
     case 'TokensGranted': return applyResourceEvent(state, { ...event, tokens: event.tokens - remaining })
-    case 'TokensDestroyed':
-    case 'FavorInvoked': return applyResourceEvent(state, { ...event, tokens: event.tokens + remaining })
-    case 'TokensStolen': return applyResourceEvent(state, event)
+    case 'TokensDestroyed': return applyResourceEvent(state, { ...event, tokens: event.tokens + remaining })
+    case 'TokensStolen':
+    case 'FavorInvoked': return applyResourceEvent(state, event)
     default: return state
   }
 }

@@ -119,6 +119,44 @@ export function createCombatPresenter(
       })
     } finally { board.steal.clear() }
   }
+  async function payGold(event: Extract<GameEvent, { type: 'FavorInvoked' }>) {
+    if (closed || event.cost <= 0) return
+    const effect = board.steal.object
+    // The final balance is the first slot of the actual plates being paid.
+    const points = board.steal.prepare(event.playerId, event.tokens, event.cost)
+    const pickup = points.reduce((sum, point) => sum.add(point), new Vector3()).multiplyScalar(1 / points.length)
+    const offsets = points.map(point => point.clone().sub(pickup))
+    const scale = board.tokenScale(event.playerId)
+    const destination = source(event)
+    effect.position.copy(pickup)
+    board.steal.cargo(offsets, scale)
+    try {
+      await animate(t => {
+        wait(t, 0.16)
+        if (reduced()) wait(t, 0.08)
+        else {
+          t.call(() => {
+            if (closed || paused) return
+            // Permanent instances yield ownership to the single moving group.
+            board.steal.lift()
+            effect.visible = true
+          })
+          const travel = { value: 0 }
+          t.to(travel, { value: 1, duration: 0.46, ease: 'power2.inOut', onUpdate: () => {
+            effect.position.copy(pickup).lerp(destination, travel.value)
+            effect.position.y += Math.sin(Math.PI * travel.value) * 0.9
+            board.steal.cargo(offsets.map(point => point.clone().multiplyScalar(1 - 0.7 * travel.value)), scale * (1 - 0.35 * travel.value))
+          } })
+        }
+        t.call(() => {
+          if (closed || paused) return
+          effect.visible = false
+          contact(event, 1)
+        })
+        wait(t, 0.08)
+      })
+    } finally { board.steal.clear() }
+  }
   async function gainGold(event: Extract<GameEvent, { type: 'TokensGained' }>) {
     const count = event.dieIds.length;
     if (closed || count === 0) return;
@@ -279,25 +317,27 @@ export function createCombatPresenter(
           await stealGold(event)
         } else if (event.type === 'TokensGained') {
           await gainGold(event)
-        } else if (event.type === 'TokensGranted' || event.type === 'TokensDestroyed' || event.type === 'FavorInvoked') {
-          const count = resourceSteps(event)
-          for (let step = 1; step <= count && !closed; step++) {
-            const outgoing = event.type === 'TokensDestroyed' || event.type === 'FavorInvoked'
-            const tokenOwner = event.type === 'TokensDestroyed' ? event.targetId : event.playerId
-            const tokenIndex = outgoing ? event.tokens + count - step : event.tokens - count + step - 1
-            const pile = board.tokenPosition(tokenOwner, tokenIndex)
-            const from = outgoing ? pile : source(event)
-            const to = outgoing ? source(event) : pile
-            feedback.cue?.({ text, progress: `${step} / ${count}` })
-            await flight(from, to, { token: true, contact: () => contact(event, step) })
-          }
-          if (event.type === 'FavorInvoked' && !closed) {
+        } else if (event.type === 'FavorInvoked') {
+          await payGold(event)
+          if (!closed) {
             const totem = board.totem(event.playerId, event.favorId)
             const y = totem.position.y
             await animate(t => {
               if (reduced()) wait(t, 0.12)
               else { t.to(totem.position, { y: y + 0.45, duration: 0.18 }); t.to(totem.position, { y, duration: 0.18 }) }
             })
+          }
+        } else if (event.type === 'TokensGranted' || event.type === 'TokensDestroyed') {
+          const count = resourceSteps(event)
+          for (let step = 1; step <= count && !closed; step++) {
+            const outgoing = event.type === 'TokensDestroyed'
+            const tokenOwner = outgoing ? event.targetId : event.playerId
+            const tokenIndex = outgoing ? event.tokens + count - step : event.tokens - count + step - 1
+            const pile = board.tokenPosition(tokenOwner, tokenIndex)
+            const from = outgoing ? pile : source(event)
+            const to = outgoing ? source(event) : pile
+            feedback.cue?.({ text, progress: `${step} / ${count}` })
+            await flight(from, to, { token: true, contact: () => contact(event, step) })
           }
         } else if (event.type === 'HelmetsRemoved' || event.type === 'DiceRemoved') {
           for (const id of event.dieIds) {
