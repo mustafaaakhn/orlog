@@ -202,7 +202,7 @@ onBeforeUnmount(() => {
   height: auto;
   padding: 20px 30px;
   transform: translate(-50%, -50%);
-  border: 1px solid #d3b176;
+  border: 0;
   border-radius: 4px;
   background: #302016;
   color: #fff1ce;
@@ -213,8 +213,7 @@ onBeforeUnmount(() => {
   text-transform: none;
   transition: background-color 180ms ease-out, color 180ms ease-out;
 }
-.intro-start::before,
-.intro-start::after { content: none; }
+.intro-start > * { position: relative; z-index: 1; }
 .intro-start:hover { background: #4b3220; color: #fff8e8; }
 .intro-start:active { background: #21160f; }
 .intro-start:focus-visible { outline: 2px solid #fff1ce; outline-offset: 6px; }

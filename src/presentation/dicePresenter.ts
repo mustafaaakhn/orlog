@@ -235,6 +235,8 @@ export function createDicePresenter(
           });
           stopRoll?.();
           stopRoll = undefined;
+
+          if (disposed) return;
           // The offline world has already been freed. Hand recorded transforms
           // to the kinematic presenter only after playback completes.
           rolledDice.forEach((value, i) => {

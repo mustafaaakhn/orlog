@@ -8,6 +8,7 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
   const sounds = new Map<SoundId, Howl>()
   const voices: { howl: Howl; id: number }[] = []
   const failures = new Set<SoundId>()
+  const autoplayBlocked = new Set<SoundId>()
   function report(id: SoundId, failed: boolean) { if (failed) failures.add(id); else failures.delete(id); onError(failures.size > 0) }
   let settings: AudioSettings = { muted: false, music: .35, effects: .65 }
   let unlocked = false, hidden = false, disposed = false
@@ -21,7 +22,7 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
       if (disposed || hidden || settings.muted || !settings.music || (id !== 'ambience' && id !== MUSIC_PLAYLIST[musicIndex])) {
         if (sound.playing()) sound.pause()
       }
-      else if (!sound.playing()) sound.play()
+      else if (!autoplayBlocked.has(id) && !sound.playing()) sound.play()
     }
   }
   function stopEffects() {
@@ -42,6 +43,7 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
   return {
     unlock() {
       if (disposed || hidden) return
+      autoplayBlocked.clear()
       if (!unlocked) {
         unlocked = true
         for (const id of Object.keys(SOUND_CATALOG) as SoundId[]) {
@@ -51,7 +53,13 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
             loop: id === 'ambience', volume: background(id) ? settings.music * (id === 'ambience' ? .45 : .7) : settings.effects,
             onload: () => { report(id, false); loops() },
             onloaderror: () => report(id, true),
-            onplayerror: () => report(id, true),
+            onplayerror: () => {
+              // Autoplay policy is expected on a fresh visit. The first gesture
+              // retries the current track; it is not a broken audio file.
+              if (background(id)) autoplayBlocked.add(id)
+              else report(id, true)
+            },
+            onunlock: () => { autoplayBlocked.delete(id); loops() },
             onplay: () => report(id, false),
             onend: (voice) => {
               const index = voices.findIndex(v => v.howl === sound && v.id === voice)

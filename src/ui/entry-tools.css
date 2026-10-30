@@ -1,6 +1,7 @@
 .masthead .header-tools.entry-tools { gap: 8px; }
 .masthead .entry-tool { color: inherit; min-height: 44px; width: 44px; }
 .masthead .entry-tool svg { width: 22px; height: 22px; }
+.at-welcome .masthead .entry-tool:hover:enabled { color: #fff8e8; background: #f5ebd80d; }
 .language-picker {
   position: fixed;
   inset: 76px clamp(16px, 3.3vw, 64px) auto auto;
@@ -48,4 +49,43 @@
 @media (max-width: 360px) {
   .in-match .masthead .wordmark { font-size: 18px; letter-spacing: .08em; gap: 4px; }
   .in-match .masthead .wordmark svg { width: 18px; }
+}
+
+.about-panel {
+  position: fixed;
+  inset: 76px clamp(16px, 3.3vw, 64px) auto auto;
+  width: 360px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 100px);
+  overflow-y: auto;
+  margin: 0;
+  padding: 22px;
+  border: 1px solid var(--field-border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text);
+  text-shadow: none;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.about-panel h2 { margin: 0 0 14px; font: 400 19px/1.4 var(--display); }
+.about-panel p { margin: 0; }
+.about-panel .about-contact { margin-top: 18px; }
+.about-contact > span { display: block; margin-bottom: 3px; }
+.about-panel a { color: inherit; font-weight: 600; font-synthesis: weight; text-decoration: underline; text-underline-offset: 4px; overflow-wrap: anywhere; }
+.about-panel a:hover { color: var(--gold); }
+@media (min-width: 1024px) {
+  :is(.at-welcome, .at-mode) .about-panel { background: #211e16; color: #f5ebd8; border-color: #d3b17699; }
+  :is(.at-welcome, .at-mode) .about-panel a:hover { color: #d3b176; }
+}
+@media (max-width: 600px) {
+  .at-welcome .masthead .wordmark { font-size: 28px; gap: 7px; }
+  .at-welcome .masthead .wordmark svg { width: 29px; height: 32px; }
+}
+@media (max-width: 360px) {
+  .about-panel a { font-size: 13px; }
+  .masthead .header-tools.entry-tools { gap: 0; }
+  .masthead .entry-tool { width: 40px; }
+  .at-welcome .masthead .wordmark { font-size: 24px; gap: 5px; letter-spacing: .08em; }
+  .at-welcome .masthead .wordmark svg { width: 25px; height: 28px; }
 }

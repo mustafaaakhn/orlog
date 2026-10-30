@@ -1,15 +1,22 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" color="#d3b176">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
   <defs>
-    <g id="orlog-die" stroke="currentColor" stroke-linejoin="round">
-      <path d="M24 4 42 14.5 24 25 6 14.5Z" fill="currentColor" fill-opacity=".16" stroke="none"/>
-      <path d="m6 14.5 18 10.5v19L6 33.5Z" fill="currentColor" fill-opacity=".08" stroke="none"/>
-      <path d="M24 4 42 14.5v19L24 44 6 33.5v-19Z M6 14.5 24 25l18-10.5M24 25v19" fill="none" stroke-width="2.3"/>
-      <g fill="currentColor" stroke="none">
-        <path d="m14 14 3-1.75L20 14l-3 1.75Zm7 0 3-1.75L27 14l-3 1.75Zm7 0 3-1.75L34 14l-3 1.75Z"/>
-        <path d="m11 21 4 2.3v4.6l-4-2.3Zm6 10 4 2.3v4.6l-4-2.3Zm13-3 5-2.9v5.8L30 34Z"/>
+    <g id="orlog-die" stroke="#b89152" stroke-linejoin="round">
+      <path d="M24 3 44 14 24 25 4 14Z" fill="#f3e4c5"/>
+      <path d="M4 14 24 25v21L4 35Z" fill="#cdb994"/>
+      <path d="m24 25 20-11v21L24 46Z" fill="#e4cfaa"/>
+      <path d="M24 3 44 14v21L24 46 4 35V14ZM4 14l20 11 20-11M24 25v21" fill="none" stroke-width="1.8"/>
+      <path d="m24 7 13 7-13 7-13-7Z" fill="none" stroke-width="1.2"/>
+      <g fill="none" stroke="#493722" stroke-width="2" stroke-linecap="round">
+        <path d="m18 14 12 0m-4-3 5 3-5 3"/>
+        <g transform="matrix(.8 .44 0 1 5 17)">
+          <path d="M10 4v17"/>
+          <path d="M10 5 3 3v10l7-3Z" fill="#493722" stroke="none"/>
+        </g>
+        <path d="m29 28 10-5v7c0 4-5 9-5 9s-5 0-5-4Z" fill="#493722" stroke="none"/>
+        <path d="m34 27v7" stroke="#e4cfaa" stroke-width="1.5"/>
       </g>
     </g>
   </defs>
-  <rect width="48" height="48" rx="10" fill="#17221c"/>
+  <rect width="48" height="48" rx="9" fill="#17221c"/>
   <use href="#orlog-die"/>
 </svg>

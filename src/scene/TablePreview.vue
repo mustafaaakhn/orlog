@@ -31,6 +31,7 @@ const props = defineProps<{
   audio: AudioPort;
   reduced: boolean;
   paused: boolean;
+  background: boolean;
   quality: string;
   speed: number;
 
@@ -216,6 +217,7 @@ onErrorCaptured(() => {
         :audio="audio"
         :reduced="reduced"
         :paused="paused"
+        :background="background"
         :quality="quality"
         :speed="speed"
         :highlighted-favor="highlightedFavor"

@@ -50,7 +50,7 @@ describe('owned audio lifecycle', () => {
     expect(track.pause).toHaveBeenCalledTimes(1)
     player.dispose()
   })
-  it('creates audio only after interaction, starts each loaded loop once, and caps contact polyphony', () => {
+  it('creates audio on request, starts each loaded loop once, and caps contact polyphony', () => {
     const player = createAudioPlayer()
     player.impact(0, 1)
     expect(mocks.sounds).toHaveLength(0)
@@ -65,6 +65,21 @@ describe('owned audio lifecycle', () => {
     expect(mocks.sounds.every(s => s.unload.mock.calls.length === 1)).toBe(true)
     player.unlock()
     expect(mocks.sounds).toHaveLength(18)
+  })
+  it('retries policy-blocked welcome music on the first gesture without reporting a file failure', () => {
+    const failed = vi.fn(), player = createAudioPlayer(failed)
+    player.unlock() // Initial page-load attempt, before the intro is started.
+    const track = mocks.sounds.find(s => s.options.src[0].endsWith('background-1.opus'))
+    track.active = false
+    track.options.onplayerror()
+    expect(failed).not.toHaveBeenCalledWith(true)
+    mocks.sounds.forEach(sound => sound.options.onload())
+    expect(track.play).toHaveBeenCalledTimes(1)
+    player.unlock() // Any pointer/key gesture on the welcome screen.
+    expect(track.play).toHaveBeenCalledTimes(2)
+    track.options.onplay()
+    expect(failed).toHaveBeenLastCalledWith(false)
+    player.dispose()
   })
   it('applies separate levels, silence and visibility without queuing late contacts', () => {
     const player = createAudioPlayer()

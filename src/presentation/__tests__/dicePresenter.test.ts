@@ -332,3 +332,22 @@ it.each(['finish', 'pause', 'dispose', 'reduced'] as const)('owns the roll bed t
     expect(stop).toHaveBeenCalledTimes(mode === 'reduced' ? 0 : 1)
   } finally { presenter.dispose() }
 })
+
+it("leaves the current board under snapshot ownership when a cancelled recording arrives late", async () => {
+  const game = new Game({ random: createSeededRandom(71) });
+  const dice = pieces(game.state);
+  const rolled = batch(game.dispatch({ type: "RollDice", playerId: "player-1" }));
+  let release!: (value: Awaited<ReturnType<typeof recordRoll>>) => void;
+  const presenter = createDicePresenter(dice, () => {}, {
+    record: () => new Promise(resolve => { release = resolve; }),
+  });
+  const pending = presenter.play(rolled);
+  presenter.dispose();
+  for (const die of dice.values()) die.position.set(7, 1, 4);
+  const recording = await recordRoll(
+    rolled.events.flatMap(event => event.type === "DiceRolled" ? event.dice : []), 71,
+  );
+  release(recording);
+  await pending;
+  expect([...dice.values()].every(die => die.position.equals(new Vector3(7, 1, 4)))).toBe(true);
+});
