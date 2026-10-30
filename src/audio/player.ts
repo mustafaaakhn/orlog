@@ -1,5 +1,5 @@
 import { Howl, Howler } from 'howler'
-import { SOUND_CATALOG, soundForEvent } from './catalog'
+import { MUSIC_PLAYLIST, SOUND_CATALOG, soundForEvent } from './catalog'
 import type { AudioPort, AudioSettings, SoundId } from './catalog'
 
 // Each application owns its Howls; never unload another application's global pool.
@@ -10,12 +10,15 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
   function report(id: SoundId, failed: boolean) { if (failed) failures.add(id); else failures.delete(id); onError(failures.size > 0) }
   let settings: AudioSettings = { muted: false, music: .35, effects: .65 }
   let unlocked = false, hidden = false, disposed = false
-  const background = (id: SoundId) => id === 'music' || id === 'ambience'
+  let musicIndex = 0
+  const background = (id: SoundId) => id === 'music-1' || id === 'music-2' || id === 'ambience'
   function loops() {
-    for (const id of ['music', 'ambience'] as const) {
+    for (const id of [...MUSIC_PLAYLIST, 'ambience'] as const) {
       const sound = sounds.get(id)
       if (!sound || sound.state() !== 'loaded') continue
-      if (hidden || settings.muted || !settings.music) sound.pause()
+      if (disposed || hidden || settings.muted || !settings.music || (id !== 'ambience' && id !== MUSIC_PLAYLIST[musicIndex])) {
+        if (sound.playing()) sound.pause()
+      }
       else if (!sound.playing()) sound.play()
     }
   }
@@ -39,13 +42,21 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
         unlocked = true
         for (const id of Object.keys(SOUND_CATALOG) as SoundId[]) {
           const sound = new Howl({
-            src: [`${import.meta.env.BASE_URL}assets/audio/${SOUND_CATALOG[id]}.wav`],
-            loop: background(id), volume: background(id) ? settings.music * (id === 'ambience' ? .45 : .7) : settings.effects,
+            src: [`${import.meta.env.BASE_URL}assets/audio/${SOUND_CATALOG[id]}`],
+            html5: id === 'music-1' || id === 'music-2',
+            loop: id === 'ambience', volume: background(id) ? settings.music * (id === 'ambience' ? .45 : .7) : settings.effects,
             onload: () => { report(id, false); loops() },
             onloaderror: () => report(id, true),
             onplayerror: () => report(id, true),
             onplay: () => report(id, false),
-            onend: (voice) => { const index = voices.findIndex(v => v.howl === sound && v.id === voice); if (index >= 0) voices.splice(index, 1) },
+            onend: (voice) => {
+              const index = voices.findIndex(v => v.howl === sound && v.id === voice)
+              if (index >= 0) voices.splice(index, 1)
+              if (!disposed && id === MUSIC_PLAYLIST[musicIndex]) {
+                musicIndex = (musicIndex + 1) % MUSIC_PLAYLIST.length
+                loops()
+              }
+            },
           })
           sounds.set(id, sound)
         }
