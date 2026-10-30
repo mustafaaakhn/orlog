@@ -8,11 +8,8 @@ defineEmits<{ retry: [] }>();
     <div class="settings-grid">
       <fieldset>
         <legend>Ses</legend>
-        <label class="setting-row"
-          ><input v-model="settings.muted" type="checkbox" /> Sessize al</label
-        >
         <div class="setting-row">
-          <label for="music-volume">Müzik ve ortam</label>
+          <label for="music-volume">Müzik seviyesi</label>
           <output for="music-volume"
             >{{ Math.round(settings.music * 100) }}%</output
           ><input
@@ -25,7 +22,7 @@ defineEmits<{ retry: [] }>();
           />
         </div>
         <div class="setting-row">
-          <label for="effects-volume">Efektler</label>
+          <label for="effects-volume">Ses efekti seviyesi</label>
           <output for="effects-volume"
             >{{ Math.round(settings.effects * 100) }}%</output
           ><input
@@ -43,34 +40,6 @@ defineEmits<{ retry: [] }>();
           <button class="restart-action" @click="$emit('retry')">
             Sesi yeniden dene
           </button>
-        </p>
-      </fieldset>
-      <fieldset>
-        <legend>Hareket ve görüntü</legend>
-        <div class="setting-row">
-          <label for="motion-preference">Hareket</label>
-          <select id="motion-preference" v-model="settings.motion">
-            <option value="system">Sistem tercihi</option>
-            <option value="reduce">Hareketi azalt</option>
-            <option value="full">Tam hareket</option>
-          </select>
-        </div>
-        <label class="setting-row"
-          ><input v-model="settings.fast" type="checkbox" /> Animasyonları
-          hızlandır (4×)</label
-        >
-        <div class="setting-row">
-          <label for="quality-preference">Görüntü kalitesi</label>
-          <select id="quality-preference" v-model="settings.quality">
-            <option value="auto">Dengeli (önerilen)</option>
-            <option value="low">Ekonomik</option>
-            <option value="high">Yüksek</option>
-          </select>
-        </div>
-        <p>
-          Hareket azaltma, zarları ve olayları doğrudan son konumlarında
-          gösterir. Olay dökümünü Tur olayları düğmesinden açabilirsin.
-          Tercihler bu tarayıcıda saklanır.
         </p>
       </fieldset>
     </div>

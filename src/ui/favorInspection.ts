@@ -1,3 +1,4 @@
+import type { PlayerId } from '../core'
 import type { SceneFavorTarget } from '../scene/dieTargets'
 
 export interface FavorInspection {
@@ -5,7 +6,8 @@ export interface FavorInspection {
   pinned: boolean
 }
 
-export function inspectFavor(state: FavorInspection, target: SceneFavorTarget, activate: boolean): FavorInspection {
+export function inspectFavor(state: FavorInspection, target: SceneFavorTarget, activate: boolean, activePlayer: PlayerId | null): FavorInspection {
+  activate = activate && target.playerId === activePlayer
   if (state.pinned && !activate) return state
   return { target, pinned: activate }
 }

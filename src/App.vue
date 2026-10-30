@@ -39,9 +39,8 @@ const TablePreview = defineAsyncComponent({
 const preparing = ref(true);
 const setupScreen = ref("welcome");
 const introActive = ref(false);
-const entryTools = computed(() => preparing.value && (setupScreen.value === "welcome" || setupScreen.value === "mode"));
 const languagePicker = ref<HTMLElement | null>(null);
-const overlay = ref<"rules" | "settings" | "log" | "menu" | null>(null);
+const overlay = ref<"rules" | "settings" | "menu" | null>(null);
 watch([introActive, setupScreen, overlay], () => {
   if (languagePicker.value?.matches(":popover-open")) languagePicker.value.hidePopover();
 });
@@ -125,13 +124,7 @@ function restart() {
 }
 const sceneReady = ref(false);
 const session = createRollSession();
-const { state, pending, error, lastEvent, history } = session;
-const combatLog = computed(() =>
-  history.value
-    .map((event) => ({ id: event.id, text: eventText(event) }))
-    .filter((event) => event.text)
-    .slice(reduced.value ? -120 : -16),
-);
+const { state, pending, error, lastEvent } = session;
 const phase = computed(() => state.value.phase);
 const activePlayer = computed(() =>
   phase.value.name === "roll" || phase.value.name === "favor"
@@ -299,37 +292,24 @@ function confirm() {
         ><GameMark />ORLOG</a
       >
       <span class="edition">Kuzeyin zar oyunu</span>
-      <nav class="header-tools" :class="{ 'entry-tools': entryTools }" aria-label="Yardımcı alanlar">
-        <template v-if="entryTools">
-          <button class="icon-button entry-tool" aria-label="Oyun rehberi" title="Oyun rehberi" @click="overlay = 'rules'">
-            <UiIcon name="book" />
+      <nav class="header-tools entry-tools" aria-label="Yardımcı alanlar">
+        <button class="icon-button entry-tool" aria-label="Dil seçimi" title="Dil seçimi" popovertarget="language-picker">
+          <UiIcon name="translate" />
+        </button>
+        <button class="icon-button entry-tool" aria-label="Ayarlar" title="Ayarlar" @click="overlay = 'settings'">
+          <UiIcon name="settings" />
+        </button>
+        <button class="icon-button entry-tool" aria-label="Oyun rehberi" title="Oyun rehberi" @click="overlay = 'rules'">
+          <UiIcon name="book" />
+        </button>
+        <div id="language-picker" ref="languagePicker" class="language-picker" popover>
+          <h2>Dil seçimi</h2>
+          <button class="language-option" aria-pressed="true" lang="tr" popovertarget="language-picker" popovertargetaction="hide">
+            Türkçe <UiIcon name="check" />
           </button>
-          <button class="icon-button entry-tool" aria-label="Dil seçimi" title="Dil seçimi" popovertarget="language-picker">
-            <UiIcon name="translate" />
-          </button>
-          <div id="language-picker" ref="languagePicker" class="language-picker" popover>
-            <h2>Dil seçimi</h2>
-            <button class="language-option" aria-pressed="true" lang="tr" popovertarget="language-picker" popovertargetaction="hide">
-              Türkçe <UiIcon name="check" />
-            </button>
-          </div>
-        </template>
-        <button v-if="!preparing" class="text-button" @click="overlay = 'log'">
-          <UiIcon name="log" /><span>Tur olayları</span>
-        </button>
-        <button v-if="!entryTools" class="text-button" @click="overlay = 'rules'">
-          <UiIcon name="book" /><span>Oyun rehberi</span>
-        </button>
-        <button v-if="!entryTools" class="text-button" @click="overlay = 'settings'">
-          <UiIcon name="settings" /><span>Ayarlar</span>
-        </button>
-        <button
-          v-if="!preparing"
-          class="icon-button"
-          aria-label="Oyun menüsü"
-          @click="overlay = 'menu'"
-        >
-          <UiIcon name="menu" />
+        </div>
+        <button v-if="!preparing" class="icon-button entry-tool" aria-label="Oyundan çık" title="Oyundan çık" @click="overlay = 'menu'">
+          <UiIcon name="exit" />
         </button>
       </nav>
     </header>
@@ -427,10 +407,8 @@ function confirm() {
             overlay === "rules"
               ? "Masaya ilk kez mi oturuyorsun?"
               : overlay === "settings"
-                ? "Ses ve görünüm"
-                : overlay === "log"
-                  ? `Tur ${state.round} · Olaylar`
-                  : "Oyuna ara ver"
+                ? "Ses ayarları"
+                : "Oyundan çık"
           }}
         </h2>
         <button
@@ -485,15 +463,6 @@ function confirm() {
         :audio-failed="audioFailed"
         @retry="audio.unlock()"
       />
-      <div v-if="overlay === 'log'" class="combat-log">
-        <ol v-if="combatLog.length">
-          <li v-for="event in combatLog" :key="event.id">{{ event.text }}</li>
-        </ol>
-        <p v-else>
-          Henüz bir savaş yaşanmadı. İlk tur tamamlandığında olaylar burada
-          görünecek.
-        </p>
-      </div>
       <div v-if="overlay === 'menu'" class="game-menu">
         <p>
           Tur {{ state.round }} ·

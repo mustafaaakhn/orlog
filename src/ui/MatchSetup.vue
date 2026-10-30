@@ -3,7 +3,6 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import WelcomeIntro from "./WelcomeIntro.vue";
 import FavorPortrait from "./FavorPortrait.vue";
 import UiIcon from "./UiIcon.vue";
-import SymbolIcon from "./SymbolIcon.vue";
 import TokenIcon from "./TokenIcon.vue";
 import GameMark from "./GameMark.vue";
 import { favorSummary } from "./favorSummary";
@@ -68,6 +67,8 @@ const loadouts = ref<Record<PlayerId, FavorId[]>>({
   "player-2": [...DEFAULT_FAVORS],
 });
 const editingPlayer = ref<PlayerId>("player-1");
+const selectionError = ref("");
+watch(editingPlayer, () => { selectionError.value = ""; });
 const browsing = ref<FavorId>(FAVOR_ART_IDS[0]!);
 const firstPlayer = ref<PlayerId | null>(null);
 const roomCode = ref("");
@@ -89,6 +90,13 @@ const roomStatus = computed(() => isHost.value
   ? guestPresent.value ? "Arkadaşın geldi. Masanız hazır." : "Arkadaşın bekleniyor…"
   : roomJoined.value ? "Odaya katıldın. Oda sahibinin başlatması bekleniyor." : "Arkadaşının paylaştığı 6 karakterli kodu gir.");
 const local = computed(() => selectedMode.value !== "computer");
+watch(local, (isLocal) => {
+  if (!isLocal) {
+    editingPlayer.value = "player-1";
+    loadouts.value["player-2"] = [...DEFAULT_FAVORS];
+    selectionError.value = "";
+  }
+});
 const currentLoadout = computed(() => loadouts.value[editingPlayer.value]);
 const valid = computed(() =>
   PLAYER_IDS.every(
@@ -174,10 +182,13 @@ async function copyCode() {
   }
 }
 function toggleFavor(id: FavorId) {
+  if (!local.value && editingPlayer.value !== "player-1") return;
+  selectionError.value = "";
   browsing.value = id;
   const index = currentLoadout.value.indexOf(id);
   if (index >= 0) currentLoadout.value.splice(index, 1);
   else if (currentLoadout.value.length < 3) currentLoadout.value.push(id);
+  else selectionError.value = "En fazla 3 tanrı seçebilirsin. Yeni bir tanrı seçmek için önce seçili bir tanrıyı kaldır.";
 }
 function continueGods() {
   if (!canContinueGods.value) return;
@@ -357,6 +368,8 @@ function start() {
             v-for="id in PLAYER_IDS"
             :key="id"
             :aria-pressed="editingPlayer === id"
+            :disabled="!local && id === 'player-2'"
+            :title="!local && id === 'player-2' ? 'Bilgisayarın tanrıları sabittir.' : undefined"
             @click="editingPlayer = id"
           >
             {{ playerName(id) }} <span>{{ loadouts[id].length }}/3</span>
@@ -364,92 +377,97 @@ function start() {
         </div>
       </div>
       <div class="gods-layout">
-        <div class="god-gallery" role="group" aria-label="20 tanrı kataloğu">
-          <button
-            v-for="id in FAVOR_ART_IDS"
-            :key="id"
-            class="god-tile"
-            :class="{ browsing: browsing === id }"
-            :aria-pressed="currentLoadout.includes(id)"
-            :aria-label="`${shortName(id)}, ${favorSummary(id).label}${currentLoadout.includes(id) ? ', kuşanıldı; kaldır' : currentLoadout.length === 3 ? ', gücü incele' : ', kuşan'}`"
-            @click="toggleFavor(id)"
+        <section class="god-description" aria-live="polite">
+          <div class="description-heading"><FavorPortrait :id="browsing" /><div><h2>{{ shortName(browsing) }}</h2><p class="god-effect-summary" :data-tone="favorSummary(browsing).tone"><UiIcon :name="favorSummary(browsing).icon" />{{ favorSummary(browsing).label }}</p></div></div>
+          <p class="favor-timing">
+            {{
+              FAVOR_CATALOG[browsing].timing === "before-resolution"
+                ? "Savaş öncesi"
+                : "Savaş sonrası"
+            }}
+            · Öncelik {{ FAVOR_CATALOG[browsing].priority }}
+          </p>
+          <dl>
+            <div v-for="tier in [1, 2, 3] as const" :key="tier">
+              <dt>{{ FAVOR_CATALOG[browsing].tiers[tier].cost }}<TokenIcon /><span class="sr-only"> jeton</span></dt>
+              <dd>{{ describeFavorTier(browsing, tier) }}</dd>
+            </div>
+          </dl>
+          <p
+            v-if="
+              currentLoadout.length === 3 &&
+              !currentLoadout.includes(browsing)
+            "
+            class="selection-hint"
           >
-            <FavorPortrait :id="id" />
-            <span v-if="currentLoadout.includes(id)" class="god-equipped"><UiIcon name="check" /><span class="sr-only">Kuşanıldı</span></span>
-            <span class="god-tile-copy"><span class="god-tile-name">{{ shortName(id) }}</span>
-              <span class="god-tile-power" :data-tone="favorSummary(id).tone"><UiIcon :name="favorSummary(id).icon" /><span>{{ favorSummary(id).label }}</span></span>
-            </span>
-          </button>
-        </div>
-        <aside
-          class="loadout-sidebar"
-          aria-label="Seçilen tanrılar ve güç açıklaması"
-        >
-          <label class="name-field" v-if="editingPlayer === 'player-1' || local"
-            >Oyuncu adı<input v-model="names[editingPlayer]" maxlength="28"
-          /></label>
-          <div class="loadout-heading">
-            <h2>Yanındaki tanrılar</h2>
-            <span role="status" aria-live="polite"
-              >{{ currentLoadout.length }} / 3</span
-            >
-          </div>
-          <div class="chosen-gods">
-            <div
-              v-for="(id, index) in currentLoadout"
+            Kuşanmak için önce seçili bir tanrıyı kaldır.
+          </p>
+        </section>
+        <div class="god-selection">
+          <div class="god-gallery" role="group" aria-label="20 tanrı kataloğu">
+            <button
+              v-for="id in FAVOR_ART_IDS"
               :key="id"
-              class="chosen-god"
+              class="god-tile"
+              :class="{ browsing: browsing === id }"
+              :aria-pressed="currentLoadout.includes(id)"
+              :aria-label="`${shortName(id)}, ${favorSummary(id).label}${currentLoadout.includes(id) ? ', kuşanıldı; kaldır' : currentLoadout.length === 3 ? ', seçim sınırı dolu; gücü incele' : ', kuşan'}`"
+              @pointerenter="browsing = id"
+              @focus="browsing = id"
+              @click="toggleFavor(id)"
             >
-              <FavorPortrait :id="id" /><span
-                ><small>{{ index + 1 }}. tanrı</small
-                ><strong>{{ shortName(id) }}</strong></span
-              ><button
-                class="icon-button"
-                :aria-label="`${shortName(id)} tanrısını kaldır`"
-                @click="toggleFavor(id)"
-              >
-                <UiIcon name="close" /><span>Kaldır</span>
-              </button>
-            </div>
-            <div
-              v-for="slot in 3 - currentLoadout.length"
-              :key="`empty-${slot}`"
-              class="empty-god"
-            >
-              <span>{{ currentLoadout.length + slot }}</span
-              >Bir tanrı seç
-            </div>
+              <FavorPortrait :id="id" />
+              <span v-if="currentLoadout.includes(id)" class="god-equipped"><UiIcon name="check" /><span class="sr-only">Kuşanıldı</span></span>
+              <span class="god-tile-copy"><span class="god-tile-name">{{ shortName(id) }}</span>
+                <span class="god-tile-power" :data-tone="favorSummary(id).tone"><UiIcon :name="favorSummary(id).icon" /><span>{{ favorSummary(id).label }}</span></span>
+              </span>
+            </button>
           </div>
-          <section class="god-description" aria-live="polite">
-            <div class="description-heading"><FavorPortrait :id="browsing" /><div><h2>{{ shortName(browsing) }}</h2><p class="god-effect-summary" :data-tone="favorSummary(browsing).tone"><UiIcon :name="favorSummary(browsing).icon" />{{ favorSummary(browsing).label }}</p></div></div>
-            <p class="favor-timing">
-              {{
-                FAVOR_CATALOG[browsing].timing === "before-resolution"
-                  ? "Savaş öncesi"
-                  : "Savaş sonrası"
-              }}
-              · Öncelik {{ FAVOR_CATALOG[browsing].priority }}
-            </p>
-            <dl>
-              <div v-for="tier in [1, 2, 3] as const" :key="tier">
-                <dt>{{ FAVOR_CATALOG[browsing].tiers[tier].cost }}<TokenIcon /><span class="sr-only"> jeton</span></dt>
-                <dd>{{ describeFavorTier(browsing, tier) }}</dd>
+          <aside
+            class="loadout-sidebar"
+            aria-label="Seçilen tanrılar"
+          >
+            <label class="name-field" v-if="editingPlayer === 'player-1' || local"
+              >Oyuncu adı<input v-model="names[editingPlayer]" maxlength="28"
+            /></label>
+            <div class="loadout-heading">
+              <h2>Yanındaki tanrılar</h2>
+              <span role="status" aria-live="polite"
+                >{{ currentLoadout.length }} / 3</span
+              >
+            </div>
+            <div class="chosen-gods">
+              <div
+                v-for="(id, index) in currentLoadout"
+                :key="id"
+                class="chosen-god"
+              >
+                <FavorPortrait :id="id" /><span
+                  ><small>{{ index + 1 }}. tanrı</small
+                  ><strong>{{ shortName(id) }}</strong></span
+                ><button
+                  class="icon-button"
+                  :aria-label="`${shortName(id)} tanrısını kaldır`"
+                  @click="toggleFavor(id)"
+                >
+                  <UiIcon name="close" /><span>Kaldır</span>
+                </button>
               </div>
-            </dl>
-            <p
-              v-if="
-                currentLoadout.length === 3 &&
-                !currentLoadout.includes(browsing)
-              "
-              class="selection-hint"
-            >
-              Kuşanmak için önce seçili bir tanrıyı kaldır.
-            </p>
-          </section>
-        </aside>
+              <div
+                v-for="slot in 3 - currentLoadout.length"
+                :key="`empty-${slot}`"
+                class="empty-god"
+              >
+                <span>{{ currentLoadout.length + slot }}</span
+                >Bir tanrı seç
+              </div>
+            </div>
+          </aside>
+        </div>
       </div>
       <div class="flow-footer">
-        <span>{{
+        <span v-if="selectionError" class="selection-warning" role="alert">{{ selectionError }}</span>
+        <span v-else>{{
           currentLoadout.length === 3
             ? "Üç tanrın hazır."
             : `${3 - currentLoadout.length} tanrı daha seç.`
@@ -477,10 +495,7 @@ function start() {
             :class="{ tossed: firstPlayer }"
             :key="firstPlayer ?? 'untossed'"
           >
-            <span v-if="firstPlayer">{{
-              firstPlayer === "player-1" ? "I" : "II"
-            }}</span
-            ><SymbolIcon v-else symbol="axe" />
+            <img src="/assets/art/toss-coin.webp" width="512" height="512" alt="Altın örgü motifleri işlenmiş demir sikke" />
           </div>
         </div>
         <p class="coin-announcement" role="status" aria-live="polite">

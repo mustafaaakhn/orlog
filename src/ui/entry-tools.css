@@ -35,3 +35,17 @@
   :is(.at-welcome, .at-mode) .language-option:hover { background: #d3b17633; }
   :is(.at-welcome, .at-mode) .language-option svg { color: #d3b176; }
 }
+@media (max-width: 1023px) {
+  .at-welcome .masthead { display: flex; position: absolute; inset: 0 0 auto; margin: 0; padding: 0 16px; border: 0; color: #f6ead5; background: #21160fe6; }
+  .at-welcome .edition { display: none; }
+}
+@media (max-width: 600px) {
+  .masthead .edition { display: none; }
+  .masthead .wordmark { font-size: 22px; gap: 6px; }
+  .masthead .wordmark svg { width: 22px; height: 26px; }
+  .masthead .header-tools.entry-tools { gap: 2px; }
+}
+@media (max-width: 360px) {
+  .in-match .masthead .wordmark { font-size: 18px; letter-spacing: .08em; gap: 4px; }
+  .in-match .masthead .wordmark svg { width: 18px; }
+}

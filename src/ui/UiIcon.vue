@@ -25,8 +25,7 @@ defineProps<{
     | "arrow-down"
     | "pierce"
     | "copy"
-    | "log"
-    | "menu";
+    | "exit";
 }>();
 const paths = {
   monitor: "M3 4h18v13H3ZM8 21h8m-4-4v4",
@@ -55,8 +54,7 @@ const paths = {
   robot: "M12 3v3M9 3h6M5 7h14v13H5ZM2 11v5m20-5v5M8 11h1m6 0h1m-7 5h6",
   door: "M3 21h18M5 21V3h14v18M9 21V7l8-2v16m-5-7h1",
   copy: "M9 9h12v12H9ZM15 5V3H3v12h2",
-  log: "M8 5h13M8 12h13M8 19h13M3 5h.01M3 12h.01M3 19h.01",
-  menu: "M4 6h16M4 12h16M4 18h16",
+  exit: "M10 4H4v16h6m4-12 4 4-4 4m-6-4h10",
 };
 </script>
 <template>

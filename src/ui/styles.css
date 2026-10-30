@@ -1306,16 +1306,6 @@ input[type="radio"] {
   accent-color: var(--gold);
   min-height: 44px;
 }
-.combat-log ol {
-  padding-left: 24px;
-}
-.combat-log li {
-  padding: 0 0 12px 6px;
-  color: var(--muted);
-  font-size: 15px;
-  line-height: 1.5;
-}
-.combat-log p,
 .game-menu p {
   color: var(--muted);
   font-size: 15px;

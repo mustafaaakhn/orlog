@@ -14,7 +14,7 @@ function aim(event: PointerEvent) {
 }
 function inspect(target: SceneFavorTarget, activate = false) {
   emit('highlight', target)
-  if (target.playerId === props.activePlayer) emit('inspect', target, activate)
+  emit('inspect', target, activate)
 }
 function activate(event: MouseEvent, target: SceneFavorTarget) {
   const bounds = (event.currentTarget as HTMLElement).parentElement!.getBoundingClientRect()

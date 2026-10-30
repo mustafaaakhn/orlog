@@ -57,9 +57,9 @@ const menuFavor = computed(() => inspection.value.target);
 const menuPinned = computed(() => inspection.value.pinned);
 const favorMenu = ref<HTMLElement | null>(null);
 function inspectFavor(target: SceneFavorTarget, activate: boolean) {
-  if (target.playerId !== props.favorPlayer || props.batch || props.paused) return;
-  inspection.value = inspect(inspection.value, target, activate);
-  if (activate) void nextTick(() => favorMenu.value?.focus());
+  if (props.batch || props.paused) return;
+  inspection.value = inspect(inspection.value, target, activate, props.favorPlayer ?? null);
+  if (inspection.value.pinned && activate) void nextTick(() => favorMenu.value?.focus());
 }
 function highlightFavor(target: SceneFavorTarget | null) {
   highlightedFavor.value = target;
@@ -224,11 +224,11 @@ onErrorCaptured(() => {
       />
     </TresCanvas>
     <SceneFavorControls v-if="status === 'ready' && !batch && !paused" :targets="favors" :active-player="favorPlayer" :pinned-target="menuPinned ? menuFavor : null" @highlight="highlightFavor" @inspect="inspectFavor" />
-    <section v-if="menuFavor && favorPlayer && status === 'ready' && !batch && !paused" ref="favorMenu"
-      id="table-favor-menu" class="table-favor-menu" :class="{ 'is-preview': !menuPinned }" :role="menuPinned ? 'dialog' : 'region'" aria-label="Tanrı gücü seçimi" tabindex="-1">
-      <p class="favor-menu-help">{{ menuPinned ? 'Seviyeni seç · Escape ile kapat' : 'Seçmek için tanrıya tıkla' }}</p>
-      <FavorPicker :key="`${favorPlayer}/${menuFavor.favorId}`" :favor-id="menuFavor.favorId"
-        :state="state" :player="state.players[favorPlayer]" :disabled="false" :preview="!menuPinned"
+    <section v-if="menuFavor && status === 'ready' && !batch && !paused" ref="favorMenu"
+      id="table-favor-menu" class="table-favor-menu" :class="{ 'is-preview': !menuPinned }" :role="menuPinned ? 'dialog' : 'region'" :aria-label="menuPinned ? 'Tanrı gücü seçimi' : 'Tanrı bilgileri'" tabindex="-1">
+      <p class="favor-menu-help">{{ menuPinned ? 'Seviyeni seç · Escape ile kapat' : menuFavor.playerId === favorPlayer ? 'Seçmek için tanrıya tıkla' : 'Tanrı bilgileri' }}</p>
+      <FavorPicker :key="`${menuFavor.playerId}/${menuFavor.favorId}`" :favor-id="menuFavor.favorId"
+        :state="state" :player="state.players[menuFavor.playerId]" :disabled="false" :preview="!menuPinned"
         @choose="(id, level, input) => emit('choose', id, level, input)" />
     </section>
     <div class="resolution-cue" :class="{ 'is-title': cue?.title }" role="status" aria-live="polite" aria-atomic="true">
