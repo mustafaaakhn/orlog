@@ -15,8 +15,8 @@
     "check": "npm run typecheck && npm run build",
     "test": "vitest",
     "test:ci": "vitest run",
-    "sfx:plan": "node --env-file-if-exists=.env --import tsx scripts/elevenlabs.ts --plan",
-    "sfx:generate": "node --env-file-if-exists=.env --import tsx scripts/elevenlabs.ts --generate"
+    "sfx:plan": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/elevenlabs.ts --plan",
+    "sfx:generate": "node --env-file-if-exists=.env --env-file-if-exists=.env.local --import tsx scripts/elevenlabs.ts --generate"
   },
   "dependencies": {
     "@dimforge/rapier3d-compat": "0.20.0",
