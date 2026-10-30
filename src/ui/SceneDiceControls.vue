@@ -6,17 +6,38 @@ import { closestDieTarget } from "../scene/dieTargets";
 import type { SceneDieTarget } from "../scene/dieTargets";
 import { inspectableDice } from "./dieInspection";
 import SymbolIcon from "./SymbolIcon.vue";
+import TokenIcon from "./TokenIcon.vue";
+import { dieTargetCapacity, layoutDieTargets } from "./dieTargetLayout";
+import type { DieTargetArea } from "./dieTargetLayout";
 const props = defineProps<{
   players: readonly PlayerState[];
   selectablePlayer: PlayerId | null;
+  viewerId: PlayerId;
   targets: readonly SceneDieTarget[];
   disabled: boolean;
   collected: readonly DieId[];
+  safeArea?: DieTargetArea;
 }>();
 const emit = defineEmits<{ select: [id: DieId]; highlight: [id: DieId | null] }>();
-const controls = computed(() => inspectableDice(
+const inspected = computed(() => inspectableDice(
   props.players, props.targets, props.selectablePlayer, props.collected,
-));
+).filter(target => !mobile.value || target.id.startsWith(`${props.viewerId}/`) || target.location !== "Haznede"));
+const size = ref({ width: 0, height: 0 });
+const mobile = computed(() => size.value.width > 0 && (size.value.width <= 600 ||
+  (size.value.height <= 500 && size.value.width > size.value.height)));
+const safeArea = computed(() => props.safeArea ?? {
+  top: size.value.height <= 500 ? 115 : 200,
+  bottom: size.value.height <= 500 ? 70 : 160,
+  left: 12, right: size.value.height <= 500 ? 210 : 12,
+});
+const overflow = computed(() => mobile.value && dieTargetCapacity(size.value.width, size.value.height, safeArea.value) < inspected.value.length);
+const controls = computed(() => mobile.value && !overflow.value
+  ? layoutDieTargets(inspected.value, size.value.width, size.value.height, safeArea.value)
+  : inspected.value.map(target => ({ ...target, sourceX: target.x, sourceY: target.y })));
+const listStyle = computed(() => overflow.value ? {
+  top: `${safeArea.value.top}px`, bottom: `${safeArea.value.bottom}px`,
+  left: `${safeArea.value.left}px`, right: `${safeArea.value.right}px`,
+} : {});
 const highlight = createDieHighlight(
   () => !props.disabled,
   () => controls.value.map(target => target.id),
@@ -24,22 +45,30 @@ const highlight = createDieHighlight(
 const { aimed } = highlight;
 const layer = ref<HTMLElement | null>(null);
 const previewElement = ref<HTMLElement | null>(null);
-const size = ref({ width: 0, height: 0 });
 const previewHeight = ref(164);
 let resize: ResizeObserver | undefined;
 const dismissed = ref(false);
-const preview = computed(() => dismissed.value ? null : controls.value.find(target => target.id === highlight.id.value));
+const inspecting = ref<DieId | null>(null);
+let keyboardMode = true;
+const preview = computed(() => dismissed.value || props.disabled ? null : controls.value.find(target => target.id === (mobile.value ? inspecting.value : highlight.id.value)));
 const previewStyle = computed(() => {
   if (!preview.value) return {};
-  const x = preview.value.x * size.value.width / 100;
-  const y = preview.value.y * size.value.height / 100;
+  const x = overflow.value
+    ? (safeArea.value.left + size.value.width - safeArea.value.right) / 2
+    : preview.value.x * size.value.width / 100;
+  const y = overflow.value ? safeArea.value.top : preview.value.y * size.value.height / 100;
   // Prefer above the die. At the far edge, flip below so the header cannot
   // cover the face. Clamp both axes inside the viewport, also in landscape.
+  const safeTop = mobile.value ? safeArea.value.top : 80;
+  const safeBottom = mobile.value ? safeArea.value.bottom : 12;
   const above = y - 30 - previewHeight.value;
-  const top = above >= 80 ? above : y + 30;
+  const top = above >= safeTop ? above : y + 30;
+  const safeLeft = mobile.value ? safeArea.value.left : 0;
+  const safeRight = mobile.value ? safeArea.value.right : 0;
   return {
-    left: `${Math.max(98, Math.min(size.value.width - 98, x))}px`,
-    top: `${Math.max(12, Math.min(size.value.height - previewHeight.value - 12, top))}px`,
+    maxHeight: `${Math.max(100, size.value.height - safeTop - safeBottom)}px`,
+    left: `${Math.max(safeLeft + 98, Math.min(size.value.width - safeRight - 98, x))}px`,
+    top: `${Math.max(safeTop, Math.min(size.value.height - previewHeight.value - safeBottom, top))}px`,
   };
 });
 watch(preview, async () => {
@@ -47,27 +76,41 @@ watch(preview, async () => {
   previewHeight.value = previewElement.value?.offsetHeight ?? 164;
 });
 watch(highlight.id, () => { dismissed.value = false; });
-watch(() => props.selectablePlayer, highlight.clear);
+watch(() => props.selectablePlayer, () => { highlight.clear(); inspecting.value = null; });
 let hold: ReturnType<typeof setTimeout> | undefined;
-let suppressSelect = false;
-let holdPoint: { x: number; y: number } | null = null;
-function cancelHold() { clearTimeout(hold); holdPoint = null; }
-watch(() => props.disabled, cancelHold);
-function touchStart(event: PointerEvent) {
-  cancelHold();
-  suppressSelect = false;
-  if (event.pointerType !== "touch") return;
-  const target = nearest(event);
-  if (!target) return;
-  holdPoint = { x: event.clientX, y: event.clientY };
+let gesture: { id: DieId; pointerId: number; x: number; y: number; consumed: boolean; released: boolean; held: boolean } | null = null;
+function cancelHold() { clearTimeout(hold); hold = undefined; }
+function resetGesture() { cancelHold(); gesture = null; }
+watch(() => props.disabled, disabled => { resetGesture(); if (disabled) inspecting.value = null; });
+watch(() => props.selectablePlayer, resetGesture);
+function touchStart(event: PointerEvent, id: DieId) {
+  resetGesture();
+  if (props.disabled || event.pointerType !== "touch" || !event.isPrimary) return;
+  gesture = { id, pointerId: event.pointerId, x: event.clientX, y: event.clientY, consumed: false, released: false, held: false };
   hold = setTimeout(() => {
-    suppressSelect = true;
-    highlight.focus(target.id);
+    if (!gesture || props.disabled) return;
+    gesture.consumed = true;
+    gesture.held = true;
+    highlight.focus(id);
+    inspecting.value = id;
     dismissed.value = false;
   }, 400);
 }
+function moveTouch(event: PointerEvent) {
+  if (!gesture || event.pointerId !== gesture.pointerId) return;
+  if (Math.hypot(event.clientX - gesture.x, event.clientY - gesture.y) > 12) {
+    cancelHold();
+    gesture.consumed = true;
+  }
+}
+function endTouch(event: PointerEvent) {
+  cancelHold();
+  if (gesture?.pointerId === event.pointerId) gesture.released = true;
+}
+function leaveTouch() { if (gesture && !gesture.released) cancelTouch(); }
+function cancelTouch() { cancelHold(); if (gesture) { gesture.consumed = true; gesture.held = false; } }
 function outside(event: PointerEvent) {
-  if (!(event.target instanceof Element) || !event.target.closest(".scene-die-target")) highlight.clear();
+  if (!(event.target instanceof Element) || !event.target.closest(".scene-die-target, .die-face-preview")) { highlight.clear(); inspecting.value = null; }
 }
 onMounted(() => {
   document.addEventListener("pointerdown", outside);
@@ -77,7 +120,7 @@ onMounted(() => {
   if (layer.value) resize.observe(layer.value);
 });
 onBeforeUnmount(() => {
-  cancelHold();
+  resetGesture();
   resize?.disconnect();
   document.removeEventListener("pointerdown", outside);
 });
@@ -97,20 +140,35 @@ function nearest(event: MouseEvent | PointerEvent) {
   );
 }
 function aim(event: PointerEvent) {
-  if (holdPoint && Math.hypot(event.clientX - holdPoint.x, event.clientY - holdPoint.y) > 12) cancelHold();
-  if (event.pointerType !== "touch") aimed.value = nearest(event)?.id ?? null;
+  if (event.pointerType === "touch") return;
+  const button = (event.target as Element).closest<HTMLElement>(".scene-die-target");
+  aimed.value = mobile.value ? (button?.dataset.dieId as DieId | undefined) ?? null : nearest(event)?.id ?? null;
+}
+function focusDie(id: DieId) {
+  highlight.focus(id);
+  dismissed.value = false;
+  if (mobile.value && keyboardMode) inspecting.value = id;
+}
+function blur(event: FocusEvent) {
+  if (!(event.relatedTarget instanceof Element) || !event.relatedTarget.closest(".die-face-preview")) highlight.focus(null);
 }
 function select(event: MouseEvent, fallback: DieId) {
   if (props.disabled) return;
-  const target = event.detail ? nearest(event) : controls.value.find(target => target.id === fallback);
+  const target = event.detail && !mobile.value ? nearest(event) : controls.value.find(target => target.id === fallback);
   if (!target) return;
   dismissed.value = false;
   highlight.focus(target.id);
-  if (suppressSelect && event.detail) { suppressSelect = false; return; }
-  suppressSelect = false;
-  if (target.canSelect) emit("select", target.id);
+  const consumed = gesture?.consumed && event.detail !== 0;
+  const held = gesture?.held;
+  resetGesture();
+  if (consumed) { if (held) inspecting.value = target.id; return; }
+  if (target.canSelect) {
+    inspecting.value = null;
+    emit("select", target.id);
+  } else inspecting.value = target.id;
 }
 function navigate(event: KeyboardEvent) {
+  keyboardMode = true;
   if (
     ![
       "ArrowLeft",
@@ -124,7 +182,7 @@ function navigate(event: KeyboardEvent) {
     return;
   const buttons = [
     ...(event.currentTarget as HTMLElement).querySelectorAll<HTMLButtonElement>(
-      "button:not(:disabled)",
+      ".scene-die-target:not([aria-disabled='true'])",
     ),
   ];
   const current = buttons.indexOf(event.target as HTMLButtonElement);
@@ -147,21 +205,27 @@ function navigate(event: KeyboardEvent) {
   <div
     ref="layer"
     class="scene-die-controls"
+    :class="{ 'mobile-die-controls': mobile }"
     role="group"
     aria-label="Masadaki zarları incele ve seç"
     @keydown="navigate"
     @keydown.esc.stop="dismissed = true"
-    @pointerdown="touchStart"
-    @pointerup="cancelHold"
-    @pointercancel="cancelHold"
+    @pointerdown="keyboardMode = false"
     @contextmenu.prevent
     @pointermove="aim"
-    @pointerleave="cancelHold(); aimed = null"
+    @pointerleave="aimed = null"
   >
+    <svg v-if="mobile && !overflow && !disabled" class="die-target-links" aria-hidden="true">
+      <line v-for="target in controls.filter(t => Math.hypot((t.x-t.sourceX)*size.width/100, (t.y-t.sourceY)*size.height/100) > 6)"
+        :key="target.id" :x1="`${target.sourceX}%`" :y1="`${target.sourceY}%`"
+        :x2="`${target.x}%`" :y2="`${target.y}%`" />
+    </svg>
+    <div class="die-target-list" :class="{ 'is-overflow': overflow, 'is-short': size.height - safeArea.top - safeArea.bottom < 100 }" :style="listStyle" :role="overflow ? 'group' : undefined" :aria-label="overflow ? 'Masadaki zarlar, kaydırarak incele ve seç' : undefined">
     <button
       v-for="target in controls"
       :key="target.id"
       class="scene-die-target"
+      :class="{ 'grants-token': target.face.grantsToken, 'is-selected': target.selected, 'is-kept': target.location === 'Kilitli' }"
       :style="{
         left: `${target.x}%`,
         top: `${target.y}%`,
@@ -174,20 +238,37 @@ function navigate(event: KeyboardEvent) {
       :aria-describedby="preview?.id === target.id ? 'die-face-preview' : undefined"
       :data-die-id="target.id"
       :data-selectable="target.canSelect"
-      @focus="highlight.focus(target.id); dismissed = false"
-      @blur="highlight.focus(null)"
+      @pointerdown="touchStart($event, target.id)"
+      @pointermove="moveTouch"
+      @pointerup="endTouch"
+      @pointercancel="cancelTouch"
+      @pointerleave="leaveTouch"
+      @pointerenter="$event.pointerType !== 'touch' && (aimed = target.id)"
+      @focus="focusDie(target.id)"
+      @blur="blur"
       @click="select($event, target.id)"
     >
+      <template v-if="mobile">
+        <SymbolIcon :symbol="target.face.symbol" />
+        <span v-if="target.face.grantsToken" class="die-target-token"><TokenIcon /></span>
+        <span v-if="target.selected || target.location === 'Kilitli'" class="die-target-check" aria-hidden="true">✓</span>
+        <span v-if="target.value !== 1" class="die-target-value" aria-hidden="true">×{{ target.value }}</span>
+      </template>
       <span class="sr-only">{{ target.label }}</span>
     </button>
-    <div v-if="preview" ref="previewElement" id="die-face-preview" class="die-face-preview" role="tooltip" :style="previewStyle">
+    </div>
+    <div v-if="preview" ref="previewElement" id="die-face-preview" class="die-face-preview" :role="mobile ? 'region' : 'tooltip'" :aria-label="mobile ? 'Zar bilgisi' : undefined" :style="previewStyle">
       <div class="die-preview-face" :class="{ 'grants-token': preview.face.grantsToken }">
         <SymbolIcon :symbol="preview.face.symbol" />
+        <TokenIcon v-if="mobile && preview.face.grantsToken" class="die-preview-coin" />
       </div>
       <strong>{{ preview.name }}<span v-if="preview.value !== 1"> × {{ preview.value }}</span></strong>
       <span class="die-preview-effect">{{ preview.description }}</span>
       <span v-if="preview.face.grantsToken" class="die-preview-token">Jeton getirir</span>
       <span class="die-preview-owner">{{ preview.owner }} · {{ preview.location }}</span>
+      <button v-if="mobile" type="button" class="die-preview-close" @click="dismissed = true; inspecting = null; highlight.clear()">Kapat</button>
     </div>
   </div>
 </template>
+
+<style src="./mobile-dice.css"></style>

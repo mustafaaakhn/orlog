@@ -86,3 +86,7 @@ Mobil panelin DOM davranış testleri için [happy-dom](https://github.com/capri
 21.0.4 kullanılır; MIT, © 2019 David Ortner (capricorn86). Sürüm ve lisans
 kurulu paketin `package.json` ve `LICENSE` dosyalarından doğrulandı. Yalnız
 geliştirme bağımlılığıdır; yeni görsel, model veya ses eklenmedi.
+
+Mobil zar yüzleri, hedeflerdeki simgeler ve jeton işareti mevcut proje SVG
+yolları ve prosedürel canvas çizimlerinden üretilir. Aşama 4 için dış görsel,
+model, doku, ses veya yeni paket eklenmedi.

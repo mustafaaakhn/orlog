@@ -145,15 +145,15 @@ export function createSurfaceTexture(kind: "bone" | "stone" | "metal") {
   }
   return texture(element);
 }
-export function createFaceTexture(face: DieFace) {
+export function createFaceTexture(face: DieFace, mobile = false) {
   const { element, context: ctx } = canvas(256);
   const base = ctx.createRadialGradient(120, 105, 30, 128, 128, 180);
   base.addColorStop(0, "#eee4cd");
   base.addColorStop(0.8, "#e0d1b0");
   base.addColorStop(1, "#c5ac85");
-  ctx.fillStyle = base;
+  ctx.fillStyle = mobile ? "#f6ecd5" : base;
   ctx.fillRect(0, 0, 256, 256);
-  for (let i = 0; i < 1900; i++) {
+  for (let i = 0; i < (mobile ? 0 : 1900); i++) {
     ctx.fillStyle = `rgba(97,68,33,${0.015 + noise(i, 3) * 0.055})`;
     ctx.fillRect(noise(i, 1) * 256, noise(i, 2) * 256, 1.2, 1.2);
   }
@@ -180,8 +180,9 @@ export function createFaceTexture(face: DieFace) {
     }
   }
   ctx.save();
-  ctx.translate(13, 13);
-  ctx.scale(2.3, 2.3);
+  ctx.translate(mobile && face.grantsToken ? 18 : 13, mobile && face.grantsToken ? 36 : 13);
+  const scale = mobile && face.grantsToken ? 2.05 : 2.3;
+  ctx.scale(scale, scale);
   ctx.lineWidth = 5;
   ctx.lineCap = "round";
   ctx.lineJoin = "round";
@@ -197,6 +198,23 @@ export function createFaceTexture(face: DieFace) {
   ctx.lineWidth = 1.1;
   ctx.stroke(symbol);
   ctx.restore();
+  if (mobile && face.grantsToken) {
+    // A separate gold-plate mark survives alongside the border. This never
+    // represents selection, ownership, or a token amount.
+    ctx.fillStyle = "#d8b76e";
+    ctx.strokeStyle = "#543516";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.roundRect(198, 10, 46, 46, 5);
+    ctx.fill();
+    ctx.stroke();
+    ctx.save();
+    ctx.translate(200, 12);
+    ctx.scale(1.35, 1.35);
+    ctx.lineWidth = 2;
+    ctx.stroke(new Path2D("M11 11V8a3 3 0 1 0-3 3h16a3 3 0 1 0-3-3v16a3 3 0 1 0 3-3H8a3 3 0 1 0 3 3Z"));
+    ctx.restore();
+  }
   return texture(element);
 }
 export function createInscriptionTexture(text: string, color = "#d9bd7d") {

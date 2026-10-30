@@ -227,7 +227,7 @@ export function createBoard(invalidate: () => void = () => {}) {
   const contourSurface = material({ color: '#f4d899', emissive: '#dbab48', emissiveIntensity: 0.8, side: BackSide });
   const faceShape = geometry(new PlaneGeometry(0.735, 0.735));
   const faceMaterials = new Map<string, MeshStandardMaterial>();
-  const restingFaceMaterials = new Map<MeshStandardMaterial, { upper: MeshStandardMaterial; side: MeshStandardMaterial }>();
+  const restingFaceMaterials = new Map<MeshStandardMaterial, { upper: MeshStandardMaterial; mobileUpper: MeshStandardMaterial; side: MeshStandardMaterial }>();
   const dice = new Map<DieId, Group>();
   for (const player of ["player-1", "player-2"] as const) {
     [...DICE_DEFINITIONS, ...DICE_DEFINITIONS.slice(0, 3)].forEach(
@@ -257,6 +257,8 @@ export function createBoard(invalidate: () => void = () => {}) {
             restingFaceMaterials.set(surface, {
               upper: material({ map: surface.map, roughness: 0.7,
                 emissiveMap: surface.map, emissive: "#eadfc4", emissiveIntensity: 0.12 }),
+              mobileUpper: material({ map: keepTexture(createFaceTexture(face, true)), roughness: 0.8,
+                emissive: "#eadfc4", emissiveIntensity: 0.06 }),
               side: material({ map: surface.map, roughness: 0.7, color: "#bfb49f" }),
             });
           }
@@ -740,7 +742,7 @@ export function createBoard(invalidate: () => void = () => {}) {
         }
       }
     },
-    setDiceReadability(resting: boolean) {
+    setDiceReadability(resting: boolean, mobile = false) {
       let changed = false;
       for (const die of dice.values()) {
         const upper = topFace(die.quaternion).faceId;
@@ -749,7 +751,7 @@ export function createBoard(invalidate: () => void = () => {}) {
           if (!neutral) continue;
           const accents = restingFaceMaterials.get(neutral)!;
           const next = !resting ? neutral
-            : plaque.name === `face/${upper}` ? accents.upper : accents.side;
+            : plaque.name === `face/${upper}` ? (mobile ? accents.mobileUpper : accents.upper) : accents.side;
           if ((plaque as Mesh).material !== next) {
             (plaque as Mesh).material = next;
             changed = true;

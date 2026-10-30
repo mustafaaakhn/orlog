@@ -121,20 +121,25 @@ ve sunum sırasını değiştirmez.
 
 Bağımlılık: Aşama 3. Ölçüler yeni kamera kadrajına göre değerlendirilir.
 
-- [ ] Mobilde beş zar sembolünü ilk bakışta ayırt edilebilir hale getir;
+- [x] Mobilde beş zar sembolünü ilk bakışta ayırt edilebilir hale getir;
   kontrast, yüz açısı ve boyutu birlikte değerlendir.
-- [ ] Jeton kazandıran yüzde belirgin çerçeveye ek bir jeton işareti kullan.
+- [x] Jeton kazandıran yüzde belirgin çerçeveye ek bir jeton işareti kullan.
   Seçili/saklanan zar vurgusuyla jeton kazanımı birbirine karışmasın.
-- [ ] Zarların ekrandaki aralığını ve dokunma hedeflerini birlikte düzenle;
+- [x] Zarların ekrandaki aralığını ve dokunma hedeflerini birlikte düzenle;
   en az 44×44 piksel hedefi korurken komşu zarı yanlış seçme riskini azalt.
-- [ ] Kaseden seçme, merkezden geri alma ve kilitli/rakip zarını inceleme
+- [x] Kaseden seçme, merkezden geri alma ve kilitli/rakip zarını inceleme
   davranışlarını doğrula. Sembol ve “Jeton getirir” açıklaması mobilde
   erişilebilir kalsın; yalnız hover'a bağlı olmasın.
 - [ ] Dokunma ve uzun basma davranışını uygun cihazda ayrıca doğrula;
   yalnız fare/klavye ile yapılan kontrolü dokunma testi diye işaretleme.
-- [ ] Ekstra zar/zar kaldırma etkilerinde taşma ve hedef eşleşmesini,
+- [x] Ekstra zar/zar kaldırma etkilerinde taşma ve hedef eşleşmesini,
   masaüstü ve klavyeyi kontrol et; anlamlı davranış testlerini ve zorunlu
   komutları çalıştır, belgeleri güncelle ve commit et.
+
+**Açık doğrulama:** Bu oturumda fiziksel dokunmatik cihaza erişim yoktu. Chromium'un CDP dokunma
+benzetimiyle kısa dokunma, 400ms uzun basma ve liste kaydırma kontrol edildi;
+bu, fiziksel iPhone/Android doğrulaması sayılmaz. Cihaz adımları
+[Aşama 4 incelemesinde](docs/review/mobile-dice.md) kayıtlıdır.
 
 **Kabul:** Balta, ok, miğfer, kalkan ve el ayırt edilir; jeton kazandıran yüz
 ayrıca anlaşılır. Oyuncu istediği zarı güvenilir biçimde seçip geri alabilir.
@@ -208,8 +213,22 @@ koruyan 2B özette gösterilir. Aşama 1–2 ile birleşik sürüm doğrulandı.
 - Kanıtlar ve sınırlar: [Aşama 3 doğrulaması](docs/review/mobile-camera.md).
   Fiziksel iPhone/Safari ve Android/Chrome, gerçek dokunma ve cihaz
   performansı Aşama 5'te açıktır.
-- Sıradaki iş **Aşama 4**; ayrıca istenmeden başlanmaz. Zar geometrisi,
-  fizik sonucu ve oyun kuralları bu aşamada değiştirilmedi.
+- Zar geometrisi, fizik sonucu ve oyun kuralları Aşama 3'te değiştirilmedi.
+
+**Aşama 4 — Yazılım uygulandı, fiziksel dokunma kontrolü açık — 30 Ekim 2026.**
+Mobil yüz hedefleri ve dinlenmiş üst yüzler daha okunur; jeton ayrı işaretle,
+seçili/kilitli durum camgöbeği onay imiyle gösterilir. 44px hedefler HUD'dan
+kalan alanda ayrılır; sığmazsa kaydırılır. Rakip özeti dokunarak incelenir.
+
+- Node 24.22.1: `npm run check` ve `npm run test:ci` geçti; 37 dosyada
+  460 test başarılı. Ayrıntılar [Aşama 4 doğrulamasında](docs/review/mobile-dice.md).
+- Chromium 143 / CDP dokunma benzetimi: 360×800, 390×844, 430×932,
+  844×390, 568×320; 1440×900 masaüstü; kısa dokunma/geri alma, uzun basma,
+  rakip/kilitli inceleme, 18 zar, kaldırılan hedef ve dar alan kaydırması.
+  Normal fizik kaydıyla atış/seçim ve azaltılmış hareket ayrıca kontrol edildi.
+- Fiziksel cihaz maddesi `[ ]` kalır. Bu kontrol ve Aşama 5 ortak kabulü
+  tamamlanmadan bütün mobil kabulün bittiği söylenmez. Aşama 5'e otomatik
+  başlanmadı.
 
 ## Bu planın dışında
 

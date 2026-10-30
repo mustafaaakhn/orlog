@@ -81,6 +81,24 @@ ve açan düğmeye odak döndürür; oyun komutu göndermez. Koltuk/maç değiş
 ve masaüstü genişliğine geçiş paneli kapatır. Kullanılabilir alan eşiği mobil
 kaynak göstergeleriyle aynıdır; telefon modeli veya tarayıcı kimliği okunmaz.
 
+## Mobil zar hedefleri
+
+`SceneDiceControls` yalnız sunumda görünür zarları `inspectableDice` üzerinden
+okur. Mobilde aynı zarın simgesi, jeton işareti ve seçili/kilitli vurgusu 44px
+bir yüz hedefinde gösterilir. `layoutDieTargets`, HUD dışında kalan ekran
+alanında hedefleri 4px arayla yerleştirir; kayan hedef ile gerçek 3B izdüşümü
+ince çizgiyle bağlanır. Yerleşim yalnız ekran koordinatıdır; fizik, GSAP ve
+core zar konumlarına yazmaz. Alan bütün hedefleri alamıyorsa aynı kimlikler
+kaydırılabilir bir listede korunur. Kaldırılan zar için hedef üretilmez.
+
+Mobil kısa dokunma tıklanan hedefin sabit zar kimliğini kullanır; komşu zarı
+mesafeden tekrar seçmez. Uzun basma incelemeyi açar ve ardından gelen tıklamayı
+tüketir; sürükleme/iptal seçim üretmez. Sunum ve koltuk kilidi bekleyen hareketi
+iptal eder. Mobil inceleme, kısa dokunma sonrasında geri gelen odaktan ayrı
+tutulur; yeni zar seçimini örten bir pencere kendiliğinden açılmaz. Masaüstü
+izdüşüm hedefleri ve klavye dolaşımı korunur. Dinlenen mobil 3B üst yüzün açık,
+yüksek kontrastlı dokusu aynı core yüzünü gösterir; atış kaydı değiştirilmez.
+
 ## Ağ ve çalıştırma
 
 Vite geliştirmede oyunla aynı HTTP sunucusuna Socket.IO ekler. Üretimde

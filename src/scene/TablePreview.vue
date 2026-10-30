@@ -278,9 +278,11 @@ onErrorCaptured(() => {
     <SceneDiceControls
       v-if="status === 'ready'"
       :players="Object.values(state.players)"
+      :viewer-id="viewerId ?? 'player-1'"
       :selectable-player="controlsDisabled ? null : controlPlayer ?? null"
       :targets="targets"
       :collected="collected"
+      :safe-area="frameInsets"
       :disabled="!!background || !!batch || paused || !!blocked || !!turningSeat || menuPinned"
       @select="emit('select', $event)"
       @highlight="highlightedDie = $event"

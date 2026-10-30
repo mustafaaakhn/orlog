@@ -290,3 +290,11 @@ seçilebilir. Gücü onayla mevcut güç komutunu, Güç kullanmadan devam et me
 pas komutunu gönderir. İnceleme ve paneli kapatma komut üretmez. Bu arayüz
 uyarlaması ödeme/öncelik, hedef, jeton kazanımı veya başarısızlık kurallarını
 değiştirmez; gerçek yeterlilik yalnız gücün çalışma sırasında denetlenir.
+
+## Mobil zar incelemesi
+
+Mobil yüz hedefleri aynı core yüzünü, jeton çerçevesini ve seçili/kilitli
+durumu gösterir. Uygun kendi zarına kısa dokunma mevcut seçim komutunu
+gönderir. Rakip/kilitli zar incelemesi, uzun basma ve bilgiyi kapatma oyun
+komutu üretmez. Ekran hedeflerinin ayrılması zar sonucu, fizik kaydı veya
+oyundaki saklama/jeton kurallarını değiştirmez.

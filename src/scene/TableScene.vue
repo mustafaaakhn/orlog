@@ -272,7 +272,7 @@ const seatTurn = createSeatTurn(props.viewerId, {
 function publishTargets() {
   if (sceneClosed || seatTurning || props.batch || !sizes.width.value || !sizes.height.value)
     return;
-  board.setDiceReadability(true);
+  board.setDiceReadability(true, sizes.width.value <= 600 || (sizes.height.value <= 500 && sizes.width.value > sizes.height.value));
   board.object.updateMatrixWorld(true);
   camera.updateMatrixWorld(true);
   const targets: SceneDieTarget[] = [];

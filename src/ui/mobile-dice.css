@@ -1,0 +1,60 @@
+.mobile-die-controls .scene-die-target {
+  width: 44px;
+  height: 44px;
+  min-height: 44px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #655746;
+  border-radius: 7px;
+  background: #f6ecd5;
+  color: #17221c;
+  box-shadow: 0 2px 5px #07120c80;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+.mobile-die-controls .scene-die-target:hover:enabled,
+.mobile-die-controls .scene-die-target:focus-visible { background: #fff5df; }
+.mobile-die-controls .scene-die-target > svg { width: 32px; height: 32px; }
+.mobile-die-controls .scene-die-target.grants-token { border-color: #a57520; box-shadow: inset 0 0 0 2px #e5bd60, 0 2px 5px #07120c80; }
+.mobile-die-controls .scene-die-target.is-selected,
+.mobile-die-controls .scene-die-target.is-kept { outline: 2px solid #71d9e2; outline-offset: 1px; }
+.mobile-die-controls .scene-die-target:focus-visible { outline: 3px solid #fff8e8; outline-offset: 3px; }
+.mobile-die-controls .scene-die-target[aria-disabled="true"] { visibility: hidden; }
+.die-target-token { position: absolute; top: -5px; right: -5px; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 3px; background: #1c2921; }
+.die-target-token svg { width: 16px; height: 16px; }
+.die-target-check { position: absolute; bottom: -3px; left: -4px; display: grid; place-items: center; width: 15px; height: 15px; background: #71d9e2; color: #10251e; border-radius: 3px; font: bold 12px/1 sans-serif; }
+.die-target-links { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.die-target-links line { stroke: #f5ebd8; stroke-width: 1.5; stroke-opacity: .8; filter: drop-shadow(0 1px 1px #07120c); }
+.mobile-die-controls .die-face-preview { pointer-events: auto; max-height: min(300px, calc(100% - 24px)); overflow-y: auto; overscroll-behavior: contain; }
+.mobile-die-controls .die-preview-face { position: relative; }
+.mobile-die-controls .die-preview-coin { position: absolute; width: 20px; height: 20px; top: -6px; right: -6px; }
+.mobile-die-controls .die-preview-close { min-height: 44px; width: 100%; margin-top: 4px; padding: 8px; font-size: 13px; background: #24382d; color: #f5ebd8; }
+
+.die-target-list { display: contents; }
+.mobile-die-controls .die-target-list.is-overflow {
+  position: absolute; display: grid; grid-template-columns: repeat(auto-fill, 44px);
+  align-content: start; justify-content: center; gap: 4px; padding: 0;
+  overflow-y: auto; overscroll-behavior: contain; pointer-events: auto;
+  border-radius: 8px; background: #13251fc9;
+}
+.mobile-die-controls .is-overflow .scene-die-target {
+  position: relative; left: auto !important; top: auto !important;
+  transform: none; touch-action: pan-y;
+}
+
+.mobile-die-controls .scene-die-target > * { pointer-events: none; }
+
+.mobile-die-controls .die-target-list.is-overflow::before {
+  content: "Zarları kaydırarak incele"; grid-column: 1 / -1; position: sticky;
+  top: 0; z-index: 4; padding: 5px; background: #13251f; color: #f5ebd8; font-size: 11px;
+}
+
+.mobile-die-controls .die-target-list.is-overflow { scroll-snap-type: y mandatory; }
+.mobile-die-controls .is-overflow .scene-die-target { scroll-snap-align: start; }
+.mobile-die-controls .die-target-list.is-overflow.is-short::before { display: none; }
+.mobile-die-controls .die-target-list.is-overflow { scroll-padding-top: 28px; }
+.mobile-die-controls .die-target-list.is-overflow.is-short { scroll-padding-top: 0; }
+
+.die-target-value { position: absolute; right: -3px; bottom: -3px; padding: 1px 3px; border-radius: 3px; background: #172a21; color: #fff5df; font: 12px/1.3 sans-serif; }

@@ -60,6 +60,20 @@ geçiş yumuşaktır; azaltılmış harekette kamera animasyonu yapılmaz. Masa�
 tam masa kadrajını korur. Koltuk yönü mevcut yerel/bot/çevrim içi davranışını
 izler; kamera ve özet oyun sonucu üretmez.
 
+Mobilde beş simge açık kemik zeminli, kameranın açısından etkilenmeyen 44px
+zar yüzlerinde de okunur. Yakın hedefler 4px aralıkla ayrılır; gerçek zardan
+uzaklaşan hedefi ince çizgi bağlar. Jetonlu yüzün altın çerçevesine sağ üstte
+ayrı bir altın jeton simgesi eşlik eder. Seçili/kilitli durum açık camgöbeği
+çizgi ve sol alttaki onay imiyle gösterilir; jeton kazancı ile karışmaz.
+Çok kısa ekranda bütün zarlar sığmazsa hedefler aynı büyüklükte kayar.
+
+Kısa dokunma kendi uygun zarını merkeze alır veya geri getirir. Kilitli/rakip
+zarına dokunma ve kendi zarına uzun basma simge, etki ve Jeton getirir bilgisini
+açar; görünür Kapat eylemi vardır. Uzun basma veya sürükleme seçim üretmez.
+Rakibin haznesi yalnız üst özetteki 44px düğmelerden incelenir; aynı zara
+iki mobil hedef çizilmez. Masaüstünde mevcut 3B yüzler, hover bilgisi ve
+klavye hedefleri korunur.
+
 Mobil maçta **Tanrı gücü** düğmesi alttan açılan bir panel sunar. Oyuncunun
 üç kuşanılmış tanrısı portre, öncelik, zamanlama ve üç seviyenin bedel/etki
 metniyle listelenir. Senin tanrıların / Rakibin tanrıları düğmeleriyle iki
