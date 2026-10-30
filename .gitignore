@@ -11,3 +11,6 @@ coverage/
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Yerel ses taslakları ve üretim kayıtları
+/output/elevenlabs/
