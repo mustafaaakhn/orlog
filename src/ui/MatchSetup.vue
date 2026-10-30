@@ -17,12 +17,14 @@ import {
 import type { FavorId, GameOptions, PlayerId } from "../core";
 import { FAVOR_ART_IDS } from "../scene/favorArt";
 import type { OpponentOptions } from "../ai/computer";
+import type { OnlineClient } from "../network/client";
 type Screen = "welcome" | "mode" | "gods" | "coin";
 const props = defineProps<{
   reduced: boolean;
   paused: boolean;
   muted: boolean;
   volume: number;
+  online: OnlineClient;
 }>();
 const emit = defineEmits<{
   start: [
@@ -74,20 +76,25 @@ const browsing = ref<FavorId>(FAVOR_ART_IDS[0]!);
 const firstPlayer = ref<PlayerId | null>(null);
 const roomCode = ref("");
 const roomError = ref("");
-const roomJoined = ref(false);
-const guestPresent = ref(false);
+const room = computed(() => props.online.room.value);
+const networkBusy = computed(() => props.online.busy.value);
+const networkError = computed(() => roomError.value || props.online.error.value);
+const ownId = computed(() => props.online.identity.value?.playerId ?? "player-1");
+const ownSeat = computed(() => room.value?.players.find(player => player.id === ownId.value));
+const roomJoined = computed(() => !!room.value);
+const guestPresent = computed(() => room.value?.players.some(player => player.id === "player-2" && player.connected) ?? false);
 const copied = ref(false);
-const roomPreview = computed(() => selectedMode.value === "friend" && friendMode.value !== "local");
-const isHost = computed(() => friendMode.value === "host");
+const onlineMode = computed(() => selectedMode.value === "friend" && friendMode.value !== "local");
+const isHost = computed(() => room.value ? ownId.value === "player-1" : friendMode.value === "host");
 const roomReady = computed(
-  () => !roomPreview.value || (isHost.value ? guestPresent.value : roomJoined.value),
+  () => !onlineMode.value || (isHost.value && props.online.bothConnected.value && !networkBusy.value),
 );
 const friendPaths = [
   { id: "local", label: "Aynı bilgisayarda", icon: "monitor" },
   { id: "host", label: "Oda kur", icon: "room-add" },
   { id: "join", label: "Odaya katıl", icon: "door" },
 ] as const;
-const roomStatus = computed(() => isHost.value
+const roomStatus = computed(() => room.value && !props.online.connected.value ? "Odaya yeniden bağlanılıyor…" : isHost.value
   ? guestPresent.value ? "Arkadaşın geldi. Masanız hazır." : "Arkadaşın bekleniyor…"
   : roomJoined.value ? "Odaya katıldın. Oda sahibinin başlatması bekleniyor." : "Arkadaşının paylaştığı 6 karakterli kodu gir.");
 const local = computed(() => selectedMode.value !== "computer");
@@ -99,6 +106,36 @@ watch(local, (isLocal) => {
   }
 });
 const currentLoadout = computed(() => loadouts.value[editingPlayer.value]);
+watch(room, (value, old) => {
+  if (!value) {
+    if (old) { screen.value = "mode"; firstPlayer.value = null; friendMode.value = "join"; }
+    return;
+  }
+  selectedMode.value = "friend";
+  friendOpen.value = true;
+  friendMode.value = ownId.value === "player-1" ? "host" : "join";
+  editingPlayer.value = ownId.value;
+  for (const player of value.players) {
+    if (player.id !== ownId.value || player.ready) {
+      names.value[player.id] = player.name;
+      loadouts.value[player.id] = [...player.favors];
+    }
+  }
+  if (value.stage === "lobby") screen.value = "mode";
+  else if (value.stage === "gods") screen.value = "gods";
+  else if (value.stage === "coin") screen.value = "coin";
+  if (value.firstPlayerId && old && !old.firstPlayerId) emit("toss");
+  firstPlayer.value = value.firstPlayerId;
+}, { immediate: true });
+watch(() => props.online.error.value, message => {
+  if (message && !room.value) {
+    selectedMode.value = "friend";
+    friendOpen.value = true;
+    screen.value = "mode";
+    if (friendMode.value === "local") friendMode.value = "join";
+  }
+}, { immediate: true });
+const loadoutLocked = computed(() => !!room.value && !!ownSeat.value?.ready);
 const valid = computed(() =>
   PLAYER_IDS.every(
     (id) =>
@@ -108,10 +145,11 @@ const valid = computed(() =>
 );
 const canContinueGods = computed(
   () =>
+    !networkBusy.value && !loadoutLocked.value &&
     currentLoadout.value.length === 3 &&
     ((editingPlayer.value === "player-2" && !local.value) ||
       !!names.value[editingPlayer.value].trim()) &&
-    ((local.value && editingPlayer.value === "player-1") || valid.value),
+    (!!room.value || (local.value && editingPlayer.value === "player-1") || valid.value),
 );
 const steps = ["Rakibin", "Tanrıların", "İlk hamle"];
 const stepIndex = computed(() =>
@@ -135,6 +173,11 @@ watch(
   { immediate: true },
 );
 function goBack() {
+  if (room.value) {
+    void props.online.leave();
+    screen.value = "mode";
+    return;
+  }
   if (screen.value === "mode" && desktopWelcome.value && friendOpen.value) {
     friendOpen.value = false;
     void nextTick(() => document.querySelector<HTMLElement>(".mode-friend-choice")?.focus({ preventScroll: true }));
@@ -152,14 +195,35 @@ function chooseFriend() {
   friendOpen.value = true;
   if (desktopWelcome.value) void nextTick(() => document.querySelector<HTMLElement>(".mode-friend-title")?.focus({ preventScroll: true }));
 }
+async function chooseComputer() {
+  if (networkBusy.value) return;
+  if (room.value) await props.online.leave();
+  props.online.error.value = "";
+  selectedMode.value = "computer";
+  friendOpen.value = false;
+  continueMode();
+}
 function continueMode() {
   roomError.value = "";
+  if (onlineMode.value) {
+    if (roomReady.value) void props.online.start();
+    return;
+  }
   if (roomReady.value) {
     editingPlayer.value = "player-1";
     screen.value = "gods";
   }
 }
-watch(roomCode, () => { roomJoined.value = false; roomError.value = ""; });
+watch(roomCode, () => { roomError.value = ""; });
+async function choosePath(path: typeof friendMode.value) {
+  if (networkBusy.value) return;
+  if (room.value) await props.online.leave();
+  friendMode.value = path;
+  roomError.value = "";
+  props.online.error.value = "";
+  copied.value = false;
+  if (path === "host") await props.online.create();
+}
 function joinRoom() {
   if (!/^[A-Z0-9]{6}$/.test(roomCode.value.trim().toUpperCase())) {
     roomError.value = "6 harf veya rakamdan oluşan bir oda kodu gir.";
@@ -170,19 +234,20 @@ function joinRoom() {
     return;
   }
   roomError.value = "";
-  roomJoined.value = true;
+  void props.online.join(roomCode.value.trim().toUpperCase());
 }
 async function copyCode() {
   try {
-    await navigator.clipboard.writeText("SKAL26");
+    await navigator.clipboard.writeText(room.value?.code ?? "");
     copied.value = true;
   } catch {
     copied.value = false;
     roomError.value =
-      "Kod kopyalanamadı. SKAL26 kodunu seçip kopyalayabilirsin.";
+      `Kod kopyalanamadı. ${room.value?.code ?? ""} kodunu seçip kopyalayabilirsin.`;
   }
 }
 function toggleFavor(id: FavorId) {
+  if (loadoutLocked.value || (room.value && editingPlayer.value !== ownId.value)) return;
   if (!local.value && editingPlayer.value !== "player-1") return;
   selectionError.value = "";
   browsing.value = id;
@@ -193,6 +258,10 @@ function toggleFavor(id: FavorId) {
 }
 function continueGods() {
   if (!canContinueGods.value) return;
+  if (room.value) {
+    void props.online.ready(names.value[ownId.value], [...currentLoadout.value]);
+    return;
+  }
   if (local.value && editingPlayer.value === "player-1") {
     editingPlayer.value = "player-2";
     return;
@@ -200,6 +269,7 @@ function continueGods() {
   if (valid.value) screen.value = "coin";
 }
 function toss() {
+  if (room.value) { void props.online.toss(); return; }
   if (firstPlayer.value) return;
   firstPlayer.value = PLAYER_IDS[randomIndex(mathRandom, 2)]!;
   emit("toss");
@@ -210,6 +280,7 @@ function toss() {
   );
 }
 function start() {
+  if (room.value) { void props.online.play(); return; }
   if (valid.value && firstPlayer.value)
     emit(
       "start",
@@ -297,7 +368,7 @@ function start() {
             class="mode-robot-choice"
             :aria-pressed="desktopWelcome ? undefined : selectedMode === 'computer'"
             aria-label="Robota karşı oyna"
-            @click="selectedMode = 'computer'; continueMode()"
+            :disabled="networkBusy" @click="chooseComputer"
           >
             <img v-if="desktopWelcome" class="mode-scene" src="/assets/art/mode-robot.webp" width="1024" height="1536" alt="" decoding="async" />
             <span v-if="!desktopWelcome" class="mode-emblem"><UiIcon name="robot" /></span>
@@ -314,7 +385,7 @@ function start() {
             <img v-if="desktopWelcome" class="mode-scene" src="/assets/art/mode-friend.webp" width="1024" height="1536" alt="" decoding="async" />
             <span v-if="!desktopWelcome" class="mode-emblem"><UiIcon name="people" /></span>
             <h2>Arkadaşınla</h2>
-            <p v-if="!desktopWelcome">Aynı bilgisayarı paylaş veya oda akışını incele.</p>
+            <p v-if="!desktopWelcome">Aynı bilgisayarı paylaş veya kodla arkadaşına katıl.</p>
             <span class="mode-card-action"><span v-if="!desktopWelcome">{{ selectedMode === "friend" ? "Seçildi" : "İki oyuncu" }}</span><UiIcon :name="!desktopWelcome && selectedMode === 'friend' ? 'check' : 'arrow'" /></span>
           </button>
         </div>
@@ -322,7 +393,7 @@ function start() {
           <div class="friend-heading"><h1 v-if="desktopWelcome" class="mode-friend-title" tabindex="-1">Arkadaşınla</h1><p>Nasıl buluşacaksınız?</p></div>
           <div class="segmented-control" role="group" aria-label="Arkadaşınla oynama şekli">
             <button v-for="path in friendPaths"
-              :key="path.id" :aria-pressed="friendMode === path.id" @click="friendMode = path.id; roomError = ''"><UiIcon :name="path.icon" />{{ path.label }}</button>
+              :key="path.id" :aria-pressed="friendMode === path.id" :disabled="networkBusy" @click="choosePath(path.id)"><UiIcon :name="path.icon" />{{ path.label }}</button>
           </div>
           <div v-if="friendMode === 'local'" class="friend-local">
             <div class="friend-seats" aria-hidden="true"><UiIcon name="people" /><span></span><UiIcon name="monitor" /><span></span><UiIcon name="people" /></div>
@@ -330,34 +401,36 @@ function start() {
             <p>Yan yana oturun. Sırayla zar atıp aynı masayı paylaşın.</p>
           </div>
           <template v-else>
-            <p id="room-preview-note" class="preview-note">Oda önizlemesi · Gerçek bağlantı kurulmaz. Devam ederseniz aynı bilgisayarda oynarsınız.</p>
+            <p id="room-note" class="preview-note">Kodu arkadaşınla paylaş. İkiniz de katılınca oda kurucusu oyunu başlatır.</p>
             <div v-if="isHost" class="friend-room-inline">
-              <div><span class="room-code-label">Örnek davet kodu</span><strong class="room-code">SKAL26</strong></div>
-              <button class="secondary-action" @click="copyCode"><UiIcon name="copy" />{{ copied ? 'Kod kopyalandı' : 'Kodu kopyala' }}</button>
-              <button class="text-button" :aria-pressed="guestPresent" @click="guestPresent = !guestPresent">{{ guestPresent ? 'Bekleme durumunu göster' : 'Arkadaş katılımını önizle' }}</button>
+              <div><span class="room-code-label">Davet kodu</span><strong class="room-code">{{ room?.code ?? (networkBusy ? '…' : '—') }}</strong></div>
+              <button v-if="room" class="secondary-action" @click="copyCode"><UiIcon name="copy" />{{ copied ? 'Kod kopyalandı' : 'Kodu kopyala' }}</button>
+              <button v-else class="secondary-action" :disabled="networkBusy" @click="online.create()">{{ networkBusy ? 'Oda kuruluyor…' : 'Yeniden dene' }}</button>
             </div>
-            <form v-else class="friend-join-form" @submit.prevent="joinRoom">
+            <form v-else-if="!roomJoined" class="friend-join-form" @submit.prevent="joinRoom">
               <label for="room-code">Oda kodu</label>
               <div class="friend-code-entry"><input id="room-code" v-model="roomCode" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="6" placeholder="Örn. SKAL26"
-                :aria-invalid="!!roomError" :aria-describedby="roomError ? 'room-preview-note room-error' : 'room-preview-note'" />
-                <button class="secondary-action" type="submit">Katıl</button></div>
+                :disabled="networkBusy" :aria-invalid="!!networkError" :aria-describedby="networkError ? 'room-note room-error' : 'room-note'" />
+                <button class="secondary-action" type="submit" :disabled="networkBusy">{{ networkBusy ? 'Katılıyor…' : 'Katıl' }}</button></div>
             </form>
-            <div v-if="isHost || roomJoined" class="room-players" aria-label="Odadaki oyuncular">
+            <div v-else class="friend-room-inline"><div><span class="room-code-label">Katıldığın oda</span><strong class="room-code">{{ room?.code }}</strong></div></div>
+            <div v-if="room" class="room-players" aria-label="Odadaki oyuncular">
               <div class="room-player"><UiIcon name="people" /><span><strong>Oda sahibi</strong><small>{{ isHost ? 'Sen' : 'Arkadaşın' }}</small></span><UiIcon name="check" /></div>
               <div class="room-player" :class="{ 'is-waiting': isHost && !guestPresent }"><UiIcon :name="isHost && !guestPresent ? 'people' : 'check'" /><span><strong>Misafir</strong><small>{{ isHost ? guestPresent ? 'Arkadaşın' : 'Henüz katılmadı' : 'Sen' }}</small></span><span class="room-presence" :class="{ ready: !isHost || guestPresent }"></span></div>
             </div>
             <div class="friend-room-status" role="status" aria-live="polite" :class="{ 'is-waiting': isHost && !guestPresent, 'is-ready': roomReady }">
               <span class="room-status-mark" aria-hidden="true"><UiIcon :name="roomReady ? 'check' : 'people'" /></span>
-              <span>{{ roomStatus }}<small v-if="isHost || roomJoined">{{ isHost && !guestPresent ? '1 / 2' : '2 / 2' }} oyuncu · Oda önizlemesi</small></span>
+              <span>{{ networkBusy ? 'Bağlantı kuruluyor…' : roomStatus }}<small v-if="room">{{ room.players.filter(player => player.connected).length }} / 2 oyuncu</small></span>
             </div>
-            <p v-if="roomError" id="room-error" class="field-error" role="alert">{{ roomError }}</p>
+            <p v-if="networkError" id="room-error" class="field-error" role="alert">{{ networkError }}</p>
+            <button v-if="room" class="text-button" :disabled="networkBusy" @click="online.leave()">Odadan ayrıl</button>
           </template>
         </div>
         </div>
       </div>
       <div v-if="!desktopWelcome || friendOpen" class="flow-footer">
-        <span>{{ roomPreview ? 'Oda arayüzü önizlemesi' : selectedMode === 'friend' ? 'Aynı masada iki kişi' : 'Sen ve bilgisayar' }}</span>
-        <button class="primary-action" :disabled="!roomReady" @click="continueMode">{{ roomPreview ? 'Yerel önizlemeyi başlat' : 'Tanrılarını seç' }}<UiIcon name="arrow" /></button>
+        <span>{{ onlineMode ? isHost ? 'Arkadaşınla çevrim içi' : 'Oda kurucusunun başlatması bekleniyor' : selectedMode === 'friend' ? 'Aynı masada iki kişi' : 'Sen ve bilgisayar' }}</span>
+        <button v-if="!onlineMode || isHost" class="primary-action" :disabled="!roomReady" @click="continueMode">{{ onlineMode ? 'Oyunu başlat' : 'Tanrılarını seç' }}<UiIcon name="arrow" /></button>
       </div>
     </template>
     <template v-else-if="screen === 'gods'">
@@ -371,7 +444,7 @@ function start() {
             v-for="id in PLAYER_IDS"
             :key="id"
             :aria-pressed="editingPlayer === id"
-            :disabled="!local && id === 'player-2'"
+            :disabled="room ? id !== ownId : !local && id === 'player-2'"
             :title="!local && id === 'player-2' ? 'Bilgisayarın tanrıları sabittir.' : undefined"
             @click="editingPlayer = id"
           >
@@ -414,6 +487,7 @@ function start() {
               class="god-tile"
               :class="{ browsing: browsing === id }"
               :aria-pressed="currentLoadout.includes(id)"
+              :aria-disabled="loadoutLocked"
               :aria-label="`${shortName(id)}, ${favorSummary(id).label}${currentLoadout.includes(id) ? ', kuşanıldı; kaldır' : currentLoadout.length === 3 ? ', seçim sınırı dolu; gücü incele' : ', kuşan'}`"
               @pointerenter="browsing = id"
               @focus="browsing = id"
@@ -431,7 +505,7 @@ function start() {
             aria-label="Seçilen tanrılar"
           >
             <label class="name-field" v-if="editingPlayer === 'player-1' || local"
-              >Oyuncu adı<input v-model="names[editingPlayer]" maxlength="28"
+              >Oyuncu adı<input v-model="names[editingPlayer]" maxlength="28" :disabled="loadoutLocked"
             /></label>
             <div class="loadout-heading">
               <h2>Yanındaki tanrılar</h2>
@@ -450,6 +524,7 @@ function start() {
                   ><strong>{{ shortName(id) }}</strong></span
                 ><button
                   class="icon-button"
+                  :disabled="loadoutLocked"
                   :aria-label="`${shortName(id)} tanrısını kaldır`"
                   @click="toggleFavor(id)"
                 >
@@ -469,7 +544,9 @@ function start() {
         </div>
       </div>
       <div class="flow-footer">
-        <span v-if="selectionError" class="selection-warning" role="alert">{{ selectionError }}</span>
+        <span v-if="room && loadoutLocked" role="status">Tanrıların hazır. Arkadaşının seçimi bekleniyor…</span>
+        <span v-else-if="networkError" class="field-error" role="alert">{{ networkError }}</span>
+        <span v-else-if="selectionError" class="selection-warning" role="alert">{{ selectionError }}</span>
         <span v-else>{{
           currentLoadout.length === 3
             ? "Üç tanrın hazır."
@@ -481,7 +558,7 @@ function start() {
           @click="continueGods"
         >
           {{
-            local && editingPlayer === "player-1"
+            room ? 'Hazırım' : local && editingPlayer === "player-1"
               ? "İkinci oyuncunun tanrıları"
               : "İlk hamleyi belirle"
           }}<UiIcon name="arrow" />
@@ -511,15 +588,14 @@ function start() {
               : "Yazı mı, tura mı? Şans iki tarafa da eşit."
           }}
         </p>
-        <button v-if="!firstPlayer" class="primary-action" @click="toss">
+        <button v-if="!firstPlayer && (!room || isHost)" class="primary-action" :disabled="networkBusy || (!!room && !online.bothConnected.value)" @click="toss">
           Yazı tura at <UiIcon name="arrow" /></button
-        ><button v-else data-coin-start class="primary-action" @click="start">
-          {{ roomPreview ? "Yerel önizlemeyi başlat" : "Masaya geç" }}
+        ><button v-else-if="firstPlayer && (!room || isHost)" data-coin-start class="primary-action" :disabled="networkBusy || (!!room && !online.bothConnected.value)" @click="start">
+          Masaya geç
           <UiIcon name="arrow" />
         </button>
-        <p v-if="roomPreview" class="preview-note">
-          Bu önizleme aynı cihazda iki oyuncuyla devam eder.
-        </p>
+        <p v-if="room && !isHost" class="preview-note" role="status">{{ firstPlayer ? 'Oda kurucusunun masayı açması bekleniyor…' : 'Oda kurucusunun yazı tura atması bekleniyor…' }}</p>
+        <p v-if="networkError" class="field-error" role="alert">{{ networkError }}</p>
         <div class="coin-loadouts">
           <div v-for="id in PLAYER_IDS" :key="id">
             <strong>{{ playerName(id) }}</strong>

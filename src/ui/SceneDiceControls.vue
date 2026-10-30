@@ -52,6 +52,7 @@ function aim(event: PointerEvent) {
   if (event.pointerType !== "touch") aimed.value = nearest(event)?.id ?? null;
 }
 function select(event: MouseEvent, fallback: DieId) {
+  if (props.disabled) return;
   emit("select", event.detail ? (nearest(event)?.id ?? fallback) : fallback);
 }
 function navigate(event: KeyboardEvent) {
@@ -107,7 +108,7 @@ function navigate(event: KeyboardEvent) {
       }"
       :aria-label="target.label"
       :aria-pressed="target.selected"
-      :disabled="disabled"
+      :aria-disabled="disabled"
       @focus="highlight.focus(target.id)"
       @blur="highlight.focus(null)"
       @click="select($event, target.id)"

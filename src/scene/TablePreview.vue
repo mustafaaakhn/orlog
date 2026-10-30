@@ -41,6 +41,7 @@ const props = defineProps<{
   favorPlayer?: PlayerId | null;
   state: GameState;
   batch: PresentationBatch | null;
+  blocked?: boolean;
 }>();
 const emit = defineEmits<{
   availability: [ready: boolean];
@@ -83,6 +84,7 @@ const collected = ref<DieId[]>([]);
 const controlsDisabled = computed(
   () =>
     props.paused ||
+    props.blocked ||
     !!props.batch ||
     props.state.phase.name !== "roll" ||
     props.state.phase.step !== "selecting-dice",

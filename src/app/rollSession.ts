@@ -24,8 +24,12 @@ export function createRollSession(options: GameOptions = {}) {
   const state = shallowRef(game.state)
   const pending = shallowRef<PresentationBatch | null>(null)
   const error = shallowRef('')
+  let remote: { dispatch(command: GameCommand, revision: number): boolean; settled(revision: number): void } | null = null
+  let remoteState: GameState | null = null
+  const currentState = () => remoteState ?? game.state
   function dispatch(command: GameCommand) {
     if (pending.value) return false
+    if (remote) return remote.dispatch(command, state.value.revision)
     const result = game.dispatch(command)
     if (!result.ok) {
       error.value = result.error.message
@@ -44,6 +48,7 @@ export function createRollSession(options: GameOptions = {}) {
     if (pending.value?.id !== batchId) return
     state.value = pending.value.state
     pending.value = null
+    remote?.settled(state.value.revision)
   }
   return {
     state,
@@ -51,6 +56,23 @@ export function createRollSession(options: GameOptions = {}) {
     error,
     lastEvent,
     history,
+    startRemote(snapshot: GameState, port: NonNullable<typeof remote>) {
+      remote = port
+      remoteState = snapshot
+      state.value = snapshot
+      pending.value = { id: ++batchSequence, revision: snapshot.revision, state: snapshot, events: [] }
+      appliedSequence = snapshot.eventSequence
+      contactSequence = 0
+      contactStep = 0
+      history.value = []
+      lastEvent.value = null
+      error.value = ''
+    },
+    receive(snapshot: GameState, events: readonly GameEvent[]) {
+      if (!remote || snapshot.gameId !== remoteState?.gameId || snapshot.revision <= remoteState.revision) return
+      remoteState = snapshot
+      pending.value = { id: ++batchSequence, revision: snapshot.revision, state: snapshot, events }
+    },
     progress(batchId: number, event: GameEvent, step: number) {
       if (pending.value?.id !== batchId || !pending.value.events.includes(event) ||
         event.sequence <= appliedSequence || event.sequence < contactSequence ||
@@ -69,6 +91,8 @@ export function createRollSession(options: GameOptions = {}) {
     },
     start(options: GameOptions) {
       if (pending.value) return false
+      remote = null
+      remoteState = null
       game = new Game({ ...options, gameId: `local-match-${++matchSequence}` })
       state.value = game.state
       appliedSequence = 0
@@ -82,10 +106,12 @@ export function createRollSession(options: GameOptions = {}) {
     dispatch,
     settle,
     resume() {
-      if (!pending.value && ['round-complete', 'ended'].includes(game.state.phase.name))
-        pending.value = { id: ++batchSequence, revision: game.state.revision, state: game.state, events: [] }
+      const current = currentState()
+      if (!pending.value && (remote || ['round-complete', 'ended'].includes(current.phase.name)))
+        pending.value = { id: ++batchSequence, revision: current.revision, state: current, events: [] }
     },
     finishLastRoll(blocked = false) {
+      if (remote) return false
       const current = game.state
       const phase = current.phase
       if (blocked || pending.value || state.value !== current || phase.name !== 'roll' ||
@@ -93,11 +119,13 @@ export function createRollSession(options: GameOptions = {}) {
       return dispatch({ type: 'ConfirmRoll', playerId: phase.activePlayerId })
     },
     resolveReady(blocked = false) {
+      if (remote) return false
       if (blocked || pending.value || state.value !== game.state || game.state.phase.name !== 'resolution' ||
         Object.values(game.state.players).some(player => player.favorChoice.status === 'pending')) return false
       return dispatch({ type: 'ResolveRound', playerId: game.state.firstPlayerId })
     },
     advanceRound() {
+      if (remote) return false
       if (pending.value || state.value !== game.state || game.state.phase.name !== 'round-complete') return false
       return dispatch({ type: 'NextRound', playerId: game.state.firstPlayerId })
     },
@@ -117,11 +145,13 @@ export function createRollSession(options: GameOptions = {}) {
     },
     recover() {
       // Context loss/unmount discards presentation, never the authoritative result.
-      state.value = game.state
+      state.value = currentState()
       pending.value = null
     },
     restart() {
       if (pending.value) return
+      remote = null
+      remoteState = null
       game = new Game({ ...options, gameId: `local-match-${++matchSequence}` })
       appliedSequence = 0
       contactSequence = 0

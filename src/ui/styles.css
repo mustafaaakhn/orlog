@@ -2416,7 +2416,7 @@ input[type="radio"] {
   outline: none;
   background: transparent;
 }
-.scene-die-target:disabled {
+.scene-die-target[aria-disabled="true"] {
   pointer-events: none;
   opacity: 1;
 }
@@ -3136,4 +3136,17 @@ input[type="radio"] {
   }
   .welcome-stage .welcome-play:active { background: #140e091a; color: #e4bc79; }
   .welcome-stage .welcome-play:focus-visible { outline: 2px solid #f6d9a1; outline-offset: -2px; }
+}
+.network-status {
+  position: absolute;
+  top: 48px;
+  left: 24px;
+  max-width: min(420px, calc(100% - 48px));
+  margin: 0;
+  padding: 10px 14px;
+  color: var(--cue-gold, #e5c58d);
+  background: var(--cue-background, #352a20f2);
+  font-size: 13px;
+  line-height: 1.5;
+  pointer-events: none;
 }

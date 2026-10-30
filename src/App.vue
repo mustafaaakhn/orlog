@@ -28,6 +28,8 @@ import type {
 import { createRollSession } from "./app/rollSession";
 import { createComputerDriver } from "./app/computerDriver";
 import type { OpponentOptions } from "./ai/computer";
+import { createOnlineClient } from "./network/client";
+import type { MatchUpdate } from "./network/protocol";
 
 const TablePreview = defineAsyncComponent({
   loader: () => import("./scene/TablePreview.vue"),
@@ -47,7 +49,7 @@ watch([introActive, setupScreen, overlay], () => {
 const dialog = ref<HTMLDialogElement | null>(null);
 const localViewer = ref<PlayerId>("player-1");
 const viewerId = computed(() =>
-  opponent.value.mode === "computer" ? "player-1" : localViewer.value,
+  online.identity.value?.playerId ?? (opponent.value.mode === "computer" ? "player-1" : localViewer.value),
 );
 watch(overlay, async (value) => {
   await nextTick();
@@ -81,12 +83,14 @@ watch([introActive, overlay, paused], () => {
   audio.visibility(paused.value || introActive.value || !!overlay.value);
 });
 onMounted(() => {
+  online.restore();
   audio.visibility(document.hidden);
   document.addEventListener("pointerdown", unlockAudio, { capture: true });
   document.addEventListener("keydown", unlockAudio, { capture: true });
   document.addEventListener("visibilitychange", visibility);
 });
 onUnmounted(() => {
+  online.dispose();
   document.removeEventListener("pointerdown", unlockAudio, { capture: true });
   document.removeEventListener("keydown", unlockAudio, { capture: true });
   document.removeEventListener("visibilitychange", visibility);
@@ -117,6 +121,7 @@ function start(
 }
 const sceneGeneration = ref(0);
 function restart() {
+  if (online.identity.value) void online.leave();
   pendingStartSound.value = false;
   audio.stopEffects();
   session.recover();
@@ -131,6 +136,26 @@ function restart() {
 const sceneReady = ref(false);
 const pendingStartSound = ref(false);
 const session = createRollSession();
+const online = createOnlineClient({
+  snapshot(match: MatchUpdate) {
+    session.startRemote(match.state, {
+      dispatch: (command, revision) => online.command(command, revision),
+      settled: (revision) => online.presented(revision),
+    });
+    for (const player of online.room.value?.players ?? []) names.value[player.id] = player.name;
+    opponent.value = { mode: "local", difficulty: "normal" };
+    if (preparing.value) pendingStartSound.value = true;
+    sceneReady.value = false;
+    sceneGeneration.value++;
+    preparing.value = false;
+  },
+  batch: match => session.receive(match.state, match.events),
+  closed() {
+    if (!preparing.value) restart();
+  },
+});
+const onlineRoom = online.room;
+const onlineError = online.error;
 const { state, pending, error, lastEvent } = session;
 const phase = computed(() => state.value.phase);
 const activePlayer = computed(() =>
@@ -138,9 +163,10 @@ const activePlayer = computed(() =>
     ? state.value.players[phase.value.activePlayerId]
     : null,
 );
-const busy = computed(() => !!pending.value || !sceneReady.value);
+const busy = computed(() => !!pending.value || !sceneReady.value ||
+  (!!onlineRoom.value && (online.busy.value || onlineRoom.value.waiting || !online.bothConnected.value)));
 watch([activePlayer, opponent], ([player, options]) => {
-  if (options.mode === "local" && player) localViewer.value = player.id;
+  if (!onlineRoom.value && options.mode === "local" && player) localViewer.value = player.id;
 });
 const computerTurn = computed(
   () =>
@@ -148,6 +174,16 @@ const computerTurn = computed(
     opponent.value.mode === "computer" &&
     activePlayer.value?.id === "player-2",
 );
+const humanTurn = computed(() => !computerTurn.value &&
+  (!onlineRoom.value || activePlayer.value?.id === online.identity.value?.playerId));
+const networkStatus = computed(() => {
+  if (!onlineRoom.value) return "";
+  if (!online.connected.value) return "Odaya yeniden bağlanılıyor…";
+  if (!online.bothConnected.value) return "Arkadaşının bağlantısı bekleniyor. Maç iki dakika boyunca korunur.";
+  if (onlineRoom.value.waiting && !pending.value) return "Arkadaşının masası hazırlanıyor…";
+  if (!humanTurn.value && activePlayer.value) return `${names.value[activePlayer.value.id]} oynuyor…`;
+  return "";
+});
 const driver = createComputerDriver((command) => session.dispatch(command));
 watch(
   [state, pending, preparing, sceneReady, paused, opponent, overlay],
@@ -163,10 +199,11 @@ watch(
 );
 onUnmounted(() => driver.dispose());
 function selectDie(dieId: Parameters<typeof session.select>[0]) {
-  if (!busy.value && !computerTurn.value && !preparing.value)
+  if (!busy.value && humanTurn.value && !preparing.value)
     session.select(dieId);
 }
 const instruction = computed(() => {
+  if (networkStatus.value) return networkStatus.value;
   if (pending.value?.events.some((event) => event.type === "DiceRolled"))
     return "Zarlar kâsede yatışıyor…";
   if (pending.value)
@@ -221,7 +258,7 @@ watch(
   { flush: "sync" },
 );
 function choose(favorId: FavorId, level: FavorLevel, input?: FavorInput) {
-  if (!busy.value && !computerTurn.value && phase.value.name === "favor")
+  if (!busy.value && humanTurn.value && phase.value.name === "favor")
     session.dispatch({
       type: "ChooseFavor",
       playerId: phase.value.activePlayerId,
@@ -231,7 +268,7 @@ function choose(favorId: FavorId, level: FavorLevel, input?: FavorInput) {
     });
 }
 function skip() {
-  if (!busy.value && !computerTurn.value && phase.value.name === "favor")
+  if (!busy.value && humanTurn.value && phase.value.name === "favor")
     session.dispatch({
       type: "SkipFavor",
       playerId: phase.value.activePlayerId,
@@ -257,14 +294,14 @@ watch([state, pending, sceneReady, paused, preparing, overlay], () => {
   }
 });
 function roll() {
-  if (!busy.value && !computerTurn.value && phase.value.name === "roll")
+  if (!busy.value && humanTurn.value && phase.value.name === "roll")
     session.dispatch({
       type: "RollDice",
       playerId: phase.value.activePlayerId,
     });
 }
 function confirm() {
-  if (!busy.value && !computerTurn.value && phase.value.name === "roll")
+  if (!busy.value && humanTurn.value && phase.value.name === "roll")
     session.dispatch({
       type: "ConfirmRoll",
       playerId: phase.value.activePlayerId,
@@ -339,9 +376,10 @@ function confirm() {
         :speed="speed"
         :state="state"
         :batch="pending"
+        :blocked="busy"
         :viewer-id="viewerId"
         :control-player="
-          !preparing && !computerTurn && phase.name === 'roll'
+          !preparing && humanTurn && phase.name === 'roll'
             ? phase.activePlayerId
             : null
         "
@@ -349,7 +387,7 @@ function confirm() {
         @presented="session.present"
         @progress="session.progress"
         @settled="session.settle($event)"
-        :favor-player="!preparing && !computerTurn && !busy && phase.name === 'favor' ? phase.activePlayerId : null"
+        :favor-player="!preparing && humanTurn && !busy && phase.name === 'favor' ? phase.activePlayerId : null"
         @choose="choose"
         @select="selectDie"
       />
@@ -360,6 +398,7 @@ function confirm() {
       :paused="paused || !!overlay"
       :muted="settings.muted"
       :volume="settings.effects"
+      :online="online"
       @start="start"
       @toss="audio.coinFlip()"
       @screen="setupScreen = $event"
@@ -376,13 +415,14 @@ function confirm() {
       <p class="table-round" aria-label="Tur ve sıra">
         Tur {{ state.round }}<span v-if="activePlayer"> · {{ names[activePlayer.id] }}</span>
       </p>
+      <p v-if="networkStatus" class="network-status" role="status">{{ networkStatus }}</p>
       <section
         id="match-controls"
         tabindex="-1"
         class="match-actions"
         aria-label="Oyun kontrolleri"
       >
-        <template v-if="!busy && !computerTurn && phase.name === 'roll'">
+        <template v-if="!busy && humanTurn && phase.name === 'roll'">
           <button v-if="phase.step === 'awaiting-roll'" class="primary-action" @click="roll">
             Zar at <UiIcon name="arrow" />
           </button>
@@ -390,7 +430,7 @@ function confirm() {
             Seçimi onayla <UiIcon name="check" />
           </button>
         </template>
-        <template v-if="!busy && !computerTurn && phase.name === 'favor'">
+        <template v-if="!busy && humanTurn && phase.name === 'favor'">
           <p class="favor-prompt">Bir tanrı seç veya devam et.</p>
           <button class="primary-action" @click="skip">Devam et <UiIcon name="arrow" /></button>
         </template>
@@ -399,6 +439,7 @@ function confirm() {
           <button class="primary-action" @click="restart">Yeni oyun <UiIcon name="arrow" /></button>
         </template>
         <p v-if="error" class="field-error" role="alert">{{ error }}</p>
+        <p v-if="onlineError" class="field-error" role="alert">{{ onlineError }}</p>
       </section>
     </section>
     <dialog
@@ -479,7 +520,7 @@ function confirm() {
         <p>
           Tur {{ state.round }} ·
           {{
-            opponent.mode === "computer"
+            onlineRoom ? `Çevrim içi · ${onlineRoom.code}` : opponent.mode === "computer"
               ? "Robota karşı"
               : "Aynı cihazda iki kişi"
           }}
