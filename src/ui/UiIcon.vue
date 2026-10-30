@@ -6,6 +6,7 @@ defineProps<{
     | "check"
     | "close"
     | "settings"
+    | "info"
     | "translate"
     | "book"
     | "people"
@@ -46,6 +47,7 @@ const paths = {
   back: "M20 12H4m6-6-6 6 6 6",
   check: "m5 12 4 4L19 6",
   close: "m6 6 12 12M6 18 18 6",
+  info: "M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM12 11v6m0-10h.01",
   settings: "M4 7h16M4 17h16M8 4v6m8 4v6",
   translate: "M3 5h12M9 3v2M5 5c.7 4.6 3.5 8 8 10M13 5c-.7 4.6-3.5 8-8 10M13 21l4-10 4 10m-6.5-4h5",
   book: "M12 5v15M12 5C8 2 3 4 3 4v14s5-2 9 2c4-4 9-2 9-2V4s-5-2-9 1Z",

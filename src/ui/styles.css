@@ -3059,7 +3059,7 @@ input[type="radio"] {
   min-width: 280px;
   min-height: 92px;
   padding: 20px 48px;
-  border: 1px solid #d3b176;
+  border: 0;
   border-radius: 2px;
   background: #302016;
   color: #fff1ce;
@@ -3068,23 +3068,25 @@ input[type="radio"] {
   text-indent: 0.12em;
   text-transform: uppercase;
   cursor: pointer;
+  isolation: isolate;
+  overflow: hidden;
   transition: background-color 180ms ease-out, color 180ms ease-out;
 }
-.welcome-play::before {
-  content: "";
-  position: absolute;
-  inset: 7px;
-  border: 1px solid #a7854d;
-  pointer-events: none;
-}
+.welcome-play::before { content: none; }
 .welcome-play::after {
   content: "";
   position: absolute;
-  inset: 50% 21px auto;
-  height: 7px;
-  border-inline: 7px solid #d3b176;
-  transform: translateY(-50%);
+  inset: 0 auto 0 0;
+  width: 55%;
+  background: linear-gradient(90deg, transparent, #f4d89940 35%, #fff4d980 50%, #f4d89940 65%, transparent);
+  transform: translateX(-160%) skewX(-18deg);
   pointer-events: none;
+  animation: welcome-button-shine 5s linear infinite;
+}
+@keyframes welcome-button-shine {
+  0% { opacity: 0; transform: translateX(-160%) skewX(-18deg); }
+  3%, 15% { opacity: .8; }
+  20%, 100% { opacity: 0; transform: translateX(260%) skewX(-18deg); }
 }
 .welcome-play:hover { background: #4b3220; color: #fff8e8; }
 .welcome-play:active { background: #21160f; }
@@ -3099,8 +3101,10 @@ input[type="radio"] {
 }
 @media (prefers-reduced-motion: reduce) {
   .welcome-play { transition: none; }
+  .welcome-play::after { animation: none; opacity: 0; }
 }
 [data-reduced-motion="true"] .welcome-play { transition: none; }
+[data-reduced-motion="true"] .welcome-play::after { animation: none; opacity: 0; }
 
 /* Desktop approval pass: scene and control share the exact artwork coordinates. */
 .welcome-stage { display: contents; }
@@ -3129,8 +3133,8 @@ input[type="radio"] {
     text-shadow: 0 2px 4px #140e09;
   }
   .at-welcome .edition { display: none; }
-  .at-welcome .wordmark { font-size: 32px; gap: 10px; }
-  .at-welcome .wordmark svg { width: 27px; height: 31px; color: inherit; }
+  .at-welcome .wordmark { font-size: 44px; gap: 13px; }
+  .at-welcome .wordmark svg { width: 40px; height: 44px; color: inherit; }
   .at-welcome .header-tools { gap: 24px; }
   .at-welcome .header-tools .text-button { color: inherit; padding: 10px 4px; }
   .at-welcome .header-tools .text-button:hover { color: #fff8e8; background: transparent; }

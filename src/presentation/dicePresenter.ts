@@ -27,6 +27,7 @@ export function createDicePresenter(
     collected?: ReadonlySet<DieId>;
   },
 ) {
+  let stopRoll: (() => void) | undefined;
   let disposed = false;
   let paused = false;
   let active: gsap.core.Timeline | undefined;
@@ -222,6 +223,7 @@ export function createDicePresenter(
                 .slerp(new Quaternion(...next.rotation), alpha);
             });
           };
+          if (!options.reduced?.() && !paused) stopRoll = options.audio?.roll?.();
           render();
           await animate((timeline) => {
             timeline.to(cursor, {
@@ -231,6 +233,10 @@ export function createDicePresenter(
               onUpdate: render,
             });
           });
+          stopRoll?.();
+          stopRoll = undefined;
+
+          if (disposed) return;
           // The offline world has already been freed. Hand recorded transforms
           // to the kinematic presenter only after playback completes.
           rolledDice.forEach((value, i) => {
@@ -259,10 +265,13 @@ export function createDicePresenter(
     },
     setPaused(value: boolean) {
       paused = value;
+      if (value) { stopRoll?.(); stopRoll = undefined; }
       if (active) active.paused(value);
     },
     dispose() {
       disposed = true;
+      stopRoll?.();
+      stopRoll = undefined;
       active?.kill();
       cancelTween?.();
       owners.clear();

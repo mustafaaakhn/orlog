@@ -31,6 +31,7 @@ const props = defineProps<{
   audio: AudioPort;
   reduced: boolean;
   paused: boolean;
+  background: boolean;
   quality: string;
   speed: number;
 
@@ -216,10 +217,11 @@ onErrorCaptured(() => {
         :audio="audio"
         :reduced="reduced"
         :paused="paused"
+        :background="background"
         :quality="quality"
         :speed="speed"
         :highlighted-favor="highlightedFavor"
-        :highlighted-die="!batch && !paused && !blocked && !turningSeat && status === 'ready' ? highlightedDie : null"
+        :highlighted-die="!background && !batch && !paused && !blocked && !turningSeat && status === 'ready' ? highlightedDie : null"
         :viewer-id="viewerId ?? 'player-1'"
         :state="state"
         :batch="batch"
@@ -264,7 +266,7 @@ onErrorCaptured(() => {
       :selectable-player="controlsDisabled ? null : controlPlayer ?? null"
       :targets="targets"
       :collected="collected"
-      :disabled="!!batch || paused || !!blocked || !!turningSeat || menuPinned"
+      :disabled="!!background || !!batch || paused || !!blocked || !!turningSeat || menuPinned"
       @select="emit('select', $event)"
       @highlight="highlightedDie = $event"
     />

@@ -34,7 +34,7 @@ defineEmits<{ retry: [] }>();
             step="0.05"
           />
         </div>
-        <p>Ses ilk dokunuş veya tuşla açılır; arka sekmede durur.</p>
+        <p>Müzik girişte başlar; tarayıcı izin isterse ilk dokunuş veya tuşla açılır. Arka sekmede durur.</p>
         <p v-if="audioFailed" role="status">
           Ses açılamadı.
           <button class="restart-action" @click="$emit('retry')">

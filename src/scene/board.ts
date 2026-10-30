@@ -741,16 +741,22 @@ export function createBoard(invalidate: () => void = () => {}) {
       }
     },
     setDiceReadability(resting: boolean) {
+      let changed = false;
       for (const die of dice.values()) {
         const upper = topFace(die.quaternion).faceId;
         for (const plaque of die.children) {
           const neutral = plaque.userData.neutralSurface as MeshStandardMaterial | undefined;
           if (!neutral) continue;
           const accents = restingFaceMaterials.get(neutral)!;
-          (plaque as Mesh).material = !resting ? neutral
+          const next = !resting ? neutral
             : plaque.name === `face/${upper}` ? accents.upper : accents.side;
+          if ((plaque as Mesh).material !== next) {
+            (plaque as Mesh).material = next;
+            changed = true;
+          }
         }
       }
+      if (changed) invalidate();
     },
     highlightDie(id: DieId | null) {
       for (const [dieId, die] of dice) die.getObjectByName('die-contour')!.visible = dieId === id && die.visible;

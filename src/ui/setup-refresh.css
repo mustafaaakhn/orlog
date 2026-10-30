@@ -39,7 +39,6 @@
 .god-effect-summary svg { width: 22px; height: 22px; flex-shrink: 0; }
 @media (min-width: 1024px) {
   .cinematic-mode .mode-selection > button::before { animation: mode-idle-shine 10s linear infinite; }
-  .cinematic-mode .mode-selection > button:is(:hover, :focus-visible)::before { animation: mode-idle-shine 10s linear infinite; }
   .cinematic-mode.friend-open .mode-options { width: min(860px, 100%); }
   .cinematic-mode.friend-open .flow-footer { width: min(860px, 100%); }
   .cinematic-mode .friend-heading { text-align: center; margin-bottom: 32px; }
@@ -295,3 +294,28 @@
   .mode-selection > button::before { animation: none !important; }
 }
 [data-reduced-motion="true"] .mode-selection > button::before { animation: none !important; }
+
+.mode-selection > button > .mode-hover-shine {
+  position: absolute;
+  inset: 0 auto 0 0;
+  z-index: 0;
+  width: 55%;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: linear-gradient(90deg, transparent, #f4d89940 35%, #fff4d9a6 50%, #f4d89940 65%, transparent);
+  opacity: 0;
+  transform: translateX(-160%) skewX(-18deg);
+  pointer-events: none;
+}
+.mode-selection > button:is(:hover, :focus-visible) > .mode-hover-shine {
+  animation: mode-card-shine 1000ms cubic-bezier(.4, 0, .6, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .mode-selection > button > .mode-hover-shine { animation: none !important; }
+}
+[data-reduced-motion="true"] .mode-selection > button > .mode-hover-shine { animation: none !important; }
+
+[data-page-hidden="true"] .welcome-play::after,
+[data-page-hidden="true"] .mode-selection > button::before,
+[data-page-hidden="true"] .mode-selection > button > .mode-hover-shine { animation-play-state: paused; }

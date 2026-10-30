@@ -165,9 +165,9 @@ const playerName = (id: PlayerId) =>
     : names.value[id].trim() || (id === "player-1" ? "Oyuncu I" : "Oyuncu II");
 watch(
   screen,
-  async (value) => {
+  async (value, previous) => {
     emit("screen", value);
-    if (introActive.value) return;
+    if (introActive.value || (value === "welcome" && previous === undefined)) return;
     await nextTick();
     document
       .querySelector<HTMLElement>(value === "welcome" ? ".welcome-play" : ".setup-screen h1")
@@ -371,6 +371,7 @@ function start() {
           >
             <img v-if="desktopWelcome" class="mode-scene" src="/assets/art/mode-robot.webp" width="1024" height="1536" alt="" decoding="async" />
             <span v-if="!desktopWelcome" class="mode-emblem"><UiIcon name="robot" /></span>
+            <span class="mode-hover-shine" aria-hidden="true"></span>
             <h2>Robota karşı</h2>
             <p v-if="!desktopWelcome">Tanrılarını seç ve mücadeleye başla.</p>
             <span class="mode-card-action"><span v-if="!desktopWelcome">Tek oyuncu</span><UiIcon name="arrow" /></span>
@@ -383,6 +384,7 @@ function start() {
           >
             <img v-if="desktopWelcome" class="mode-scene" src="/assets/art/mode-friend.webp" width="1024" height="1536" alt="" decoding="async" />
             <span v-if="!desktopWelcome" class="mode-emblem"><UiIcon name="people" /></span>
+            <span class="mode-hover-shine" aria-hidden="true"></span>
             <h2>Arkadaşınla</h2>
             <p v-if="!desktopWelcome">Aynı bilgisayarı paylaş veya kodla arkadaşına katıl.</p>
             <span class="mode-card-action"><span v-if="!desktopWelcome">{{ selectedMode === "friend" ? "Seçildi" : "İki oyuncu" }}</span><UiIcon :name="!desktopWelcome && selectedMode === 'friend' ? 'check' : 'arrow'" /></span>

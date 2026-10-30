@@ -45,9 +45,12 @@ const rematchSetup = ref<RematchSetup | null>(null);
 const setupScreen = ref("welcome");
 const introActive = ref(false);
 const languagePicker = ref<HTMLElement | null>(null);
+const aboutPanel = ref<HTMLElement | null>(null);
 const overlay = ref<"rules" | "settings" | "menu" | null>(null);
 watch([introActive, setupScreen, overlay], () => {
-  if (languagePicker.value?.matches(":popover-open")) languagePicker.value.hidePopover();
+  for (const panel of [languagePicker.value, aboutPanel.value]) {
+    if (panel?.matches(":popover-open")) panel.hidePopover();
+  }
 });
 const dialog = ref<HTMLDialogElement | null>(null);
 const localViewer = ref<PlayerId>("player-1");
@@ -76,20 +79,16 @@ watch(setupScreen, (_screen, previous) => {
 const pageHidden = ref(document.hidden);
 const paused = ref(document.hidden || !document.hasFocus());
 watch(settings, (value) => audio.configure(value), { immediate: true });
-const unlockAudio = () => {
-  if (!preparing.value || setupScreen.value !== "welcome") audio.unlock();
-};
+const unlockAudio = () => audio.unlock();
 const visibility = () => {
   pageHidden.value = document.hidden;
   paused.value = document.hidden || !document.hasFocus();
-  audio.visibility(document.hidden || introActive.value);
+  audio.visibility(document.hidden);
 };
-watch([introActive, paused], () => {
-  audio.visibility(document.hidden || introActive.value);
-});
 onMounted(() => {
   online.restore();
   audio.visibility(document.hidden);
+  audio.unlock();
   document.addEventListener("pointerdown", unlockAudio, { capture: true });
   document.addEventListener("keydown", unlockAudio, { capture: true });
   document.addEventListener("visibilitychange", visibility);
@@ -202,13 +201,9 @@ watch(() => onlineRoom.value?.stage, stage => {
   }
 });
 const passivePresentation = computed(() => paused.value || (!!onlineRoom.value && !!overlay.value));
-watch(passivePresentation, (passive, previous) => {
+watch(passivePresentation, (passive) => {
   online.visibility(!passive);
   session.setBackground(passive);
-  if (paused.value || (!passive && previous && !preparing.value)) {
-    sceneReady.value = false;
-    sceneGeneration.value++;
-  }
 }, { immediate: true, flush: 'sync' });
 const { state, pending, error, lastEvent } = session;
 const phase = computed(() => state.value.phase);
@@ -218,6 +213,11 @@ let announcedResult: string | null = null;
 watch([resultAvailable, () => state.value.gameId], ([available, gameId]) => {
   if (available && announcedResult !== gameId) {
     announcedResult = gameId;
+    const ended = session.history.value.findLast(event => event.type === 'GameEnded');
+    if (ended?.type === 'GameEnded') {
+      const listener = online.identity.value?.playerId ?? (opponent.value.mode === 'computer' ? 'player-1' : null);
+      audio.result(ended, listener);
+    }
     resultOpen.value = true;
   } else if (phase.value.name !== 'ended') resultOpen.value = false;
 });
@@ -391,6 +391,7 @@ function confirm() {
       'is-intro-active': introActive,
     }"
     :data-reduced-motion="reduced"
+    :data-page-hidden="pageHidden"
   >
     <a v-if="!preparing" class="skip-link" href="#match-controls"
       >Oyun kontrollerine geç</a
@@ -421,6 +422,15 @@ function confirm() {
         <button class="icon-button entry-tool" aria-label="Oyun rehberi" title="Oyun rehberi" @click="overlay = 'rules'">
           <UiIcon name="book" />
         </button>
+        <button class="icon-button entry-tool" aria-label="Proje hakkında" title="Proje hakkında" popovertarget="about-panel">
+          <UiIcon name="info" />
+        </button>
+        <section id="about-panel" ref="aboutPanel" class="about-panel" popover aria-labelledby="about-title">
+          <h2 id="about-title">Proje hakkında</h2>
+          <p>Bu oyun, Assassin’s Creed Valhalla’daki Orlog’dan esinlenen bağımsız bir fan yapımıdır. Resmî bir Ubisoft oyunu değildir; Ubisoft ile bağlantısı yoktur.</p>
+          <p class="about-contact"><span>GitHub</span><a href="https://github.com/mustafaaakhn/orlog" target="_blank" rel="noopener noreferrer">github.com/mustafaaakhn/orlog</a></p>
+          <p class="about-contact"><span>İletişim</span><a href="mailto:mustafaaakhn@gmail.com">mustafaaakhn@gmail.com</a></p>
+        </section>
         <div id="language-picker" ref="languagePicker" class="language-picker" popover>
           <h2>Dil seçimi</h2>
           <button class="language-option" aria-pressed="true" lang="tr" popovertarget="language-picker" popovertargetaction="hide">
@@ -433,7 +443,7 @@ function confirm() {
       </nav>
     </header>
     <div
-      v-if="!preparing && !pageHidden"
+      v-if="!preparing"
       class="scene-layer"
       :aria-hidden="preparing"
       :inert="preparing"
@@ -443,6 +453,7 @@ function confirm() {
         :audio="audio"
         :reduced="reduced"
         :paused="paused || !!overlay"
+        :background="passivePresentation"
         :quality="settings.quality"
         :speed="speed"
         :state="state"
