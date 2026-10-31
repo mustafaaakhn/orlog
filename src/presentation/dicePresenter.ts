@@ -253,6 +253,7 @@ export function createDicePresenter(
           if (event.type === "DiceRecast") await arrange(batch.state);
         } else if (
           event.type === "DieSelectionChanged" ||
+          event.type === "DiceSelectionChanged" ||
           event.type === "DiceKept" ||
           event.type === "RollTurnStarted"
         ) {

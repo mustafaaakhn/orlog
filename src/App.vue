@@ -29,6 +29,7 @@ import type {
   FavorInput,
 } from "./core";
 import { createRollSession } from "./app/rollSession";
+import { createDiceSelectionDraft } from './app/diceSelectionDraft';
 import { createComputerDriver } from "./app/computerDriver";
 import type { OpponentOptions } from "./ai/computer";
 import { createOnlineClient } from "./network/client";
@@ -263,9 +264,23 @@ watch(
   { immediate: true, flush: "sync" },
 );
 onUnmounted(() => driver.dispose());
+const mobileMedia = window.matchMedia('(max-width: 600px), (max-height: 500px) and (orientation: landscape)');
+const mobileSelection = ref(mobileMedia.matches);
+const updateMobileSelection = () => { mobileSelection.value = mobileMedia.matches; };
+mobileMedia.addEventListener('change', updateMobileSelection);
+const selectionDraft = createDiceSelectionDraft(() => ({
+  state: state.value,
+  enabled: mobileSelection.value && !busy.value && humanTurn.value && !preparing.value && !paused.value && !overlay.value,
+}), command => session.dispatch(command));
+const draftSelectedIds = selectionDraft.selectedIds;
+onUnmounted(() => {
+  mobileMedia.removeEventListener('change', updateMobileSelection);
+  selectionDraft.dispose();
+});
 function selectDie(dieId: Parameters<typeof session.select>[0]) {
-  if (!busy.value && humanTurn.value && !preparing.value)
-    session.select(dieId);
+  if (busy.value || !humanTurn.value || preparing.value) return;
+  if (mobileSelection.value) selectionDraft.toggle(dieId);
+  else session.select(dieId);
 }
 const instruction = computed(() => {
   if (networkStatus.value) return networkStatus.value;
@@ -287,6 +302,8 @@ const instruction = computed(() => {
     return "Kendi haznendeki zarları at.";
   if (activePlayer.value?.rollsUsed === 3)
     return "Son atışın zarları saklandı; sıra otomatik ilerliyor.";
+  if (mobileSelection.value)
+    return "Saklayacağın zarları seç; son değişiklikten 2 saniye sonra birlikte taşınır. Geri almak için tekrar dokun.";
   return "Saklayacağın zarlara dokun; merkezden geri almak için tekrar dokun.";
 });
 function focusAction() {
@@ -459,6 +476,7 @@ function confirm() {
         :quality="settings.quality"
         :speed="speed"
         :state="state"
+        :draft-selected-ids="draftSelectedIds"
         :batch="pending"
         :blocked="busy"
         :viewer-id="viewerId"

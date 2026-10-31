@@ -102,6 +102,31 @@ tutulur; yeni zar seçimini örten bir pencere kendiliğinden açılmaz. Masaüs
 izdüşüm hedefleri ve klavye dolaşımı korunur. Dinlenen mobil 3B üst yüzün açık,
 yüksek kontrastlı dokusu aynı core yüzünü gösterir; atış kaydı değiştirilmez.
 
+## Mobil toplu zar seçimi
+
+`src/app/diceSelectionDraft.ts` tek 2000 ms zamanlayıcıyla yalnız zar
+kimliklerinden oluşan yerel seçim niyetini tutar. `App`, mobil alan eşiğinde
+insan seçimini bu taslağa yönlendirir; masaüstü ve bot `SetDieSelection`
+kullanmaya devam eder. Her geçerli değişiklik süreyi yeniler; geçersiz kimlik,
+inceleme ve uzun basma yenilemez. `SceneDiceControls`, taslak kimliklerini
+yalnız onay imi/vurgu ve erişilebilir seçim açıklamasına uygular. Geometri,
+fizik, yüzler ve core durumu bekleme boyunca değiştirilmez.
+
+Süre bitiminde son seçim `SetDiceSelection` komutuyla atomik uygulanır.
+Core bütün kimlikleri, fazı, oyuncuyu ve kilitleri mutasyondan önce doğrular;
+tek revision ve tek `DiceSelectionChanged` olayı üretir. `dicePresenter`
+bu olayı bir `arrange` çağrısıyla, bütün zarlar aynı GSAP zaman çizgisinde
+hareket edecek şekilde sunar. Yerel ve sunucu oturumları aynı olay kaydını
+kullanır. Değişmeyen seçim taslakta komut üretmez; core'a doğrudan gönderilirse
+revision/olay üretmez ve oturumlar boş sunum grubu oluşturmaz. Seçim olayı
+`ConfirmRoll`, atış veya sıra değişimi üretmez; eski kilitler korunur.
+
+Taslak durum veya kullanılabilirlik değişiminde ve kaldırılmada iptal edilir;
+geç callback'ler nesil numarası ve kaynak durum kimliğiyle reddedilir.
+Bu temel koruma, Aşama 8'in erken onay, ağ kabulü/ret uzlaşması ve bütün
+kesinti senaryolarının tamamlandığı anlamına gelmez. Aşama 7'de erken onay
+mevcut uygulanmış seçimi kullanır. Yeni dış varlık veya bağımlılık eklenmedi.
+
 ## Ağ ve çalıştırma
 
 Vite geliştirmede oyunla aynı HTTP sunucusuna Socket.IO ekler. Üretimde

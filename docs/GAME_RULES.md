@@ -63,6 +63,15 @@ Mantıksal dizi sırasından `+X`, `-X` gibi özgün oyun eksenleri türetilmez.
 5. Üçüncü atışta kalan tüm zarlar otomatik saklanır. Sunum tamamlanınca uygulama sonucu otomatik onaylar; dördüncü atış yoktur.
 6. İki oyuncunun da zarları tamamlandığında güç seçimi başlar. (S1, S2)
 
+**Mobil seçim sunumu (30 Ekim 2026, ROADMAP Aşama 7):** İlk iki atışta
+kısa dokunuşlar bekleyen seçim niyetini değiştirir. Son geçerli değişiklikten
+2000 ms sonra niyet tek atomik seçim olarak uygulanır ve zarlar birlikte
+taşınır. Saklamak için seçilenler merkezde, yeniden atılacaklar haznede kalır.
+Süre dolması onay/kilit, atış hakkı tüketimi, rastgele sonuç veya sıra geçişi
+değildir. Merkezdeki kilitsiz seçim geri alınabilir; önceki onaylarda kilitlenen
+zarlar açılamaz. Bu bir sunum tercihidir; yukarıdaki atış kuralları değişmez.
+Erken onaya bekleyen taslağın aktarılması Aşama 8 kapsamındadır.
+
 **Motor akışı tercihi:** Bütün zarlarını erken saklayan oyuncu kalan atış sıralarından çıkarılır.
 Rakip kalan atışlarını ardışık tamamlayabilir. Boş atış yapılmaz, kullanılmamış haklar yapay olarak üçe yükseltilmez.
 İki oyuncu da ilk atışta bütün zarlarını saklarsa doğrudan güç seçimine geçilir.

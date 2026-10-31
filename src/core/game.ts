@@ -115,6 +115,9 @@ export class Game {
     if (error) return deepFreeze({ ok: false, state: this.#state, events: [], error })
 
     const previousState = this.#state
+    if (command.type === 'SetDiceSelection' && previousState.players[command.playerId].dice.every(
+      die => die.selected === command.dieIds.includes(die.id),
+    )) return deepFreeze({ ok: true, previousState, state: previousState, events: [] })
     const next = cloneState(previousState)
     const events: GameEventPayload[] = []
     const player = next.players[command.playerId]
@@ -158,6 +161,7 @@ export class Game {
         break
       }
       case 'ConfirmRoll': {
+        // Only explicit confirmation locks the current selection and advances play.
         const selected = player.dice.filter(die => die.selected)
         for (const die of selected) {
           die.kept = true
@@ -175,6 +179,11 @@ export class Game {
           next.phase = { name: 'roll', activePlayerId: active.id, step: 'awaiting-roll' }
           events.push({ type: 'RollTurnStarted', playerId: active.id, rollNumber: active.rollsUsed + 1 })
         }
+        break
+      }
+      case 'SetDiceSelection': {
+        for (const die of player.dice) die.selected = command.dieIds.includes(die.id)
+        events.push({ type: 'DiceSelectionChanged', playerId: player.id, dieIds: [...command.dieIds] })
         break
       }
       case 'ChooseFavor':
@@ -216,7 +225,7 @@ export class Game {
   #validate(command: GameCommand): { code: CommandErrorCode; message: string } | null {
     const fail = (code: CommandErrorCode, message: string) => ({ code, message })
     if (!command || typeof command !== 'object' || ![
-      'RollDice', 'SetDieSelection', 'ConfirmRoll', 'ChooseFavor', 'SkipFavor', 'ResolveRound', 'NextRound',
+      'RollDice', 'SetDieSelection', 'SetDiceSelection', 'ConfirmRoll', 'ChooseFavor', 'SkipFavor', 'ResolveRound', 'NextRound',
     ].includes(command.type)) return fail('INVALID_COMMAND', 'Unknown command.')
     if (!PLAYER_IDS.includes(command.playerId)) return fail('INVALID_PLAYER', 'Unknown player.')
     const phase = this.#state.phase
@@ -252,6 +261,17 @@ export class Game {
       return null
     }
     if (phase.step !== 'selecting-dice') return fail('ROLL_REQUIRED', 'Roll before selecting dice or confirming.')
+    if (command.type === 'SetDiceSelection') {
+      if (!Array.isArray(command.dieIds) || command.dieIds.length > player.dice.length ||
+        new Set(command.dieIds).size !== command.dieIds.length)
+        return fail('INVALID_SELECTION', 'Selection must contain unique die IDs.')
+      for (const id of command.dieIds) {
+        const die = player.dice.find(candidate => candidate.id === id)
+        if (!die) return fail('DIE_NOT_OWNED', 'This die does not belong to the player.')
+        if (die.kept) return fail('DIE_LOCKED', 'A previously kept die cannot be changed.')
+        if (die.removed || !die.faceId) return fail('INVALID_SELECTION', 'Only visible dice can be selected.')
+      }
+    }
     if (command.type === 'SetDieSelection') {
       const die: DieState | undefined = player.dice.find(candidate => candidate.id === command.dieId)
       if (!die) return fail('DIE_NOT_OWNED', 'This die does not belong to the player.')

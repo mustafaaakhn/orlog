@@ -72,6 +72,27 @@ async function setup(options: Parameters<typeof attachRoomServer>[1] = {}) {
 }
 
 describe('two-player Socket.IO rooms', () => {
+  it('publishes a batch selection as one shared revision/event and leaves identical selections idle', async () => {
+    const h = await setup()
+    await h.play()
+    const first = h.matches.get(h.host)!.state.firstPlayerId
+    await h.command({ type: 'RollDice', playerId: first })
+    const before = h.matches.get(h.host)!.state
+    const dieIds = before.players[first].dice.slice(0, 5).map(d => d.id)
+    await h.command({ type: 'SetDiceSelection', playerId: first, dieIds })
+    const host = h.matches.get(h.host)!, guest = h.matches.get(h.guest)!
+    expect(host.state.revision).toBe(before.revision + 1)
+    expect(host.events.map(e => e.type)).toEqual(['DiceSelectionChanged'])
+    expect(guest.events).toEqual(host.events)
+    expect(host.state.phase).toEqual(before.phase)
+    expect(host.state.players[first].dice.filter(d => d.selected).map(d => d.id)).toEqual(dieIds)
+    await h.command({ type: 'SetDiceSelection', playerId: first, dieIds: [...dieIds].reverse() })
+    expect(h.views.get(h.host)!.revision).toBe(host.state.revision)
+    expect(h.views.get(h.host)!.waiting).toBe(false)
+    await h.command({ type: 'SetDiceSelection', playerId: first, dieIds: [] })
+    expect(h.matches.get(h.host)!.events).toHaveLength(1)
+    expect(h.matches.get(h.host)!.state.players[first].dice.every(d => !d.selected && !d.kept)).toBe(true)
+  })
   it('starts exactly one fresh match in the same room, preserving seats and rejecting packets from the previous match', async () => {
     fixedDice.value = true
     const h = await setup()

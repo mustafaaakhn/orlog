@@ -107,6 +107,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
   function apply(room: Room, command: GameCommand) {
     const result = room.game!.dispatch(command)
     if (!result.ok) return failure(result.error.message)
+    if (result.state === result.previousState) return success()
     batch(room, result.events)
     return success()
   }
@@ -243,7 +244,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       if (!room.game || room.stage !== 'playing' || !connected(room) || room.waiting) return failure('Diğer oyuncu ve masa bekleniyor.')
       if (!request || request.gameId !== room.game.state.gameId || request.revision !== room.game.state.revision) return failure('Maç durumu yenileniyor. Hamleni yeniden dene.')
       const command = request.command
-      if (!command || command.playerId !== seat.id || !['RollDice', 'SetDieSelection', 'ConfirmRoll', 'ChooseFavor', 'SkipFavor'].includes(command.type)) return failure('Yalnız kendi hamleni yapabilirsin.')
+      if (!command || command.playerId !== seat.id || !['RollDice', 'SetDieSelection', 'SetDiceSelection', 'ConfirmRoll', 'ChooseFavor', 'SkipFavor'].includes(command.type)) return failure('Yalnız kendi hamleni yapabilirsin.')
       try { return apply(room, command) } catch { return failure('Geçersiz oyun komutu.') }
     })(ack))
     socket.on('game:presented', (revision, gameId) => {

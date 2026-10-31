@@ -13,6 +13,7 @@ import { bowlCenter, playerSide } from "../../scene/tableLayout";
 import { topFace } from "../../scene/diceGeometry";
 import { recordRoll } from "../rollSimulation";
 import { createDicePresenter } from "../dicePresenter";
+import { gsap } from 'gsap';
 
 function batch(result: CommandResult): PresentationBatch {
   if (!result.ok) throw new Error(result.error.message);
@@ -46,6 +47,29 @@ function pieces(state: GameState) {
 }
 
 describe("dice presentation ownership", () => {
+  it('moves five selected dice and returns them with one shared timeline per group', async () => {
+    const game = new Game({ random: () => 0.4 });
+    game.dispatch({ type: 'RollDice', playerId: 'player-1' });
+    const dice = pieces(game.state);
+    const ids = game.state.players['player-1'].dice.slice(0, 5).map(d => d.id);
+    const resting = ids.map(id => dice.get(id)!.position.toArray());
+    const still = dice.get('player-1/die-6')!.position.toArray();
+    const frames: number[][] = [];
+    const timeline = vi.spyOn(gsap, 'timeline');
+    const presenter = createDicePresenter(dice, () => frames.push(ids.map(id => dice.get(id)!.position.y)), { record: recordRoll, speed: () => 4 });
+    try {
+      const selected = batch(game.dispatch({ type: 'SetDiceSelection', playerId: 'player-1', dieIds: ids }));
+      await presenter.play(selected);
+      expect(selected.events).toHaveLength(1);
+      expect(timeline).toHaveBeenCalledTimes(1);
+      expect(frames.some(frame => frame.every(y => y > 1.8))).toBe(true);
+      ids.forEach((id, index) => expect(dice.get(id)!.position.toArray()).toEqual(reserveSlot('player-1', index, true)));
+      expect(dice.get('player-1/die-6')!.position.toArray()).toEqual(still);
+      await presenter.play(batch(game.dispatch({ type: 'SetDiceSelection', playerId: 'player-1', dieIds: [] })));
+      expect(timeline).toHaveBeenCalledTimes(2);
+      ids.forEach((id, index) => expect(dice.get(id)!.position.distanceTo(new Vector3(...resting[index] as [number, number, number]))).toBeLessThan(0.00001));
+    } finally { presenter.dispose(); timeline.mockRestore(); }
+  });
   it("clears the rim during selection while keeping accepted dice stationary", async () => {
     const game = new Game({ random: createSeededRandom(1) });
     game.dispatch({ type: "RollDice", playerId: "player-1" });

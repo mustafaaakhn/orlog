@@ -55,6 +55,7 @@ export function createRollSession(options: GameOptions = {}) {
       return false
     }
     error.value = ''
+    if (result.state === result.previousState) return true
     offer({
       id: ++batchSequence,
       revision: result.state.revision,

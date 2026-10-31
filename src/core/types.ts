@@ -100,6 +100,7 @@ export type GameCommand =
   | { readonly type: 'NextRound'; readonly playerId: PlayerId }
   | { readonly type: 'RollDice'; readonly playerId: PlayerId }
   | { readonly type: 'SetDieSelection'; readonly playerId: PlayerId; readonly dieId: DieId; readonly selected: boolean }
+  | { readonly type: 'SetDiceSelection'; readonly playerId: PlayerId; readonly dieIds: readonly DieId[] }
   | { readonly type: 'ConfirmRoll'; readonly playerId: PlayerId }
   | { readonly type: 'ChooseFavor'; readonly playerId: PlayerId; readonly favorId: FavorId; readonly level: FavorLevel; readonly input?: FavorInput }
   | { readonly type: 'SkipFavor'; readonly playerId: PlayerId }
@@ -131,6 +132,7 @@ export type GameEventPayload =
 
   | { readonly type: 'DiceRolled'; readonly playerId: PlayerId; readonly rollNumber: number; readonly dice: readonly RolledDie[] }
   | { readonly type: 'DieSelectionChanged'; readonly playerId: PlayerId; readonly dieId: DieId; readonly selected: boolean }
+  | { readonly type: 'DiceSelectionChanged'; readonly playerId: PlayerId; readonly dieIds: readonly DieId[] }
   | { readonly type: 'DiceKept'; readonly playerId: PlayerId; readonly dieIds: readonly DieId[]; readonly reason: 'confirmed' | 'last-roll' }
   | { readonly type: 'RollTurnStarted'; readonly playerId: PlayerId; readonly rollNumber: number }
   | { readonly type: 'PhaseChanged'; readonly phase: GamePhase }

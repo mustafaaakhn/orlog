@@ -17,12 +17,18 @@ const props = defineProps<{
   disabled: boolean;
   collected: readonly DieId[];
   safeArea?: DieTargetArea;
+  draftSelectedIds?: readonly DieId[] | null;
 }>();
 const emit = defineEmits<{ select: [id: DieId]; highlight: [id: DieId | null] }>();
 // Mobile exposes the near bowl and both center rows; the far bowl has no touch targets.
 const inspected = computed(() => inspectableDice(
   props.players, props.targets, props.selectablePlayer, props.collected,
-).filter(target => !mobile.value || target.id.startsWith(`${props.viewerId}/`) || target.location !== "Haznede"));
+).filter(target => !mobile.value || target.id.startsWith(`${props.viewerId}/`) || target.location !== "Haznede")
+  .map(target => {
+    if (!mobile.value || props.draftSelectedIds == null || !target.canSelect) return target;
+    const selected = props.draftSelectedIds.includes(target.id);
+    return { ...target, selected, label: `${target.label.split(';')[0]}; ${selected ? 'saklamak için seçildi, geri al' : 'yeniden atılacak, saklamak için seç'} (bekleyen seçim)` };
+  }));
 const size = ref({ width: 0, height: 0 });
 const mobile = computed(() => size.value.width > 0 && (size.value.width <= 600 ||
   (size.value.height <= 500 && size.value.width > size.value.height)));

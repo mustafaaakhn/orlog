@@ -67,12 +67,27 @@ ayrı bir altın jeton simgesi eşlik eder. Seçili/kilitli durum açık camgöb
 çizgi ve sol alttaki onay imiyle gösterilir; jeton kazancı ile karışmaz.
 Çok kısa ekranda bütün zarlar sığmazsa hedefler aynı büyüklükte kayar.
 
-Kısa dokunma kendi uygun zarını merkeze alır veya geri getirir. Kilitli/rakip
-zarına dokunma ve kendi zarına uzun basma simge, etki ve Jeton getirir bilgisini
-açar; görünür Kapat eylemi vardır. Uzun basma veya sürükleme seçim üretmez.
+Mobil kısa dokunma kendi uygun zarının bekleyen seçimini anında camgöbeği
+vurgu ve onay imiyle değiştirir; ikinci dokunuş geri alır. Yüzler ve 44px
+hedefler beklerken yerinde kalır. Son geçerli seçim değişikliğinden **2000 ms**
+sonra son seçim tek grupta uygulanır; saklamak için seçilenler merkeze,
+seçimden çıkarılan kilitsiz zarlar hazneye birlikte gider. Her seçim/geri
+alma süreyi yeniden başlatır. Taslak uygulanmış seçimle aynıysa taşıma olmaz.
+Bu süre zar atmaz, kilitlemez veya sıra geçirmez. Masaüstü ve botun mevcut
+tekli seçim akışı korunur.
+
+Bekleyen seçim yalnız bir niyettir; zar yüzü, jeton, can veya fizik sonucu
+üretmez. Kilitli/rakip zarına dokunma ve kendi zarına uzun basma simge, etki
+ve Jeton getirir bilgisini açar; görünür Kapat eylemi vardır. Uzun basma,
+inceleme veya sürükleme seçim üretmez ve 2000 ms süresini yenilemez.
 Rakibin haznesindeki zarlar için mobil dokunma hedefi üretilmez; merkezdeki
 her zarın tek hedefi vardır. Masaüstünde mevcut 3B yüzler, hover bilgisi ve
 klavye hedefleri korunur.
+
+Aşama 7 yalnız bekleme ve toplu taşımayı kapsar. Süre dolmadan **Seçimi
+onayla** eylemine taslağın aktarılması, ağ reddiyle uzlaşma ve kesintilerin
+birleşik kabulü Aşama 8'de tamamlanacaktır. Mevcut onay, uygulanmış seçimi
+kullanır; bekleyen taslak henüz bu erken onaya eklenmez.
 
 Mobil maçta **Tanrı gücü** düğmesi alttan açılan bir panel sunar. Oyuncunun
 üç kuşanılmış tanrısı portre, öncelik, zamanlama ve üç seviyenin bedel/etki

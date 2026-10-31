@@ -40,6 +40,7 @@ const props = defineProps<{
   controlPlayer?: PlayerId | null;
   favorPlayer?: PlayerId | null;
   state: GameState;
+  draftSelectedIds?: readonly DieId[] | null;
   batch: PresentationBatch | null;
   blocked?: boolean;
 }>();
@@ -268,6 +269,7 @@ onErrorCaptured(() => {
     <SceneDiceControls
       v-if="status === 'ready'"
       :players="Object.values(state.players)"
+      :draft-selected-ids="draftSelectedIds"
       :viewer-id="viewerId ?? 'player-1'"
       :selectable-player="controlsDisabled ? null : controlPlayer ?? null"
       :targets="targets"

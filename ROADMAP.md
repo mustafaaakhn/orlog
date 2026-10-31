@@ -28,14 +28,14 @@ işaretleri korunur. Önceki fiziksel cihaz kabulünün açık maddeleri açık 
 
 Bu hedef, önceki planın rakip hazne özetini zorunlu tutan maddelerinin ve her
 dokunuşta anında taşıma davranışının yerini alır. Aşama 6 ile özet kaldırıldı;
-toplu seçim henüz uygulanmadı. `DESIGN.md` ve
+Aşama 7 ile iki saniyelik toplu seçim ve tek taşıma uygulandı. `DESIGN.md` ve
 `ARCHITECTURE.md` güncel uygulamayı anlatır; ilgili aşama uygulanırken
 yeniden güncellenir.
 
 ## İlerleme biçimi
 
 - Her istekte yalnızca belirtilen aşama uygulanır. Sonraki aşamaya otomatik
-  geçilmez. Sıradaki iş: **“ROADMAP.md içindeki Aşama 7'yi uygula.”**
+  geçilmez. Sıradaki iş: **“ROADMAP.md içindeki Aşama 8'i uygula.”**
 - Aşamalar sırayla ilerler. Her biri ayrı kısa ömürlü branch, doğrulama ve
   commit ile teslim edilir; doğrulanan iş yerel `main` branch'ine birleştirilir.
 - Yalnız gerçekten uygulanıp doğrulanan maddeler aynı işin commit'inde `[x]`
@@ -239,22 +239,22 @@ incelemesi, jeton işaretleri ve paneldeki geçerli güç hedefleri korunur.
 
 Bağımlılık: Aşama 6. Önce seçim, süre ve toplu sunum birlikte çalışır hale gelir.
 
-- [ ] Mobil kısa dokunmada zar kimliğine bağlı geçici seçimi anında onay imi
+- [x] Mobil kısa dokunmada zar kimliğine bağlı geçici seçimi anında onay imi
   ve mevcut seçim vurgusuyla göster. Aynı zara tekrar dokunma bu seçimi geri
   alsın; 44×44px hedefler seçim boyunca yerinde ve kullanılabilir kalsın.
-- [ ] Son geçerli seçim değişikliğinden itibaren **2000 ms** bekle. Yeni
+- [x] Son geçerli seçim değişikliğinden itibaren **2000 ms** bekle. Yeni
   değişiklikte önceki süreyi iptal edip yeniden başlat; ilk dokunuştan itibaren
   sabit bir pencere veya her zar için ayrı zamanlayıcı kullanma.
-- [ ] Süre bitince bekleyen seçimlerin son halini tek bir toplu işlemle
+- [x] Süre bitince bekleyen seçimlerin son halini tek bir toplu işlemle
   yetkili kurallara uygula; aynı olay grubundan tek toplu taşıma üret.
   Zar başına komut/animasyon zinciriyle seçim kilidini tekrarlama.
-- [ ] Geçici seçim işaretini henüz uygulanmış oyun durumundan ayır. UI zar
+- [x] Geçici seçim işaretini henüz uygulanmış oyun durumundan ayır. UI zar
   yüzü, sonuç, can veya jeton üretmesin; kurallar ile görsel sunum aynı olay
   kaydından beslensin. `src/core` içine zamanlayıcı veya UI bağımlılığı ekleme.
-- [ ] Son taslak uygulanmış seçimle aynıysa gereksiz komut/taşıma üretme.
+- [x] Son taslak uygulanmış seçimle aynıysa gereksiz komut/taşıma üretme.
   Merkeze taşındıktan sonra henüz kilitlenmemiş zarları aynı toplu seçim
   mantığıyla geri alabil; önceki atışlarda kilitlenen zarları açma.
-- [ ] Anlamlı zamanlayıcı ve olay senaryolarıyla 1999/2000 ms sınırını,
+- [x] Anlamlı zamanlayıcı ve olay senaryolarıyla 1999/2000 ms sınırını,
   son dokunuşta süre yenilemeyi, beş zarın tek grupta taşınmasını, aynı zara
   çift dokunmayı ve toplu geri almayı doğrula. Bot ve masaüstünün mevcut
   davranışını koru; zorunlu komutları çalıştır, belgeleri güncelle ve commit et.
@@ -262,6 +262,22 @@ Bağımlılık: Aşama 6. Önce seçim, süre ve toplu sunum birlikte çalışı
 **Kabul:** Kullanıcı beş zarı arka arkaya seçerken her zarın animasyonunu
 beklemez. Son seçim değişikliğinden 2 saniye sonra zarlar birlikte hareket
 eder; yalnız bu beklemenin bitmesi oyun sırasını ilerletmez.
+
+**Aşama 7 tamamlandı — 30 Ekim 2026.** Son dokunuşa göre yenilenen tek
+2000 ms zamanlayıcı, anlık taslak vurgusu, atomik seçim olayı ve eşzamanlı
+taşıma/geri alma uygulandı. Aşama 6'nın tamamlanmış `main` sürümüyle birleştirildi.
+
+- Node 24.22.1 ile `npm run check` ve `npm run test:ci`: **38 dosya,
+  479 test başarılı**. 1999/2000 ms sınırı, son değişiklikte süre yenileme,
+  çift dokunmada komutsuz geri dönüş, beş zarın tek olay/zaman çizgisinde
+  taşınması, toplu geri alma ve önceki kilitler doğrulandı.
+- Chromium 143: 360×800, 390×844, 430×932, 844×390; taslak sırasında sabit
+  44px hedefler, anlık onay imi, tek revision/olay, toplu geri alma ve aynı
+  faz/sıra kontrol edildi. Normal fizik kaydı, azaltılmış hareket ve
+  1440×900 masaüstü klavye/tekli seçim de kontrol edildi.
+- Ayrıntılar: [Aşama 7 doğrulaması](docs/review/mobile-batch-selection.md).
+  Süre dolmadan onaya taslağın aktarılması, ağ reddiyle uzlaşma ve birleşik
+  kesinti kabulü Aşama 8'de açıktır. Fiziksel cihaz kabulü kapatılmadı.
 
 ## Aşama 8 — Onay, çevrim içi oyun ve kesintiler
 
