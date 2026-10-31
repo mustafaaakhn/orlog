@@ -61,18 +61,20 @@ geçiş yumuşaktır; azaltılmış harekette kamera animasyonu yapılmaz. Masa�
 tam masa kadrajını korur. Koltuk yönü mevcut yerel/bot/çevrim içi davranışını
 izler; kamera oyun sonucu üretmez.
 
-Mobilde açık kemik zeminli 44px seçim kartları yalnız kendi haznemizde
-bulunur. Kimliğe ait yuvalar 8px aralıklarla ayrılır; ek zarlar ikinci
-sırayı kullanır, kaldırılan kimliğin boşluğu korunur. Altın çerçeve ve sağ
-üstteki jeton simgesi kazancı, camgöbeği vurgu ve onay imi bekleyen seçimi
-anlatır. Kısa alanda yalnız hazne kartları kendi yüzeyinde kaydırılır.
+Mobil okunur seçim kartları yalnız kendi haznendeki zarlarda bulunur.
+44px açık kemik yüzler kimliğe ait sabit yuvaları korur; jetonlu yüzün
+altın çerçevesi ve ayrı jeton simgesi, bekleyen seçimin camgöbeği onay
+iminden ayrılır. Kartlar haznenin alt bölgesindedir; dar alanda yalnız bu
+bölge kaydırılır. Merkezde başlık veya yüz kartı bulunmaz. Merkeze geçmiş
+zarın gerçek 3B izdüşümündeki saydam 44px hedef geri alma ve incelemeyi
+sağlar; hazneye dönünce aynı kart yuvası geri gelir.
 
-İki tarafın merkezinde kalıcı yüz kartı ve merkez başlığı bulunmaz. Zarın
-3B izdüşümündeki görünmez 44×44px hedef kısa dokunma ve incelemeyi korur;
-kendi kilitsiz merkez zarına dokunmak geri alma taslağı oluşturur. Merkez
-hedefleri hazne kaydırmasının dışında kalır. Kartın hazne–merkez geçişi
-yetkili sunum durumunu izler; bekleyen taslak kartı taşımaz. Geçici saldırı
-ve savunma yüzleri sonraki roadmap adımı tamamlanana kadar korunur.
+Savaşta mobil merkez hedefleri de kaldırılır. Saldırı ve blok gerçek 3B
+zarın hareketiyle, aktif kaynak/savunma kısa ince altın halkayla, hasar can
+taşının temas tepkisiyle gösterilir. Azaltılmış harekette yolculuk yerine
+aynı kaynak/hedef halkası ve temas bildirimi kalır. Kalıcı etiket veya
+hareketli yüz kartı üretilmez. Eski aşama kayıtlarındaki kart anlatımı bu
+güncel görünümün önceki tasarımıdır.
 
 Mobil kısa dokunma kendi uygun zarının bekleyen seçimini anında camgöbeği
 vurgu ve onay imiyle değiştirir; ikinci dokunuş geri alır. Hazne kartları ve merkezdeki görünmez 44px
