@@ -54,8 +54,9 @@ geçerli zar hedeflerini sunar.
 
 Kamera başlık, kaynaklar ve alt eylemlerin ölçülen alanını boş bırakır;
 kaldırılan özet için boş şerit ayırmaz. Kısa yatayda kaynaklar solda,
-yakın oyun alanı sağdadır; eylemler yer varsa yan yana durur. Çözümleme sırasında iki tarafın can/jeton/tanrı
-temaslarını göstermek için kadraj geçici olarak genişler. Normal harekette
+yakın oyun alanı sağdadır; eylemler yer varsa yan yana durur. Çözümlemede kadraj o anki olayın kaynak ve hedeflerini, can/jeton/tanrı
+temaslarını ve hareket alanını birlikte gösterir. Bütün masa sürekli uzaktan
+gösterilmez; toplamada yalnız ilgili zar ve kenar bölgesi kapsanır. Normal harekette
 geçiş yumuşaktır; azaltılmış harekette kamera animasyonu yapılmaz. Masaüstü
 tam masa kadrajını korur. Koltuk yönü mevcut yerel/bot/çevrim içi davranışını
 izler; kamera oyun sonucu üretmez.
@@ -152,8 +153,8 @@ Mobilde yalnız aktif saldırgan/savunanın okunur yüzü hareketi takip eder;
 kimlik, simge, etki değeri ve jeton işareti mevcut sunum durumundan gelir.
 Bu yüzler seçim veya odak hedefi değildir. Azaltılmış harekette yolculuk
 ve geri itme yerine kısa kaynak/hedef işareti ve temas bildirimi vardır.
-Aşama 10–12 bu teslimin kapsamında değildir: genel oyuncu sıraları ve bütün
-savaş boyunca yüz/kadraj sürekliliğinin kabulü açık kalır.
+Bu Aşama 13 kaydından sonra Aşama 11–12 ile genel oyuncu sıraları ve bütün
+savaş boyunca yüz/kadraj sürekliliği de eklendi.
 
 ## Çevrim içi hazırlık — Aşama 14
 
@@ -168,3 +169,18 @@ Masaüstünde geçici atış/seçim kilidi zar düğmesinin DOM kimliğini ve kl
 odağını korur. Mobildeki dekoratif savaş yüzleri masaüstü odak akışını
 etkilemez. Birleşik kabul ve açık bağımlılıklar
 `docs/review/gameplay-acceptance.md` içinde kayıtlıdır.
+
+## Savaş boyunca okunur yüzler — Aşama 12
+
+Savaşa girince mevcut okunur yüzler görünür kalır. Kilitli yüzler dekoratiftir;
+tıklama ve odak hedefi oluşturmaz. O anki olayın kaynak/hedef kimlikleri
+pirinç vurguyla gösterilir, diğer yüzler soluktur. Saldıran/savunan yüz
+hareket eden 3B zarını ince çizgiyle takip eder; diğer yuvalar boşluk kapatmaz.
+Kısa yatayda hareketli yüz kaydırma yüzeyinden ayrı izlenir. Atılan yeni
+yüz, değişen değer veya sonraki kaynak sonucu erkenden açılmaz. Kullanılmış
+yüz toplamanın sonunda, kaldırılan yüz gerçek kaybolma sınırında temizlenir.
+
+Kadraj mevcut olayın temas alanına yumuşak geçer; azaltılmış harekette uzun
+kamera geçişi uygulanmaz. Başlık/kaynak/eylem alanı her kadrajda korunur.
+Sekme dönüşü veya WebGL yeniden kurma eski yüz/vurgu bırakmaz. Masaüstü
+aynı düğme/odak kimliğiyle tam masa görünümünü sürdürür.

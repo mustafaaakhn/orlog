@@ -21,7 +21,9 @@
 .mobile-die-controls .scene-die-target.is-selected,
 .mobile-die-controls .scene-die-target.is-kept { outline: 2px solid #71d9e2; outline-offset: 1px; }
 .mobile-die-controls .scene-die-target:focus-visible { outline: 3px solid #fff8e8; outline-offset: 3px; }
-.mobile-die-controls .scene-die-target[aria-disabled="true"] { visibility: hidden; }
+.mobile-die-controls .scene-die-target[aria-disabled="true"] { pointer-events: none; }
+.mobile-die-controls .scene-die-target.is-muted { opacity: .38; }
+.mobile-die-controls .scene-die-target.is-active-event { outline: 2px solid #f4d899; outline-offset: 2px; opacity: 1; }
 .die-target-token { position: absolute; top: -5px; right: -5px; display: grid; place-items: center; width: 17px; height: 17px; border-radius: 3px; background: #1c2921; }
 .die-target-token svg { width: 16px; height: 16px; }
 .die-target-check { position: absolute; bottom: -3px; left: -4px; display: grid; place-items: center; width: 15px; height: 15px; background: #71d9e2; color: #10251e; border-radius: 3px; font: bold 12px/1 sans-serif; }

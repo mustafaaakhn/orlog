@@ -15,20 +15,21 @@ async function mount(viewerId: PlayerId = 'player-1', width = 390, height = 844)
     disconnect() {}
   })
   const initial = new Game().state
-  const players = Object.values(initial.players).map(player => ({ ...player, dice: player.dice.map((die, index) => ({
+  const players = shallowRef(Object.values(initial.players).map(player => ({ ...player, dice: player.dice.map((die, index) => ({
     ...die, faceId: (['arrow', 'helmet', 'hand', 'shield', 'axe-1', 'axe-2'] as FaceId[])[index]!, kept: index === 1, selected: index === 2, value: index === 2 ? 3 : 1,
-  })) }))
-  const targets = shallowRef<SceneDieTarget[]>(players.flatMap(player => player.dice.map((d, i) => ({ id: d.id, x: 40 + i * 3, y: player.id === 'player-1' ? 55 : 45 }))))
+  })) })))
+  const targets = shallowRef<SceneDieTarget[]>(players.value.flatMap(player => player.dice.map((d, i) => ({ id: d.id, x: 40 + i * 3, y: player.id === 'player-1' ? 55 : 45 }))))
+  const collected = shallowRef<import('../../core').DieId[]>([])
   const disabled = shallowRef(false), selectablePlayer = shallowRef<PlayerId | null>(viewerId), select = vi.fn()
   const root = document.createElement('div')
   document.body.append(root)
-  const app = createApp({ render: () => h(SceneDiceControls, { players, targets: targets.value, disabled: disabled.value,
-    collected: [], viewerId, selectablePlayer: selectablePlayer.value, safeArea: { top: 200, bottom: 160, left: 12, right: 12 }, onSelect: select }) })
+  const app = createApp({ render: () => h(SceneDiceControls, { players: players.value, targets: targets.value, disabled: disabled.value,
+    collected: collected.value, viewerId, selectablePlayer: selectablePlayer.value, safeArea: { top: 200, bottom: 160, left: 12, right: 12 }, onSelect: select }) })
   app.mount(root)
   unmounts.push(() => app.unmount())
   await nextTick()
   const button = (id: string) => root.querySelector<HTMLButtonElement>(`[data-die-id="${id}"]`)!
-  return { root, targets, disabled, selectablePlayer, select, button }
+  return { root, targets, players, collected, disabled, selectablePlayer, select, button }
 }
 function pointer(button: HTMLElement, type: string, x = 160, y = 450) {
   button.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerType: 'touch', pointerId: 1, isPrimary: true, clientX: x, clientY: y }))
@@ -64,6 +65,29 @@ describe('mobile projected dice interaction', () => {
     m.targets.value = []
     await nextTick()
     expect(m.root.querySelector('.is-combat')).toBeNull()
+  })
+  it('keeps every visible mobile face decorative under lock, highlights only this event, and removes faces at collection', async () => {
+    const m = await mount(), count = m.root.querySelectorAll('.scene-die-target').length
+    const before = m.button('player-1/die-3').style.cssText
+    m.disabled.value = true
+    m.targets.value = m.targets.value.map(t => ({ ...t, eventRole: t.id === 'player-2/die-3' ? 'source' : undefined }))
+    await nextTick()
+    const faces = [...m.root.querySelectorAll<HTMLElement>('.scene-die-target')]
+    expect(faces).toHaveLength(count)
+    expect(faces.every(el => el.tagName === 'SPAN' && !el.hasAttribute('tabindex'))).toBe(true)
+    expect(m.root.querySelectorAll('.is-active-event')).toHaveLength(1)
+    expect(m.root.querySelectorAll('.is-muted')).toHaveLength(count - 1)
+    expect(m.button('player-1/die-3').style.cssText).toBe(before)
+    faces.forEach(click)
+    expect(m.select).not.toHaveBeenCalled()
+    m.collected.value = ['player-1/die-3']
+    await nextTick()
+    expect(m.button('player-1/die-3')).toBeNull()
+    m.targets.value = m.targets.value.map(t => ({ ...t, eventRole: undefined }))
+    m.disabled.value = false
+    await nextTick()
+    expect(m.root.querySelector('.is-active-event')).toBeNull()
+    expect(m.root.querySelectorAll('.scene-die-target')).toHaveLength(count - 1)
   })
   it('selects the bound die rather than a nearby projected neighbour, and permits taking a selected die back', async () => {
     const m = await mount()

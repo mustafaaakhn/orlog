@@ -5,7 +5,7 @@ import { playerAngle, TABLE_DEPTH, TABLE_NARROW_WIDTH, TABLE_WIDTH } from './tab
 export interface TableInsets { top: number; bottom: number; left: number; right: number }
 export const isMobileTableView = (width: number, height: number) => width <= 600 || (height <= 500 && width > height)
 
-function frameMobile(camera: PerspectiveCamera, width: number, height: number, angle: number, combat: number, insets?: TableInsets) {
+function frameMobile(camera: PerspectiveCamera, width: number, height: number, angle: number, combat: number, insets?: TableInsets, focus?: readonly Vector3[], focusBlend = 1) {
   const landscape = width > height
   const edge = insets ?? (landscape
     ? { top: 110, bottom: 86, left: Math.min(280, width * .45), right: 12 }
@@ -15,7 +15,7 @@ function frameMobile(camera: PerspectiveCamera, width: number, height: number, a
   const centerX = edge.left + areaWidth / 2
   const centerY = edge.top + areaHeight / 2
   const rotation = new Vector3(0, 1, 0)
-  const target = new Vector3(0, .35, 4 - 3 * combat).applyAxisAngle(rotation, angle)
+  let target = new Vector3(0, .35, 4 - 3 * combat).applyAxisAngle(rotation, angle)
   const direction = new Vector3(0, 1, .85).normalize().applyAxisAngle(rotation, angle)
   const right = new Vector3(1, 0, 0).applyAxisAngle(rotation, angle)
   const up = new Vector3().crossVectors(direction, right)
@@ -28,6 +28,20 @@ function frameMobile(camera: PerspectiveCamera, width: number, height: number, a
     for (const z of [-1.8 - 6.2 * combat, 10.1]) for (const y of [0, 1.85 + .15 * combat]) points.push(new Vector3(x, y, z))
   // High roll poses only occur over the near bowl, never over the battle lines.
   for (const x of [-2.5, 2.5]) for (const z of [4.8, 8.6]) points.push(new Vector3(x, 4.1, z))
+  if (focus?.length && focusBlend > 0) {
+    // Pad the current source/target envelope for the full die, attack recoil,
+    // lifted gold arc and a decorative face beside the contact. Fit, never crop.
+    const min = new Vector3(Infinity, Infinity, Infinity), max = min.clone().negate()
+    for (const point of focus) { min.min(point); max.max(point) }
+    min.addScalar(-1.3); max.addScalar(1.3); max.y += 1.1
+    const weight = Math.max(0, Math.min(1, focusBlend))
+    const baseMin = new Vector3(Infinity, Infinity, Infinity), baseMax = baseMin.clone().negate()
+    for (const point of points) { point.applyAxisAngle(rotation, angle); baseMin.min(point); baseMax.max(point) }
+    baseMin.lerp(min, weight); baseMax.lerp(max, weight)
+    points.length = 0
+    for (const x of [baseMin.x, baseMax.x]) for (const y of [baseMin.y, baseMax.y]) for (const z of [baseMin.z, baseMax.z]) points.push(new Vector3(x, y, z).applyAxisAngle(rotation, -angle))
+    target.lerp(min.clone().add(max).multiplyScalar(.5), weight)
+  }
   for (const pose of points) {
     const point = pose.applyAxisAngle(rotation, angle).sub(target)
     distance = Math.max(distance, point.dot(direction) + Math.max(
@@ -46,10 +60,10 @@ function frameMobile(camera: PerspectiveCamera, width: number, height: number, a
 
 // Desktop retains the complete wooden outline; mobile fits the near play area.
 // Both paths reserve the applicable controls before projecting from either seat.
-export function frameTableCamera(camera: PerspectiveCamera, width: number, height: number, player: PlayerId, narrow: boolean, angle = playerAngle(player), options: { insets?: TableInsets; combat?: boolean | number } = {}) {
+export function frameTableCamera(camera: PerspectiveCamera, width: number, height: number, player: PlayerId, narrow: boolean, angle = playerAngle(player), options: { insets?: TableInsets; combat?: boolean | number; focus?: readonly Vector3[]; focusBlend?: number } = {}) {
   if (width <= 0 || height <= 0) return
   if (isMobileTableView(width, height)) {
-    frameMobile(camera, width, height, angle, Math.max(0, Math.min(1, Number(options.combat ?? 0))), options.insets)
+    frameMobile(camera, width, height, angle, Math.max(0, Math.min(1, Number(options.combat ?? 0))), options.insets, options.focus, options.focusBlend)
     return
   }
   camera.clearViewOffset()

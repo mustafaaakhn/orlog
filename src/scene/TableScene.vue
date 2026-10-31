@@ -23,8 +23,10 @@ import type { PresentationBatch } from "../app/rollSession";
 import type { DieId, GameState, GameEvent, PlayerId } from "../core";
 
 import type { SceneDieTarget } from "./dieTargets";
+import { projectDiceTargets } from "./projectDiceTargets";
 import { frameTableCamera, isMobileTableView } from './tableCamera';
 import type { TableInsets } from './tableCamera';
+import { eventFocusPoints, collectionFocusPoints } from "./eventFocus";
 import { collectionSlot } from './tableLayout';
 import { createSeatTurn } from '../presentation/seatTurn';
 
@@ -59,6 +61,9 @@ const board = createBoard(invalidate);
 board.syncDice(props.state);
 board.syncResources(props.state);
 let sceneClosed = false;
+let visualEvent: GameEvent | null = null;
+let concealedDice: readonly DieId[] = [];
+const finishedDice = new Set<DieId>();
 // The renderer and board survive focus/visibility changes. Only the obsolete
 // playback is retired before authoritative state takes ownership of transforms.
 function createPlayback() {
@@ -81,7 +86,7 @@ function createPlayback() {
       invalidate();
     },
   });
-  const presenter = createDicePresenter(board.dice, invalidate, {
+  const presenter = createDicePresenter(board.dice, () => { invalidate(); publishTargets(); }, {
     record: recorder.record,
     reduced: () => props.reduced,
     speed: () => props.speed,
@@ -93,6 +98,7 @@ function createPlayback() {
     if (!batch || retired) return;
     if (event.type === 'RoundStarted') {
       combat.reset();
+      finishedDice.clear();
       emit('collected', []);
       board.syncDice(batch.state);
     }
@@ -103,6 +109,12 @@ function createPlayback() {
     if (event.type === 'DiceRolled' && batch.state.round === 1 && shown.revision === 0)
       await combat.title('Tur 1 · Zar atışı');
     if (retired || sceneClosed) return;
+    visualEvent = event;
+    concealedDice = event.type === 'DiceRolled' ? event.dice.map(d => d.dieId)
+      : event.type === 'DiceRecast' ? event.dice.map(d => d.id) : [];
+    const points = eventFocusPoints(event, board);
+    if (points.length && (batch.state.phase.name === 'round-complete' || batch.state.phase.name === 'ended')) focusEvent(points);
+    publishTargets();
     await presenter.play({
       ...batch,
       state: event.type === 'DiceRecast' ? applyResourceEvent(shown, event) : batch.state,
@@ -115,10 +127,18 @@ function createPlayback() {
     shown = applyResourceEvent(shown, event);
     board.syncResources(shown);
     invalidate();
+    concealedDice = [];
     if (props.batch) emit('presented', props.batch.id, event);
+    publishTargets();
   }, async event => {
-    await combat.collect([...last].filter(([, eventId]) => eventId === event.id).map(([id]) => id));
-    if (!retired && !sceneClosed) emit('collected', [...combat.collected]);
+    const ids = [...last].filter(([, eventId]) => eventId === event.id).map(([id]) => id);
+    if (ids.length) focusEvent(collectionFocusPoints(ids, board));
+    await combat.collect(ids);
+    if (!retired && !sceneClosed) {
+      ids.forEach(id => finishedDice.add(id));
+      emit('collected', [...combat.collected]);
+      publishTargets();
+    }
   });
   return {
     get state() { return shown; },
@@ -128,6 +148,9 @@ function createPlayback() {
       shown = state;
       shownPhase = state.phase.name;
       combat.reset();
+      finishedDice.clear();
+      visualEvent = null;
+      concealedDice = [];
       board.dice.forEach(die => die.scale.setScalar(1));
       board.syncDice(state);
       board.syncResources(state);
@@ -139,6 +162,7 @@ function createPlayback() {
             const die = board.dice.get(value.id)!;
             if (!die.visible) continue;
             combat.collected.add(value.id);
+            finishedDice.add(value.id);
             die.position.set(...collectionSlot(player.id, slot++));
             die.getObjectByName('selection-marker')!.visible = false;
           }
@@ -146,6 +170,7 @@ function createPlayback() {
       }
       emit('collected', [...combat.collected]);
       emit('cue', null);
+      focusEvent([]);
       invalidate();
     },
     play(batch: PresentationBatch) {
@@ -160,10 +185,18 @@ function createPlayback() {
           await queue.play(batch.events);
           if (retired || sceneClosed) return;
           if (resolution) {
+            const remaining = [...board.dice.keys()].filter(id => !combat.collected.has(id));
+            visualEvent = null;
+            focusEvent(collectionFocusPoints(remaining, board));
             await combat.cleanup(batch.state);
+            combat.collected.forEach(id => finishedDice.add(id));
             if (retired || sceneClosed) return;
             emit('collected', [...combat.collected]);
           }
+          visualEvent = null;
+          concealedDice = [];
+          focusEvent([]);
+          publishTargets();
           emit('cue', null);
           if (await queue.ready() && !retired && !sceneClosed) emit('settled', batch.id);
         } catch (error) {
@@ -178,6 +211,10 @@ function createPlayback() {
     setPaused(value: boolean) { queue.setPaused(value); presenter.setPaused(value); combat.setPaused(value); },
     stop() {
       retired = true;
+      visualEvent = null;
+      concealedDice = [];
+      finishedDice.clear();
+      focusEvent([]);
       queue.dispose();
       recorder.dispose();
       combat.dispose();
@@ -251,7 +288,7 @@ watch(
   },
 );
 const camera = new PerspectiveCamera(42, 1, 0.1, 100);
-const composition = { combat: 0 };
+const composition = { weight: 0, minX: -5.65, maxX: 5.65, minY: 0, maxY: 4.1, minZ: -1.8, maxZ: 10.1 };
 let compositionTween: gsap.core.Tween | undefined;
 let seatTurning = false;
 const seatTurn = createSeatTurn(props.viewerId, {
@@ -269,33 +306,19 @@ const seatTurn = createSeatTurn(props.viewerId, {
     if (!seatTurning) publishTargets();
   },
 });
-let combatTargetsPublished = false;
 function publishTargets() {
-  if (sceneClosed || seatTurning || !sizes.width.value || !sizes.height.value)
-    return;
-  const combatActive = [...board.dice.values()].some(die => !!die.userData.combatRole);
-  // Preserve existing DOM targets/focus through ordinary roll/selection playback.
-  // Only combat owns live readonly projections; clear its final frame once.
-  if (props.batch && !combatActive && !combatTargetsPublished) return;
-  combatTargetsPublished = !!props.batch && combatActive;
+  if (sceneClosed || seatTurning || !sizes.width.value || !sizes.height.value) return;
+  const mobile = isMobileTableView(sizes.width.value, sizes.height.value);
+  // Desktop keeps its existing nodes/focus through playback. Mobile projection
+  // is visual-only; App still owns the unchanged input and presentation locks.
+  if (props.batch && !mobile) return;
   board.setDiceReadability(!props.batch, sizes.width.value <= 600 || (sizes.height.value <= 500 && sizes.width.value > sizes.height.value));
   board.object.updateMatrixWorld(true);
   camera.updateMatrixWorld(true);
-  const targets: SceneDieTarget[] = [];
-  for (const [id, die] of board.dice) {
-    if (!die.visible || (props.batch && !die.userData.combatRole)) continue;
-    const point = die.position
-      .clone()
-      .add(new Vector3(0, 0.18, 0))
-      .project(camera);
-    const screenX = (point.x + 1) * sizes.width.value / 2;
-    const screenY = (1 - point.y) * sizes.height.value / 2;
-    const edge = props.frameInsets;
-    const underHud = isMobileTableView(sizes.width.value, sizes.height.value) &&
-      (screenX < edge.left || screenX > sizes.width.value - edge.right || screenY < edge.top || screenY > sizes.height.value - edge.bottom);
-    if (!underHud && Math.abs(point.x) < 1.1 && Math.abs(point.y) < 1.1 && point.z < 1)
-      targets.push({ id, combatRole: die.userData.combatRole, x: (point.x + 1) * 50, y: (1 - point.y) * 50 });
-  }
+  const targets = projectDiceTargets(board.dice, camera, sizes.width.value, sizes.height.value, {
+    mobile, presenting: !!props.batch, insets: props.frameInsets, event: visualEvent,
+    concealed: concealedDice, finished: finishedDice,
+  });
   emit("targets", targets);
   emit('favors', board.favorTargets().map(totem => {
     const point = totem.getWorldPosition(new Vector3()).add(new Vector3(0, 0.26, 0)).project(camera);
@@ -308,24 +331,23 @@ function frameCamera(angle: number) {
   const aspect = Math.max(sizes.aspectRatio.value, 0.25);
   const narrow = sizes.width.value < 620 && aspect < 1.1;
   board.setNarrow(narrow);
-  frameTableCamera(camera, sizes.width.value, sizes.height.value, props.viewerId, narrow, angle, { insets: props.frameInsets, combat: composition.combat });
+  frameTableCamera(camera, sizes.width.value, sizes.height.value, props.viewerId, narrow, angle, { insets: props.frameInsets, focus: [new Vector3(composition.minX, composition.minY, composition.minZ), new Vector3(composition.maxX, composition.maxY, composition.maxZ)], focusBlend: composition.weight });
   invalidate();
   publishTargets();
 }
 watch(() => props.viewerId, player => seatTurn.turn(player, props.reduced, props.paused));
 watch(() => props.paused, paused => { if (paused) seatTurn.snap(props.viewerId); });
 watch(() => props.reduced, reduced => { if (reduced) seatTurn.snap(props.viewerId); });
-const resolutionFrame = computed(() => props.batch?.events.some(event => ['TokensGained', 'TokensStolen', 'FavorInvoked', 'DamageDealt', 'HealthRestored', 'TokensGranted', 'TokensDestroyed', 'HealthSacrificed', 'DiceRecast', 'DiceRemoved', 'HelmetsRemoved'].includes(event.type)) ?? false);
-watch([resolutionFrame, () => props.reduced], ([combat, reduced]) => {
+function focusEvent(points: readonly Vector3[]) {
+  if (sceneClosed) return;
   compositionTween?.kill();
-  if (reduced) {
-    composition.combat = Number(combat);
-    frameCamera(seatTurn.angle);
-  } else compositionTween = gsap.to(composition, {
-    combat: Number(combat), duration: .45, ease: 'power2.out',
-    onUpdate: () => frameCamera(seatTurn.angle),
-  });
-}, { immediate: true });
+  const min = new Vector3(Infinity, Infinity, Infinity), max = min.clone().negate();
+  for (const point of points) { min.min(point); max.max(point); }
+  const target = points.length ? { weight: 1, minX: min.x, maxX: max.x, minY: min.y, maxY: max.y, minZ: min.z, maxZ: max.z } : { weight: 0 };
+  if (props.reduced) { Object.assign(composition, target); frameCamera(seatTurn.angle); }
+  else compositionTween = gsap.to(composition, { ...target, duration: .28 / props.speed, ease: 'power2.out', onUpdate: () => frameCamera(seatTurn.angle) });
+}
+watch(() => props.reduced, reduced => { if (reduced) { compositionTween?.progress(1); compositionTween?.kill(); } });
 watch(
   [
     () => sizes.aspectRatio.value,
@@ -379,6 +401,7 @@ function pointerCancel() {
   pointer = undefined;
 }
 onMounted(() => {
+  if (!props.batch) playback?.sync(props.state);
   publishTargets();
   const canvas = renderer.domElement;
   canvas.addEventListener("pointerdown", pointerDown);

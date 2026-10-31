@@ -39,3 +39,7 @@ Kanıtlar Git dışında `output/stage11/`: `driver.mjs`, `matrix.mjs/json`,
 masaüstü ekranları, `check.log`, `tests.log`. Çalışma zamanı istisnası yoktu.
 Fiziksel iPhone/Safari ve Android/Chrome kabulü bu tarayıcı kontrolleriyle
 kapanmaz. Genel savaş yüz/kadraj sürekliliği sonraki Aşama 12'dir.
+
+Kullanıcının özgün IMG_1965–IMG_1971 dosyaları bu çalışmada mevcut değildi.
+12 yüzün kümelenme senaryosu core snapshot'ıyla yeniden kuruldu; özgün
+fotoğraflarla piksel düzeyinde birebir karşılaştırma iddia edilmez.

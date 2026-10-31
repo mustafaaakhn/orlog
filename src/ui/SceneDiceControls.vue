@@ -23,7 +23,7 @@ const emit = defineEmits<{ select: [id: DieId]; highlight: [id: DieId | null] }>
 // Mobile exposes the near bowl and both center rows; the far bowl has no touch targets.
 const inspected = computed(() => inspectableDice(
   props.players, props.targets, props.selectablePlayer, props.collected,
-).filter(target => !mobile.value || target.id.startsWith(`${props.viewerId}/`) || target.location !== "Haznede")
+).filter(target => (!mobile.value || !props.collected.includes(target.id)) && (!mobile.value || target.id.startsWith(`${props.viewerId}/`) || target.location !== "Haznede"))
   .map(target => {
     if (!mobile.value || props.draftSelectedIds == null || !target.canSelect) return target;
     const selected = props.draftSelectedIds.includes(target.id);
@@ -40,26 +40,35 @@ const safeArea = computed(() => props.safeArea ?? {
 const metrics = computed(() => dieLayoutMetrics(size.value.width, size.value.height, safeArea.value));
 const overflow = computed(() => mobile.value && metrics.value.overflow);
 type FaceControl = typeof inspected.value[number] & { sourceX: number; sourceY: number; lane?: DieLane; slot?: number };
-const controls = computed<FaceControl[]>(() => mobile.value && props.disabled
-  ? inspected.value.filter(target => target.combatRole).map(target => ({
-    ...target, sourceX: target.x, sourceY: target.y, lane: undefined, slot: undefined,
-    y: target.y + (target.combatRole === 'source' ? -24 : 24) * 100 / size.value.height,
-  }))
-  : mobile.value
-  ? layoutDieTargets(inspected.value, size.value.width, size.value.height, safeArea.value, props.viewerId)
-  : inspected.value.map(target => ({ ...target, sourceX: target.x, sourceY: target.y, lane: undefined, slot: undefined })));
+const controls = computed<FaceControl[]>(() => {
+  const faces = mobile.value
+    ? layoutDieTargets(inspected.value, size.value.width, size.value.height, safeArea.value, props.viewerId)
+    : inspected.value.map(t => ({ ...t, sourceX: t.x, sourceY: t.y }));
+  return faces.map(target => {
+    if (!mobile.value || !props.disabled || !target.combatRole) return target;
+    const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
+    return { ...target,
+      x: clamp(target.sourceX * size.value.width / 100, safeArea.value.left + 24, size.value.width - safeArea.value.right - 24) / size.value.width * 100,
+      y: clamp(target.sourceY * size.value.height / 100 + (target.combatRole === 'source' ? -36 : 36), safeArea.value.top + 24, size.value.height - safeArea.value.bottom - 24) / size.value.height * 100,
+    };
+  });
+});
+const renderGroups = computed(() => [
+  { id: 'slots', targets: controls.value.filter(t => !(mobile.value && props.disabled && t.combatRole)) },
+  { id: 'active', targets: controls.value.filter(t => mobile.value && props.disabled && t.combatRole) },
+]);
 const listStyle = computed(() => overflow.value ? {
   top: `${safeArea.value.top}px`, bottom: `${safeArea.value.bottom}px`,
   left: `${safeArea.value.left}px`, right: `${safeArea.value.right}px`,
 } : {});
 const surfaceStyle = computed(() => overflow.value ? { height: `${metrics.value.contentHeight}px` } : {});
 function position(target: typeof controls.value[number]) {
-  return overflow.value ? {
+  return overflow.value && !(props.disabled && target.combatRole) ? {
     left: `${target.x * size.value.width / 100 - safeArea.value.left}px`,
     top: `${target.y * size.value.height / 100 - safeArea.value.top}px`,
   } : { left: `${target.x}%`, top: `${target.y}%` };
 }
-const laneLabels = computed(() => mobile.value ? DIE_LANES.filter(lane => controls.value.some(t => t.lane === lane)).map(lane => ({
+const laneLabels = computed(() => mobile.value ? DIE_LANES.filter(lane => controls.value.some(t => t.lane === lane && !(props.disabled && t.combatRole))).map(lane => ({
   lane, label: LANE_LABELS[lane],
   top: overflow.value ? `${DIE_LANES.indexOf(lane) * metrics.value.laneHeight}px` : `${safeArea.value.top + DIE_LANES.indexOf(lane) * metrics.value.laneHeight}px`,
 })) : []);
@@ -250,31 +259,32 @@ function navigate(event: KeyboardEvent) {
     @pointermove="aim"
     @pointerleave="aimed = null"
   >
-    <svg v-if="mobile && !overflow" class="die-target-links" aria-hidden="true">
-      <line v-for="target in controls.filter(t => (t.id === aimed || t.id === inspecting || !!t.combatRole) && Math.hypot((t.x-t.sourceX)*size.width/100, (t.y-t.sourceY)*size.height/100) > 6)"
+    <svg v-if="mobile" class="die-target-links" aria-hidden="true">
+      <line v-for="target in controls.filter(t => (!overflow || (disabled && t.combatRole)) && (t.id === aimed || t.id === inspecting || !!t.eventRole || !!t.combatRole) && Math.hypot((t.x-t.sourceX)*size.width/100, (t.y-t.sourceY)*size.height/100) > 6)"
         :key="target.id" :x1="`${target.sourceX}%`" :y1="`${target.sourceY}%`"
         :x2="`${target.x}%`" :y2="`${target.y}%`" />
     </svg>
-    <div class="die-target-list" :class="{ 'is-overflow': overflow, 'is-short': size.height - safeArea.top - safeArea.bottom < 100 }" :style="listStyle" :role="overflow ? 'group' : undefined" :aria-label="overflow ? 'Masadaki zarlar, kaydırarak incele ve seç' : undefined">
-    <div class="die-slot-surface" :style="surfaceStyle">
-    <span v-for="label in laneLabels" :key="label.lane" class="die-lane-label" :data-lane="label.lane" :style="{ top: label.top, left: overflow ? '50%' : `${safeArea.left + metrics.availableWidth / 2}px` }" aria-hidden="true">{{ label.label }}</span>
+    <div v-for="group in renderGroups" :key="group.id" class="die-target-list" :class="{ 'is-overflow': overflow && group.id === 'slots', 'is-short': size.height - safeArea.top - safeArea.bottom < 100 }" :style="group.id === 'slots' ? listStyle : {}" :role="overflow ? 'group' : undefined" :aria-label="overflow ? 'Masadaki zarlar, kaydırarak incele ve seç' : undefined">
+    <div class="die-slot-surface" :style="group.id === 'slots' ? surfaceStyle : {}">
+    <span v-for="label in group.id === 'slots' ? laneLabels : []" :key="label.lane" class="die-lane-label" :data-lane="label.lane" :style="{ top: label.top, left: overflow ? '50%' : `${safeArea.left + metrics.availableWidth / 2}px` }" aria-hidden="true">{{ label.label }}</span>
     <component
-      :is="disabled && mobile && target.combatRole ? 'span' : 'button'"
-      v-for="target in controls"
+      :is="disabled && mobile ? 'span' : 'button'"
+      v-for="target in group.targets"
       :key="target.id"
       class="scene-die-target"
-      :class="{ 'grants-token': target.face.grantsToken, 'is-selected': target.selected, 'is-kept': target.location === 'Kilitli', 'is-combat': !!target.combatRole }"
+      :class="{ 'grants-token': target.face.grantsToken, 'is-selected': target.selected, 'is-kept': target.location === 'Kilitli', 'is-combat': !!target.combatRole, 'is-active-event': !!target.eventRole, 'is-muted': disabled && !target.eventRole && !target.combatRole }"
       :style="{
         ...position(target),
-        zIndex: aimed === target.id ? 3 : undefined,
+        zIndex: target.combatRole ? 5 : aimed === target.id ? 3 : undefined,
       }"
       :aria-hidden="disabled ? true : undefined"
       :aria-label="disabled ? undefined : target.label"
       :aria-pressed="target.canSelect ? target.selected : undefined"
       :aria-disabled="disabled"
-      :tabindex="disabled ? mobile && target.combatRole ? undefined : -1 : 0"
+      :tabindex="disabled ? mobile ? undefined : -1 : 0"
       :aria-describedby="preview?.id === target.id ? 'die-face-preview' : undefined"
       :data-die-id="target.id"
+      :data-event-role="target.eventRole"
       :data-selectable="target.canSelect"
       :data-lane="target.lane"
       :data-slot="target.slot"

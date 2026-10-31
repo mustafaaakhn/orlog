@@ -2,6 +2,7 @@ import type { DieId } from "../core";
 
 export interface SceneDieTarget {
   id: DieId;
+  eventRole?: "source" | "target";
   combatRole?: "source" | "target";
   x: number;
   y: number;

@@ -11,8 +11,9 @@ Bu dosya planı gösterir; geliştirmelerin tamamlandığı anlamına gelmez.
 31 Ekim 2026 yayın sonrası kullanıcı testi ve incelemesiyle yeni çalışma
 **Aşama 10–15** olarak belirlendi. Güncel uygulama ve doğrulama durumu
 aşağıdaki onay kutuları ve aşama sonu kayıtlarındadır. Aşama 10 ayrı çalışma
-olarak tamamlandı; bu istekte yalnız 13–15 ele alındı. Aşama 11–12 ve
-fiziksel cihaz kabulü açık kaldı. Plan, başka aşamaları otomatik uygulama
+olarak tamamlandı; önceki istekte 13–15 ele alındı. Bu devam isteğinde
+11–12 de tamamlandı. Aşama 15'in birleşik/fiziksel kabulündeki açık maddeler
+aşağıda korunur. Plan, başka aşamaları otomatik uygulama
 yetkisi vermez.
 
 | Sıra | Aşama | Hedef | Bağımlılık |
@@ -502,34 +503,39 @@ Kayıt: [kararlı mobil sıralar](docs/review/mobile-stable-rows.md).
 Bağımlılık: Aşama 11. Önce okunurluk sürekliliği sağlanır; saldıran zarın
 hareketi Aşama 13'tedir.
 
-- [ ] Etkileşim kilidi ile yüzün görünürlüğünü ayır. Çözümleme sırasında
+- [x] Etkileşim kilidi ile yüzün görünürlüğünü ayır. Çözümleme sırasında
   seçim kapalı kalsın; görünen bütün yüzler yalnız `disabled` olduğu için
   kaybolmasın. Dekoratif yüzler tıklama/odak hedefi oluşturmasın.
-- [ ] Sunum grubu sürerken de yüzün konumunu güncel 3B parça/kamera
+- [x] Sunum grubu sürerken de yüzün konumunu güncel 3B parça/kamera
   izdüşümünden okuyabil. `publishTargets` içindeki sunum kilidi nedeniyle
   eski koordinatlarda donma oluşmasın; bu salt okunur görsel takip seçim
   kilidini açmasın veya bekleyen grubun nihai yüz/sonucunu erkenden göstermesin.
-- [ ] O anki olayın kaynak ve hedef zarlarını mevcut olay kimliklerinden
+- [x] O anki olayın kaynak ve hedef zarlarını mevcut olay kimliklerinden
   vurgula. Diğer yüzlerin vurgusunu azalt; sıradaki zarları veya nihai can/
   jeton değerlerini erkenden gösterme. Kaldırılan/kullanılan zarın yüzünü
   mevcut olay ve toplama sınırında temizle.
-- [ ] Kameranın tek yazım yolunu koruyarak kadrajı olayın kaynak, hedef ve
+- [x] Kameranın tek yazım yolunu koruyarak kadrajı olayın kaynak, hedef ve
   hareket alanına göre ayarla. Her çözümlemede bütün masayı uzaktan
   göstermek yerine okunur aktif parçaları ve temas noktasını birlikte kapsa.
   Can/jeton/tanrı etkilerinde hedef HUD altında veya ekran dışında kalmasın.
-- [ ] Olay geçişlerinde yüzleri ve kadrajı kararlı tut; yüz katmanı 3B
+- [x] Olay geçişlerinde yüzleri ve kadrajı kararlı tut; yüz katmanı 3B
   parçanın üstünü anlamsız biçimde kapatmasın. Azaltılmış harekette uzun
   kamera hareketi olmadan kaynak, hedef ve sonuç anlaşılır kalsın.
-- [ ] Saldırı/blok, doğrudan hasar, kazanım/çalma/ödeme, tanrı etkisi ve
+- [x] Saldırı/blok, doğrudan hasar, kazanım/çalma/ödeme, tanrı etkisi ve
   toplamada iki koltuğun kadrajını ve olay–yüz bağını doğrula. Sekme dönüşü,
   WebGL toparlanması ve yeniden maç eski vurgu veya hayalet yüz bırakmasın.
-- [ ] Dikey/kısa yatay mobilde seçim → güç → savaş → sonraki tur geçişlerini
+- [x] Dikey/kısa yatay mobilde seçim → güç → savaş → sonraki tur geçişlerini
   normal/azaltılmış harekette tarayıcıda izle; tablet/masaüstünü kontrol et.
   Zorunlu komutlar, güncel belgeler ve görsel kanıtla aşamayı commit et.
 
 **Kabul:** Savaşa girildiğinde okunur yüzlerden bir anda küçük, anlaşılması
 güç zarlara geçilmez. Aktif kaynak ve hedef görülebilir; etkileşim kilidi ve
 oyun olaylarının sırası korunur.
+
+**Aşama 12 tamamlandı — 31 Ekim 2026.** Bütün mevcut mobil yüzler sunum
+kilidinde dekoratif kalır; güncel olay kimlikleri ve izdüşümler izlenir.
+Kadraj mevcut kaynak/hedef ve temas alanına odaklanır. Kayıt:
+[savaş yüzleri ve olay kadrajı](docs/review/mobile-combat-framing.md).
 
 ## Aşama 13 — Saldırı, blok ve hasarı görünür zar hareketiyle anlat
 
@@ -563,12 +569,13 @@ Bağımlılık: Aşama 12. Kadraj ve yüz sürekliliğinin üstüne hareket ekle
 ve canın hangi temasta düştüğünü takip edebilir. Hareket ve yüz aynı zara
 aittir; kural sonucu önceki olay kaydıyla aynıdır.
 
-**Aşama 13 — Uygulandı; Aşama 12 bağımlılığı açık — 31 Ekim 2026.**
+**Aşama 13 — Uygulandı; Aşama 12 bağımlılığı sonradan tamamlandı — 31 Ekim 2026.**
 Kaynak zar hareketi, savunma tepkisi, gerçek can taşı teması, geri dönüş,
 son katkıda toplama ve mobil aktif yüz takibi eklendi. Kullanıcının kapsam
 kararıyla bu işte Aşama 10–12 uygulanmadı. Aşama 10 ayrı `da2c608`
-commit'iyle geldi ve korundu; Aşama 11–12 açık kaldı. Genel sabit sıralar, bütün savaş
-olaylarında yüz sürekliliği ve olay odaklı yakın kadraj tamamlanmış sayılmaz.
+commit'iyle geldi ve korundu; o teslimde Aşama 11–12 açık kaldı. Bu devam
+işinde 11–12, kendi kayıtlarıyla tamamlandı; önceki teslimin kapsam kaydı
+ve kanıtları korunur.
 Doğrulama ve sınırlar: [Aşama 13 kaydı](docs/review/combat-dice-motion.md).
 
 ## Aşama 14 — Lobide hazırlığı geri al ve tanrıları yeniden düzenle
@@ -659,8 +666,10 @@ beş mobil boyut, 18 zar uç durumu, yön değişimi, CDP uzun basma, gerçek Ch
 sekme geçişi, WebGL kaybı ve bağlantı dönüşü kontrol edildi.
 
 İlk madde kısmen doğrulandı: 44px hedefler ve 12/18 zar görüntülendi; fakat
-Aşama 11–12 uygulanmadığından sahipliğe göre kararlı sıralar ve bütün savaşta
-yüz/kadraj sürekliliği kabul edilmedi. Kullanıcının özgün fotoğrafları bu
+o tarihte Aşama 11–12 uygulanmadığından sahipliğe göre kararlı sıralar ve
+bütün savaşta yüz/kadraj sürekliliği kabul edilmedi. Aşama 11–12 bu devam
+tesliminde ayrıca doğrulandı; Aşama 15'in birleşik kabul kutuları burada
+otomatik kapatılmadı. Kullanıcının özgün fotoğrafları bu
 çalışmada mevcut değildi; birebir görüntü karşılaştırması iddia edilmez.
 Fiziksel iPhone/Safari ve Android/Chrome denenmedi. Bu iki açık madde ve
 önceki Aşama 4–5/9 cihaz maddeleri `[ ]` kalır.

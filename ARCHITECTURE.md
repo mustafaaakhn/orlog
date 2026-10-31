@@ -46,8 +46,8 @@ eşitlenir; WebGL kaybı ayrı yeniden kurma yolunu kullanır.
 
 Mobil kamera `useTableInsets` ile gerçek HUD/eylem boyutlarını ölçer;
 `frameTableCamera` bu boş alanda yakın hazne ve dokuz zara kadar iki merkez
-sırasını kadrajlar. Çözümleme olay gruplarında iki tarafın kaynak ve tanrı
-temas noktaları da kapsanır. GSAP yalnız kadraj genişleme katsayısını ve
+sırasını kadrajlar. Çözümlemede o anki olayın kaynak/hedef zarları, kaynak ve tanrı temas
+noktaları kapsanır. GSAP yalnız odak zarfını, geçiş ağırlığını ve
 mevcut koltuk dönüş açısını değiştirir; kameranın konumu/izdüşümü tek
 `frameCamera` yolunda yazılır. Fizik ve zar sahipliği değiştirilmez. Mobil
 zar seçim hedefleri aynı kamera izdüşümünü okur; HUD altında kalan merkezler
@@ -211,10 +211,10 @@ eski nesneye yazamaz. Mevcut sekme ve WebGL yeniden kurma yolu korunur.
 Geçici `combatRole`, yalnız aktif kaynak/savunma nesnesinin sunum bilgisidir.
 Animasyon invalidate çağrıları bunların güncel kamera izdüşümünü yayınlar.
 Mobilde ilgili okunur yüzler dekoratif `span` olur; odak/tıklama açılmaz.
-Yakın temasta yüzler dikey 24px ayrılır ve izdüşüme çizgiyle bağlanır.
+Yakın temasta yüzler dikey 36px ayrılır ve izdüşüme çizgiyle bağlanır.
 Azaltılmış harekette zar yolculuğu yapılmaz; kaynak/hedef işareti ve temas
-beklemesi korunur. Genel sabit mobil sıralar ve savaşın bütün olaylarındaki
-yüz/kadraj sürekliliği kapsam dışındaki Aşama 11–12'ye bağlıdır.
+beklemesi korunur. Aşama 13 tesliminde kapsam dışında olan genel mobil sıralar ve bütün olaylarda
+yüz/kadraj sürekliliği sonradan Aşama 11–12 ile tamamlandı.
 
 ## Lobi hazır durumu — Aşama 14
 
@@ -234,11 +234,11 @@ kilidini kullanır; red resume ile uzlaştırılır, kayıp ACK tekrar istek
 Hazır, bekleyen istek veya kopma ad/tanrı düzenlemesini kilitler. Geri alma
 onayı seçimleri silmez. Core ve yerel/bot hazırlığı değişmez.
 
-Aşama 15'in masaüstü regresyonunda sıradan seçim sunumu hedef listesini
-boşaltıp klavye odağını kaybettiriyordu. `publishTargets` saldırı dışındaki
-sunumlarda eski hedefleri korur; canlı savaş izdüşümü yalnız aktif roller
-varken yayınlanır ve son karesi bir kez temizlenir. Dekoratif `span` yalnız
-mobil aktif savaş yüzüne uygulanır; masaüstü düğmesi kilitte korunur.
+Önceki Aşama 15 doğrulamasındaki masaüstü regresyonunda sıradan seçim sunumu hedef listesini
+boşaltıp klavye odağını kaybettiriyordu. Aşama 12 ile
+`publishTargets` masaüstünde sunum boyunca mevcut hedefleri korur. Mobil
+salt okunur izdüşümler her sunum karesinde güncellenir; masaüstü düğmesi
+ve klavye odağı kilitte korunur.
 
 ## Kararlı mobil yüz sıraları — Aşama 11
 
@@ -253,3 +253,32 @@ Kısa alanda aynı yuvalar, grup başlıkları ve 44px yüzler kaydırılan yüz
 kalır; bir grubun zarı diğer grubun boşluğunu kullanmaz. Ekranda hiçbir yüz
 kalmamışsa liste ilk görünür sıraya kayar. Bu ekran yerleşimi core, fizik
 ve GSAP konumlarını değiştirmez; kişisel/aktif koltuk mevcut `viewerId`'dır.
+
+## Savaş yüzleri ve olay kadrajı — Aşama 12
+
+`visualEvent` yalnız kuyruğun yürüttüğü olayı tutar. `eventFocusPoints` ve
+`eventDieRole`, aynı olayın zar kimliklerini ve sahnedeki gerçek kaynak,
+can taşı, jeton ve tanrı temas noktalarını okur. Sonraki olayları veya
+grubun nihai oyun durumunu okumaz; yeni kural hesabı yapmaz. Toplamada
+mevcut son katkı sınırı ve gerçek kenar yuvaları kullanılır.
+
+`frameCamera`, kamerayı yazan tek yoldur. GSAP konumu doğrudan değiştirmek
+yerine mevcut odak zarfını ve yakın oyun alanıyla karışımını değiştirir;
+`frameTableCamera` hareket payıyla bu zarfı ölçülen HUD boşluğuna sığdırır.
+Olaylar arası geçiş .28 saniyeyi hız ayarına böler; azaltılmış harekette
+anlık uygulanır. Masaüstünün tam masa kadrajı korunur.
+
+`projectDiceTargets` sunum kilidinde de güncel parça/kamera izdüşümünü
+okur. Mobilde kadraj dışındaki diğer mevcut zarlar sabit yuvalarını korur.
+Atış/yeniden atış kimlikleri kendi olayının yayınlanmasına kadar gizlenir;
+yeni yüzler, değerler ve kaynaklar halen oturumun `present`/`progress`
+sınırında yayınlanır. Toplama bitince `finishedDice` ilgili yüzü temizler;
+kaldırmada gerçek görünürlük sınırı izlenir. Kural ve kaynak güncelleme
+sıraları değiştirilmedi.
+
+Mobil kilitli yüzler odaklanamayan/tıklanamayan dekoratif `span` olur.
+Aktif olay kimlikleri vurgulanır, diğer yüzler soluk kalır. Mevcut saldırı
+hareketinin `combatRole` yüzü 3B izdüşümünü takip eder, diğer yuvalar akmaz.
+Bu hareketli yüz kaydırma kabının dışında durur; kısa yatayda da HUD içinde
+kalır. İptal, yeniden maç ve sahne kurulumunda olay/gizleme/bitmiş kimlikleri
+temizlenir; sekme dönüşünde aynı yetkili durumla eşitlenir.
