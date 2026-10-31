@@ -321,3 +321,18 @@ Doğrusal büyütme ve mipmap’li küçültme korunur; mobil yüz 8× anizotrop
 ister, `createBoard` bütün istekleri gerçek renderer donanım sınırına kısar.
 `mobileUpper` emisyon haritası aynı yüz dokusudur. Varsayılan renderer AA
 artık açıkça belirtilir; ek ekran son işlemi veya sürekli çizim eklenmez.
+
+## Sade mobil masa — kartsız savaş
+
+Güncel mobil sunum yukarıdaki eski sabit merkez sıraları/hareketli savaş
+kartlarının yerini alır. `SceneDiceControls` yalnız kişisel haznede okunur
+kart üretir; merkezde güncel 3B izdüşümünde 44px saydam hedef bulunur.
+Merkez hedefi sunum kilidinde kaldırılır; savaşta dekoratif yüz kartı da
+üretilmez. Kaydırılabilir kart yüzeyi yalnız hazneye ayrılan alt bölgededir;
+merkez hedefleri bu yüzeyin dışında kalır. Taslak seçimi yuvayı değiştirmez,
+yalnız yetkili konum değişimi kartı kaldırır/geri getirir.
+
+Kaynak ve savunma vurgusu mevcut `combatPresenter` olayının 3B
+`activity-marker` halkasıdır. Gerçek zar hareketi, can taşı tepkisi ve
+azaltılmış hareketin temas beklemesi aynı olay/`progress` yolunda kalır.
+Kart kaldırılması yeni hasar, jeton, zamanlayıcı veya konum sahibi eklemez.

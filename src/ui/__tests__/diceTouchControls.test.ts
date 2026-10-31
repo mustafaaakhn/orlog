@@ -56,48 +56,40 @@ describe('mobile projected dice interaction', () => {
     m.disabled.value = false; await nextTick()
     expect(document.activeElement).toBe(button)
   })
-  it('tracks active combat faces as decorative spans without opening interaction or moving idle slots', async () => {
+  it('removes center overlays during combat and leaves all transforms to the scene', async () => {
     const m = await mount()
     m.disabled.value = true
-    m.targets.value = m.targets.value.map(target => ({ ...target, combatRole: target.id === 'player-1/die-1' ? 'source' : undefined }))
+    m.targets.value = m.targets.value.map(target => ({ ...target,
+      combatRole: target.id === 'player-1/die-3' ? 'source' : undefined,
+      eventRole: target.id === 'player-2/die-3' ? 'target' : undefined,
+    }))
     await nextTick()
-    const face = m.button('player-1/die-1')
-    expect(face.tagName).toBe('SPAN')
-    expect(face.getAttribute('aria-hidden')).toBe('true')
-    expect(face.hasAttribute('tabindex')).toBe(false)
-    const before = face.style.top
-    m.targets.value = m.targets.value.map(target => ({ ...target, y: target.y + 10 }))
-    await nextTick()
-    expect(m.button('player-1/die-1')).toBe(face)
-    expect(face.style.top).not.toBe(before)
-    click(face)
+    expect(m.button('player-1/die-3')).toBeNull()
+    expect(m.button('player-2/die-3')).toBeNull()
+    expect(m.root.querySelector('.is-combat, .is-active-event, .die-lane-label[data-lane="self"], .die-lane-label[data-lane="opponent"]')).toBeNull()
+    const bowl = m.button('player-1/die-1')
+    expect(bowl.tagName).toBe('SPAN')
+    expect(bowl.getAttribute('aria-hidden')).toBe('true')
+    click(bowl)
     expect(m.select).not.toHaveBeenCalled()
-    m.targets.value = []
+    m.disabled.value = false
     await nextTick()
-    expect(m.root.querySelector('.is-combat')).toBeNull()
+    expect(m.button('player-1/die-3').classList.contains('is-projected')).toBe(true)
+    expect(m.button('player-1/die-3').querySelector('svg')).toBeNull()
   })
-  it('keeps every visible mobile face decorative under lock, highlights only this event, and removes faces at collection', async () => {
-    const m = await mount(), count = m.root.querySelectorAll('.scene-die-target').length
-    const before = m.button('player-1/die-3').style.cssText
-    m.disabled.value = true
-    m.targets.value = m.targets.value.map(t => ({ ...t, eventRole: t.id === 'player-2/die-3' ? 'source' : undefined }))
+  it('keeps one transparent target per center die at its current projection and removes collected identities', async () => {
+    const m = await mount()
+    const center = m.button('player-1/die-3')
+    expect(center.style.left).toBe('46%')
+    expect(center.style.top).toBe('55%')
+    expect(center.querySelector('.die-target-check, svg, .die-target-value')).toBeNull()
+    m.targets.value = m.targets.value.map(t => ({ ...t, y: t.y + 10 }))
     await nextTick()
-    const faces = [...m.root.querySelectorAll<HTMLElement>('.scene-die-target')]
-    expect(faces).toHaveLength(count)
-    expect(faces.every(el => el.tagName === 'SPAN' && !el.hasAttribute('tabindex'))).toBe(true)
-    expect(m.root.querySelectorAll('.is-active-event')).toHaveLength(1)
-    expect(m.root.querySelectorAll('.is-muted')).toHaveLength(count - 1)
-    expect(m.button('player-1/die-3').style.cssText).toBe(before)
-    faces.forEach(click)
-    expect(m.select).not.toHaveBeenCalled()
+    expect(m.button('player-1/die-3')).toBe(center)
+    expect(center.style.top).toBe('65%')
     m.collected.value = ['player-1/die-3']
     await nextTick()
     expect(m.button('player-1/die-3')).toBeNull()
-    m.targets.value = m.targets.value.map(t => ({ ...t, eventRole: undefined }))
-    m.disabled.value = false
-    await nextTick()
-    expect(m.root.querySelector('.is-active-event')).toBeNull()
-    expect(m.root.querySelectorAll('.scene-die-target')).toHaveLength(count - 1)
   })
   it('selects the bound die rather than a nearby projected neighbour, and permits taking a selected die back', async () => {
     const m = await mount()
