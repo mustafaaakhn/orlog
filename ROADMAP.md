@@ -6,10 +6,35 @@ Amaç, telefonda zarları, kaynakları ve tanrı güçlerini rahatça okuyup
 seçebilmek. Masaüstünün mevcut görünümü ve oyun kuralları korunur.
 Bu dosya planı gösterir; geliştirmelerin tamamlandığı anlamına gelmez.
 
+## Güncel hedef — Hazne özetini kaldırma ve toplu zar seçimi
+
+30 Ekim 2026 kullanıcı geri bildirimiyle sıradaki çalışma **Aşama 6–9** olarak
+belirlendi. Aşama 1–5 önceki uygulamanın ve doğrulamanın kaydıdır; tamamlanan
+işaretleri korunur. Önceki fiziksel cihaz kabulünün açık maddeleri açık kalır.
+
+- Mobilde **Rakibin haznesi** başlıklı 2B özet kaldırılacak. Görsel odak kendi
+  haznen ve iki tarafın ortaya koyduğu zarlar olacak; can/jeton göstergeleri
+  ile tanrı gücü paneli korunacak. Rakip hazneyi kadraja sığdırmak gerekmeyecek.
+- Okunaklı zar yüzleri korunacak. Her kısa dokunma seçimi anında işaretleyecek;
+  kullanıcı başka zarları seçerken yüzler kaybolmayacak veya yer değiştirmeyecek.
+- **Son geçerli seçim değişikliğinden 2 saniye (2000 ms) sonra** bekleyen
+  değişiklikler birlikte uygulanacak ve zarlar topluca taşınacak. Her seçim
+  veya seçimden vazgeçme süreyi yeniden başlatacak. Uzun basma, inceleme ve
+  kaydırma bu süreyi başlatmayacak veya yenilemeyecek.
+- Merkeze alınan zarlar saklamak için seçilen zarlardır; yeniden atılacak
+  zarlar haznede kalır. Sürenin dolması zar atmaz, seçimi kilitlemez ve sıra
+  geçirmez. Mevcut **Seçimi onayla** ve **Zar at** eylemleri korunur; ek bir
+  onay penceresi eklenmez.
+
+Bu hedef, önceki planın rakip hazne özetini zorunlu tutan maddelerinin ve her
+dokunuşta anında taşıma davranışının yerini alır. Yeni davranış henüz
+uygulanmadığından `DESIGN.md` ve `ARCHITECTURE.md` mevcut uygulamayı anlatmaya
+devam eder; ilgili aşama uygulanırken güncellenir.
+
 ## İlerleme biçimi
 
 - Her istekte yalnızca belirtilen aşama uygulanır. Sonraki aşamaya otomatik
-  geçilmez. Örnek: **“ROADMAP.md içindeki Aşama 1'i uygula.”**
+  geçilmez. Sıradaki iş: **“ROADMAP.md içindeki Aşama 6'yı uygula.”**
 - Aşamalar sırayla ilerler. Her biri ayrı kısa ömürlü branch, doğrulama ve
   commit ile teslim edilir; doğrulanan iş yerel `main` branch'ine birleştirilir.
 - Yalnız gerçekten uygulanıp doğrulanan maddeler aynı işin commit'inde `[x]`
@@ -23,7 +48,7 @@ Bu dosya planı gösterir; geliştirmelerin tamamlandığı anlamına gelmez.
 - Arayüz ve 3B değişiklikleri tarayıcıda görüntülenir. Ekran boyutu benzetimi,
   gerçek dokunma ve fiziksel cihaz performansı doğrulaması sayılmaz.
 
-## Başlangıç bulguları
+## İlk çalışmanın başlangıç bulguları — Aşama 1–5
 
 Canlı sitede 390×844 ve 360×800 dikey, 844×390 yatay ekran boyutlarıyla
 hazırlık, zar atma/saklama ve tanrı gücü menüsü incelendi:
@@ -37,7 +62,7 @@ hazırlık, zar atma/saklama ve tanrı gücü menüsü incelendi:
 
 Bu inceleme fiziksel iPhone/Android testi veya tam maç doğrulaması değildir.
 
-## Ortak sınırlar
+## İlk çalışmanın ortak sınırları — Aşama 1–5
 
 - Değişiklikler mobil maç deneyimine yöneliktir. Karşılama, maç öncesi
   20 tanrı kataloğu ve masaüstü tasarımı yeniden tasarlanmaz.
@@ -172,7 +197,109 @@ Aşama 4'ün fiziksel dokunma maddesi ve bu aşamanın iPhone/Android maddesi
 açık kalır. [Cihaz test yönergesi ve kayıt tablosu](docs/MOBILE_DEVICE_CHECKLIST.md)
 hazırdır; tarayıcı benzetimi bu kayıtların yerine geçmez.
 
-## Doğrulama ve devam notları
+## Aşama 6 — Rakip hazne özetini kaldır ve oyun alanını aç
+
+Bağımlılık: Mevcut Aşama 1–5 uygulaması. Toplu seçim bu aşamada eklenmez.
+
+- [ ] Mobil dikey ve kısa yatay görünümde **Rakibin haznesi** başlığını,
+  özet zarlarını ve bunlara ait inceleme açılır alanını kaldır. Aynı zarlar
+  için görünmez veya yinelenen dokunma hedefleri bırakma.
+- [ ] Özetin kapladığı boşluğu ve kamera inset ölçümünü temizle. Kadrajı
+  kendi haznen ve iki merkez sırası için kullan; rakibin haznesini ayrıca
+  sığdırma. Can/jeton, tur/sıra ve ana eylemler okunaklı kalsın.
+- [ ] Rakibin merkezdeki zar yüzlerini, jeton işaretlerini ve incelemesini
+  koru. Hedef isteyen tanrı güçlerinin mevcut geçerli hedeflerini panelden
+  seçme yolu kaybolmasın; oyun kuralları ve botun karar bilgisi değişmesin.
+- [ ] Artık kullanılmayan özet kodunu ve yalnız ona ait testleri gözden geçir;
+  başka sunum işlevlerinin kullandığı olay verisini kaldırma.
+- [ ] Dikey/kısa yatay mobil, tablet ve masaüstünü tarayıcıda kontrol et;
+  zorunlu komutları çalıştır, ilgili belgeleri güncelle ve commit et.
+
+**Kabul:** Mobilde rakip hazne özeti görünmez ve boş şerit bırakmaz. Kendi
+haznen, merkez zarları, kaynaklar ve güç hedefleri kullanılabilir kalır.
+
+## Aşama 7 — İki saniyelik toplu seçim ve tek taşıma
+
+Bağımlılık: Aşama 6. Önce seçim, süre ve toplu sunum birlikte çalışır hale gelir.
+
+- [ ] Mobil kısa dokunmada zar kimliğine bağlı geçici seçimi anında onay imi
+  ve mevcut seçim vurgusuyla göster. Aynı zara tekrar dokunma bu seçimi geri
+  alsın; 44×44px hedefler seçim boyunca yerinde ve kullanılabilir kalsın.
+- [ ] Son geçerli seçim değişikliğinden itibaren **2000 ms** bekle. Yeni
+  değişiklikte önceki süreyi iptal edip yeniden başlat; ilk dokunuştan itibaren
+  sabit bir pencere veya her zar için ayrı zamanlayıcı kullanma.
+- [ ] Süre bitince bekleyen seçimlerin son halini tek bir toplu işlemle
+  yetkili kurallara uygula; aynı olay grubundan tek toplu taşıma üret.
+  Zar başına komut/animasyon zinciriyle seçim kilidini tekrarlama.
+- [ ] Geçici seçim işaretini henüz uygulanmış oyun durumundan ayır. UI zar
+  yüzü, sonuç, can veya jeton üretmesin; kurallar ile görsel sunum aynı olay
+  kaydından beslensin. `src/core` içine zamanlayıcı veya UI bağımlılığı ekleme.
+- [ ] Son taslak uygulanmış seçimle aynıysa gereksiz komut/taşıma üretme.
+  Merkeze taşındıktan sonra henüz kilitlenmemiş zarları aynı toplu seçim
+  mantığıyla geri alabil; önceki atışlarda kilitlenen zarları açma.
+- [ ] Anlamlı zamanlayıcı ve olay senaryolarıyla 1999/2000 ms sınırını,
+  son dokunuşta süre yenilemeyi, beş zarın tek grupta taşınmasını, aynı zara
+  çift dokunmayı ve toplu geri almayı doğrula. Bot ve masaüstünün mevcut
+  davranışını koru; zorunlu komutları çalıştır, belgeleri güncelle ve commit et.
+
+**Kabul:** Kullanıcı beş zarı arka arkaya seçerken her zarın animasyonunu
+beklemez. Son seçim değişikliğinden 2 saniye sonra zarlar birlikte hareket
+eder; yalnız bu beklemenin bitmesi oyun sırasını ilerletmez.
+
+## Aşama 8 — Onay, çevrim içi oyun ve kesintiler
+
+Bağımlılık: Aşama 7. Taslak ile yetkili durumun yaşam döngüsü tamamlanır.
+
+- [ ] İki saniye dolmadan **Seçimi onayla** basılırsa bekleyen son seçimi
+  süreyi beklemeden uygula ve mevcut onay akışını yalnız bir kez yürüt.
+  Sıra önceki taslakla ilerlemesin; ek onay penceresi açma.
+- [ ] **Zar at** mevcut uygun fazda tek dokunuşla çalışsın. Seçim süresinin
+  dolması atış, `ConfirmRoll` veya sıra/faz değişimi başlatmasın; üçüncü
+  atışın mevcut otomatik saklama ve ilerleme kurallarını değiştirme.
+- [ ] Çevrim içi oyunda toplu seçimi sunucuda koltuk, faz ve revision ile
+  doğrula. Kabul edilmeden sonraki onayı gönderme; reddedilen veya eski
+  istekte taslağı güncel yetkili durumla uzlaştır. Tekrar mesajı çift taşıma
+  ya da çift onay üretmesin; rakibin seçimlerini yerel taslak değiştirmesin.
+- [ ] Koltuk/faz/maç değişimi, çıkış, yeniden maç, bağlantı kopması veya
+  WebGL toparlanmasında eski taslak ve callback'leri temizle. Yeni oyuna,
+  başka oyuncuya veya artık olmayan zara gecikmiş seçim uygulama.
+- [ ] Tanrı/yardım/ayar penceresi açıldığında, sekme gizlendiğinde veya mobil
+  düzenden çıkıldığında taslağı iptal edip uygulanmış seçime dön; zamanlayıcı
+  kapalı görünümde komut göndermesin. Yalnız mobil içinde yön değişiminde
+  taslağı ve kalan süreyi koru; yinelenen zamanlayıcı oluşturma.
+- [ ] Hızlı tekrar onayı, süre dolmasıyla aynı anda onay, uzun basma,
+  kaydırma, klavye, kesinti ve iki gerçek ağ istemcisi senaryolarını doğrula;
+  zorunlu komutları çalıştır, belgeleri güncelle ve commit et.
+
+**Kabul:** Onay bekleyen seçimi kaybetmez veya iki kez işlemez. Eski
+zamanlayıcı yeni koltukta/maçta çalışmaz; çevrim içi sonuç sunucuyla tutarlıdır.
+
+## Aşama 9 — Birleşik mobil doğrulama ve cihaz kabulü
+
+Bağımlılık: Aşama 6–8. Yeni özellik eklenmez; kapsam içi sorunlar düzeltilir.
+
+- [ ] 360×800, 390×844, 430×932 ve 844×390 boyutlarında hazne özetinin
+  yokluğunu, yüzlerin okunurluğunu, beş zarı hızlı seçmeyi, iki saniyelik
+  beklemeyi, geri almayı ve beklerken onaylamayı tarayıcıda doğrula.
+- [ ] Normal/azaltılmış harekette botla maç, yerel iki oyuncuda koltuk
+  değişimi ve iki çevrim içi koltukta atış–seçim–onay–güç–sonuç–yeniden
+  maç akışını kontrol et. Ekstra/kaldırılan zarlar, dar alan kaydırması,
+  yön değişimi ve sekmeden dönme de kapsansın.
+- [ ] Tablet ve masaüstünde mevcut tekli seçim, klavye/odak ve kamera
+  davranışının korunduğunu doğrula; kaynakların olay zamanlaması değişmesin.
+- [ ] Fiziksel iPhone/Safari ve Android/Chrome üzerinde hızlı çoklu dokunma,
+  uzun basma, kaydırma ve yön değişimini test et. Donanım yoksa madde açık
+  kalsın; önceki Aşama 4–5 fiziksel kabul maddelerini benzetimle kapatma.
+  [Cihaz yönergesini](docs/MOBILE_DEVICE_CHECKLIST.md) yeni akışa göre güncelle.
+- [ ] `npm run check` ve `npm run test:ci` çalıştır; kullanılan cihaz/tarayıcı,
+  ekran boyutu, kanıt konumları ve açık sorunları kaydet. Gerçekten doğrulanan
+  maddeleri işaretle, güncel belgelerle birlikte commit et.
+
+**Kabul:** Rakip hazne özeti olmadan merkez zarları okunur; çoklu seçim
+her dokunuşta kesilmez. 2 saniye yalnız toplu taşıma içindir; atış ve sıra
+ilerletme açık kullanıcı eylemine ve mevcut oyun kurallarına bağlıdır.
+
+## Doğrulama ve devam notları — Önceki Aşama 1–5
 
 **Aşama 1 tamamlandı — 30 Ekim 2026.** Mobil kaynak göstergeleri mevcut sunum
 durumunu izler. Kamera, güç seçimi ve oyun kuralları değiştirilmedi.
