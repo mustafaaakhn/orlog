@@ -569,27 +569,27 @@ Bağımlılık: Mevcut oda/hazırlık akışı. Zar/savaş aşamalarından tekni
 bağımsızdır; uygulama teslim sırası Aşama 13 sonrasıdır. Mobil ve masaüstünü
 ve aynı odada yeniden maç hazırlığını kapsar.
 
-- [ ] Diğer oyuncu henüz hazır değilken **Hazırım** eylemi hazır durumunu
+- [x] Diğer oyuncu henüz hazır değilken **Hazırım** eylemi hazır durumunu
   versin; aynı kontrol **Hazır değilim** olarak etkin kalsın ve hazırlığı geri
   alabilsin. Geri alınca kendi adını/tanrılarını düzenleme kilidi açılsın;
   seçimler silinmesin ve karşı taraf güncel hazır durumunu görsün.
-- [ ] Hazırlığı kaldırma işlemini ağ protokolü, istemci ve oda sunucusunda
+- [x] Hazırlığı kaldırma işlemini ağ protokolü, istemci ve oda sunucusunda
   birlikte tanımla. Sunucu yalnız isteyen koltuğun durumunu, uygun `gods`
   aşamasında değiştirsin; arayüz kabul edilmemiş hazır durumunu kesinleşmiş
   olarak göstermesin.
-- [ ] İki tarafın hazır olmasının kabulü ile hazırlığın geri alınması
+- [x] İki tarafın hazır olmasının kabulü ile hazırlığın geri alınması
   yarışını sunucuda sırala. Geri alma önce kabul edilirse sonraki aşamaya
   geçme; iki hazır kabul edilip yazı tura/maç aşamasına geçildiyse gecikmiş
   geri almayı reddet ve istemciyi güncel durumla uzlaştır.
-- [ ] Bekleyen istekte tekrar tıklamayı sınırla; red/kayıp ACK, kopma/dönüş
+- [x] Bekleyen istekte tekrar tıklamayı sınırla; red/kayıp ACK, kopma/dönüş
   ve eski oda/maç mesajları yanlış hazır etiketi veya tanrı kilidi bırakmasın.
   Tekrar istek hazır durumunu istemeden tersine çevirmesin; hedef hazır
   durumu açıkça belirtilsin. Rakibin seçimine müdahale yolu açılmasın.
-- [ ] İki gerçek ağ istemcisinde kurucu ve misafir için hazır → hazır değil
+- [x] İki gerçek ağ istemcisinde kurucu ve misafir için hazır → hazır değil
   → tanrı değiştir → tekrar hazır akışını; eşzamanlı hazır/geri alma,
   geçersiz koltuk/faz, kopma/dönüş ve yeniden maçı doğrula. Yerel iki kişi
   ve bot hazırlığının mevcut başlama akışını bozma.
-- [ ] Sunucu/istemci ve UI davranışı için anlamlı testler ekle; iki tarayıcı
+- [x] Sunucu/istemci ve UI davranışı için anlamlı testler ekle; iki tarayıcı
   koltuğunda mobil/masaüstü düğme, kilit ve karşı taraf bilgisini kontrol et.
   Zorunlu komutları çalıştır; `docs/ONLINE_PLAY.md`, mimari/tasarım ve
   doğrulama kaydını güncelle, aşamayı commit et.
@@ -597,6 +597,13 @@ ve aynı odada yeniden maç hazırlığını kapsar.
 **Kabul:** Tek başına hazır vermiş oyuncu odadan çıkmadan hazırlığını geri
 alıp tanrılarını değiştirebilir. Her iki istemci sunucuyla aynı hazır
 durumundadır; başlamış maç eski bir istekle hazırlığa dönmez.
+
+**Aşama 14 tamamlandı — 31 Ekim 2026.** Sunucu onaylı hazır geri alma,
+seçimleri koruyarak düzenleme, açık hedef durum, hazırlık kimliği ve yarış/
+kopma uzlaştırması uygulandı. İki ağ koltuğunda mobil/masaüstü hazır–geri
+alma–değişiklik–yeniden hazır–ortak masa doğrulandı. Yeniden maç ve hatalı/
+gecikmiş mesajlar sunucu testleriyle kapsandı.
+Ayrıntı: [Aşama 14 kaydı](docs/review/lobby-readiness.md).
 
 ## Aşama 15 — Yayın sonrası sorunlar için birleşik ve fiziksel kabul
 

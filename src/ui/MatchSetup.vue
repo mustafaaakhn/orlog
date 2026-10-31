@@ -141,7 +141,8 @@ watch(() => props.online.error.value, message => {
     if (friendMode.value === "local") friendMode.value = "join";
   }
 }, { immediate: true });
-const loadoutLocked = computed(() => !!room.value && !!ownSeat.value?.ready);
+const ownReady = computed(() => !!ownSeat.value?.ready);
+const loadoutLocked = computed(() => !!room.value && (ownReady.value || networkBusy.value || !props.online.connected.value));
 const rematching = computed(() => !!props.rematch || (room.value?.stage === 'gods' && !!room.value.firstPlayerId));
 const valid = computed(() =>
   PLAYER_IDS.every(
@@ -150,14 +151,13 @@ const valid = computed(() =>
       loadouts.value[id].length === 3,
   ),
 );
-const canContinueGods = computed(
-  () =>
-    !networkBusy.value && !loadoutLocked.value &&
-    currentLoadout.value.length === 3 &&
-    ((editingPlayer.value === "player-2" && !local.value) ||
-      !!names.value[editingPlayer.value].trim()) &&
-    (!!room.value || (local.value && editingPlayer.value === "player-1") || valid.value),
-);
+const canContinueGods = computed(() => {
+  if (room.value) return props.online.connected.value && !networkBusy.value && room.value.stage === 'gods' &&
+    (ownReady.value || (currentLoadout.value.length === 3 && !!names.value[ownId.value].trim()));
+  return currentLoadout.value.length === 3 &&
+    ((editingPlayer.value === 'player-2' && !local.value) || !!names.value[editingPlayer.value].trim()) &&
+    ((local.value && editingPlayer.value === 'player-1') || valid.value);
+});
 const shortName = (id: FavorId) => FAVOR_CATALOG[id].name.split("'")[0];
 const playerName = (id: PlayerId) =>
   id === "player-2" && !local.value
@@ -263,7 +263,8 @@ function toggleFavor(id: FavorId) {
 function continueGods() {
   if (!canContinueGods.value) return;
   if (room.value) {
-    void props.online.ready(names.value[ownId.value], [...currentLoadout.value]);
+    if (ownReady.value) void props.online.unready();
+    else void props.online.ready(names.value[ownId.value], [...currentLoadout.value]);
     return;
   }
   if (props.rematch) {
@@ -544,8 +545,8 @@ function start() {
         </div>
       </div>
       <div class="flow-footer">
-        <span v-if="room && loadoutLocked" role="status">Tanrıların hazır. Arkadaşının seçimi bekleniyor…</span>
-        <span v-else-if="networkError" class="field-error" role="alert">{{ networkError }}</span>
+        <span v-if="networkError" class="field-error" role="alert">{{ networkError }}</span>
+        <span v-else-if="room && ownReady" role="status">Tanrıların hazır. Değiştirmek için Hazır değilim seç.</span>
         <span v-else-if="selectionError" class="selection-warning" role="alert">{{ selectionError }}</span>
         <span v-else>{{
           currentLoadout.length === 3
@@ -558,7 +559,7 @@ function start() {
           @click="continueGods"
         >
           {{
-            room || rematching ? 'Hazırım' : local && editingPlayer === "player-1"
+            room && ownReady ? 'Hazır değilim' : room || rematching ? 'Hazırım' : local && editingPlayer === "player-1"
               ? "İkinci oyuncunun tanrıları"
               : "İlk hamleyi belirle"
           }}<UiIcon name="arrow" />

@@ -149,3 +149,12 @@ Bu yüzler seçim veya odak hedefi değildir. Azaltılmış harekette yolculuk
 ve geri itme yerine kısa kaynak/hedef işareti ve temas bildirimi vardır.
 Aşama 10–12 bu teslimin kapsamında değildir: genel oyuncu sıraları ve bütün
 savaş boyunca yüz/kadraj sürekliliğinin kabulü açık kalır.
+
+## Çevrim içi hazırlık — Aşama 14
+
+Hazır veren oyuncunun ana düğmesi **Hazır değilim** olur ve arkadaşı henüz
+hazır değilken kullanılabilir kalır. Geri alma onaylanınca aynı ad ve tanrılar
+korunarak düzenleme açılır; düğme **Hazırım** olur. Bekleyen istek ve bağlantı
+kaybında düğme/ad/tanrı seçimi kilitlidir. Etiket sunucu onayını izler;
+hata, hazır açıklaması tarafından gizlenmez. İlk maç ve aynı odada yeniden
+maç, mobil ve masaüstünde aynı akışı kullanır.

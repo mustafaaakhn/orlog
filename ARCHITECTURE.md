@@ -215,3 +215,21 @@ Yakın temasta yüzler dikey 24px ayrılır ve izdüşüme çizgiyle bağlanır.
 Azaltılmış harekette zar yolculuğu yapılmaz; kaynak/hedef işareti ve temas
 beklemesi korunur. Genel sabit mobil sıralar ve savaşın bütün olaylarındaki
 yüz/kadraj sürekliliği kapsam dışındaki Aşama 11–12'ye bağlıdır.
+
+## Lobi hazır durumu — Aşama 14
+
+`RoomView.preparationId`, her `gods` girişinde üretilen ayrı UUID'dir;
+ilk hazırlık ve yeniden maç aynı kimliği paylaşmaz. `room:ready` artık
+`{ preparationId, ready: false }` veya açık `ready: true` ile ad/tanrı
+listesini taşır. İstek koltuğu socket üyeliğinden gelir; istemciden hedef
+koltuk alınmaz. Sunucu fazı, hazırlık kimliğini ve yükü doğrular; senkron
+handler iki hazır/geri alma yarışını tek sıraya koyar. Tekrarlanan aynı hedef
+hazır durumu idempotenttir; hazırken başka tanrı listesiyle değiştirmek
+önce geri alma gerektirir. Geçişten sonra geri alma kabul edilmez.
+
+İstemci hazır durumunu tahminen değiştirmez. `room:update` veya resume
+snapshot'ı tek kaynaktır. Hazır/geri alma mevcut `request` nesli ve `busy`
+kilidini kullanır; red resume ile uzlaştırılır, kayıp ACK tekrar istek
+üretmeden yeniden bağlanır. Bağlantı yokken hazır isteği buffer'a alınmaz.
+Hazır, bekleyen istek veya kopma ad/tanrı düzenlemesini kilitler. Geri alma
+onayı seçimleri silmez. Core ve yerel/bot hazırlığı değişmez.

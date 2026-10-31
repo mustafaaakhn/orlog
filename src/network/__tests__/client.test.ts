@@ -31,7 +31,7 @@ function setup() {
   socket.emit('connect')
   const joined: JoinedRoom = {
     session: { code: '1234', playerId: 'player-1', token: 'private-seat-token' },
-    room: { code: '1234', stage: 'playing', revision: 1, waiting: false, firstPlayerId: 'player-1', players: [
+    room: { code: '1234', stage: 'playing', preparationId: null, revision: 1, waiting: false, firstPlayerId: 'player-1', players: [
       { id: 'player-1', name: 'Eivor', connected: true, ready: true, favors: [] },
       { id: 'player-2', name: 'Sigurd', connected: true, ready: true, favors: [] },
     ] },
@@ -45,6 +45,50 @@ function setup() {
 }
 
 describe('online command acceptance and reconciliation', () => {
+  it('sends explicit preparation-scoped readiness without optimistic state and suppresses repeat clicks', async () => {
+    const h = setup()
+    h.client.room.value = { ...h.joined.room, stage: 'gods', preparationId: 'setup-1' }
+    let receipt!: (reply: Reply) => void
+    h.socket.emitWithAck.mockImplementationOnce(() => new Promise(resolve => { receipt = resolve }))
+    const request = h.client.unready()
+    expect(h.client.room.value.players[0]!.ready).toBe(true)
+    expect(h.client.busy.value).toBe(true)
+    await h.client.unready()
+    expect(h.socket.emitWithAck).toHaveBeenCalledExactlyOnceWith('room:ready', { preparationId: 'setup-1', ready: false })
+    receipt({ ok: true, data: undefined }); await request
+    // Only room:update/snapshot may change the displayed readiness.
+    expect(h.client.room.value.players[0]!.ready).toBe(true)
+    h.socket.emit('room:update', { ...h.client.room.value, players: h.client.room.value.players.map(p => ({ ...p, ready: false })) })
+    expect(h.client.room.value.players[0]!.ready).toBe(false)
+  })
+  it('reconciles a rejected withdrawal with the authoritative later stage', async () => {
+    const h = setup()
+    h.client.room.value = { ...h.joined.room, stage: 'gods', preparationId: 'setup-1' }
+    const authoritative = { ...h.joined, room: { ...h.joined.room, stage: 'coin' as const } }
+    h.socket.emitWithAck.mockResolvedValueOnce({ ok: false, error: 'Preparation ended' }).mockResolvedValueOnce({ ok: true, data: authoritative })
+    await h.client.unready()
+    expect(h.client.room.value?.stage).toBe('coin')
+    expect(h.client.error.value).toBe('Preparation ended')
+    expect(h.socket.emitWithAck.mock.calls.map(([event]) => event)).toEqual(['room:ready', 'room:resume'])
+  })
+  it('recovers a lost readiness ACK without resending or toggling the target state', async () => {
+    const h = setup()
+    h.client.room.value = { ...h.joined.room, stage: 'gods', preparationId: 'setup-1' }
+    const authoritative = { ...h.joined, room: { ...h.client.room.value, players: h.joined.room.players.map(p => ({ ...p, ready: false })) } }
+    h.socket.emitWithAck.mockRejectedValueOnce(new Error('ACK timeout')).mockResolvedValueOnce({ ok: true, data: authoritative })
+    await h.client.unready()
+    await vi.waitFor(() => expect(h.client.room.value?.players[0]!.ready).toBe(false))
+    expect(h.socket.emitWithAck.mock.calls.map(([event]) => event)).toEqual(['room:ready', 'room:resume'])
+    expect(h.client.busy.value).toBe(false)
+  })
+  it('does not buffer readiness while disconnected or after preparation ended', async () => {
+    const h = setup()
+    await h.client.unready()
+    h.client.room.value = { ...h.joined.room, stage: 'gods', preparationId: 'setup-1' }
+    h.socket.disconnect()
+    await h.client.ready('Eivor', []); await h.client.unready()
+    expect(h.socket.emitWithAck).not.toHaveBeenCalled()
+  })
   it('reports acceptance only after the ACK and prevents another request during the wait', async () => {
     const h = setup()
     let receipt!: (reply: Reply) => void

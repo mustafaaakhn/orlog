@@ -41,7 +41,7 @@ describe('rematch loadout review', () => {
     const online = createOnlineClient({ snapshot() {}, batch() {}, closed() {} })
     online.identity.value = { code: '0007', playerId: 'player-2', token: 'test-seat' }
     online.room.value = {
-      code: '0007', stage: 'gods', firstPlayerId: 'player-1', revision: 42, waiting: false,
+      code: '0007', stage: 'gods', preparationId: 'setup-1', firstPlayerId: 'player-1', revision: 42, waiting: false,
       players: [
         { id: 'player-1', name: 'Eivor', favors: other, ready: false, connected: true },
         { id: 'player-2', name: 'Sigurd', favors, ready: false, connected: true },

@@ -14,6 +14,7 @@ interface Seat extends RoomPlayer { token: string; socketId: string | null; disc
 interface Room {
   code: string
   stage: RoomStage
+  preparationId: string | null
   seats: Seat[]
   firstPlayerId: PlayerId | null
   game: Game | null
@@ -40,7 +41,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
   const connected = (room: Room) => room.seats.length === 2 && room.seats.every(seat => seat.connected)
   function view(room: Room): RoomView {
     return {
-      code: room.code, stage: room.stage, firstPlayerId: room.firstPlayerId,
+      code: room.code, stage: room.stage, preparationId: room.preparationId, firstPlayerId: room.firstPlayerId,
       players: room.seats.map(({ id, name, connected, ready, favors }) => ({ id, name, connected, ready, favors: [...favors] })),
       revision: room.game?.state.revision ?? 0, waiting: room.waiting,
     }
@@ -53,6 +54,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       loadouts: Object.fromEntries(room.seats.map(s => [s.id, s.favors])),
     })
     room.stage = 'playing'
+    room.preparationId = null
     batch(room, [])
   }
   function closeRoom(room: Room, message: string) {
@@ -176,7 +178,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       if (rooms.size >= (options.maxRooms ?? 500)) { ack(failure('Odalar şu an dolu. Biraz sonra yeniden dene.')); return }
       const code = createRoomCode(rooms)
       if (code === null) { ack(failure('Odalar şu an dolu. Biraz sonra yeniden dene.')); return }
-      const room: Room = { code, stage: 'lobby', seats: [], firstPlayerId: null, game: null, waiting: false, presented: new Set(), updatedAt: Date.now() }
+      const room: Room = { code, stage: 'lobby', preparationId: null, seats: [], firstPlayerId: null, game: null, waiting: false, presented: new Set(), updatedAt: Date.now() }
       const seat: Seat = { id: 'player-1', token: randomUUID(), name: 'Oyuncu I', connected: true, ready: false, favors: [], socketId: null, disconnectedAt: null, visible: true }
       room.seats.push(seat)
       rooms.set(code, room)
@@ -206,17 +208,29 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
     socket.on('room:start', action((room, seat) => {
       if (seat.id !== 'player-1') return failure('Oyunu yalnız oda kurucusu başlatabilir.')
       if (room.stage !== 'lobby' || !connected(room)) return failure('Başlamak için iki oyuncu da bağlı olmalı.')
-      room.stage = 'gods'; publish(room); return success()
+      room.stage = 'gods'; room.preparationId = randomUUID(); publish(room); return success()
     }))
-    socket.on('room:ready', (loadout, ack) => action((room, seat) => {
-      if (room.stage !== 'gods' || seat.ready) return failure('Tanrı seçimi şu an değiştirilemez.')
+    socket.on('room:ready', (request, ack) => action((room, seat) => {
+      if (room.stage !== 'gods' || !request || request.preparationId !== room.preparationId || typeof request.ready !== 'boolean')
+        return failure('Hazırlık durumu değişti. Güncel masayı bekle.')
+      // Explicit desired state is idempotent; a duplicate cannot toggle readiness.
+      if (!request.ready) {
+        seat.ready = false
+        publish(room)
+        return success()
+      }
       if (room.game && !connected(room)) return failure('Hazır olmak için iki oyuncu da bağlı olmalı.')
-      if (!loadout || typeof loadout.name !== 'string' || !loadout.name.trim() || loadout.name.trim().length > 28 ||
-        !Array.isArray(loadout.favors) || loadout.favors.length !== 3 || new Set(loadout.favors).size !== 3 || !loadout.favors.every(isFavorId)) return failure('Bir oyuncu adı ve üç farklı tanrı seç.')
-      seat.name = loadout.name.trim(); seat.favors = [...loadout.favors]; seat.ready = true
+      if (typeof request.name !== 'string' || !request.name.trim() || request.name.trim().length > 28 ||
+        !Array.isArray(request.favors) || request.favors.length !== 3 || new Set(request.favors).size !== 3 || !request.favors.every(isFavorId)) return failure('Bir oyuncu adı ve üç farklı tanrı seç.')
+      if (seat.ready) {
+        return seat.name === request.name.trim() && seat.favors.every((id, i) => id === request.favors[i])
+          ? success() : failure('Tanrılarını değiştirmek için önce Hazır değilim seç.')
+      }
+      seat.name = request.name.trim(); seat.favors = [...request.favors]; seat.ready = true
       if (room.seats.every(seat => seat.ready)) {
         if (room.game) { startMatch(room); return success() }
         room.stage = 'coin'
+        room.preparationId = null
       }
       publish(room); return success()
     })(ack))
@@ -236,6 +250,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       if (typeof gameId !== 'string' || gameId !== room.game.state.gameId) return failure('Bu maç zaten yenilendi.')
       room.firstPlayerId = room.firstPlayerId === 'player-1' ? 'player-2' : 'player-1'
       room.stage = 'gods'
+      room.preparationId = randomUUID()
       room.seats.forEach(seat => { seat.ready = false })
       publish(room)
       return success()

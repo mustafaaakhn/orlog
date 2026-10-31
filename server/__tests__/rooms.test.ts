@@ -44,10 +44,12 @@ async function setup(options: Parameters<typeof attachRoomServer>[1] = {}) {
   const host = await peer(), guest = await peer()
   const joined = data<JoinedRoom>(await host.timeout(2000).emitWithAck('room:create'))
   const guestJoined = data<JoinedRoom>(await guest.timeout(2000).emitWithAck('room:join', joined.room.code))
+  let initialPreparationId: string | null = null
   async function play() {
     data(await host.emitWithAck('room:start'))
-    data(await host.emitWithAck('room:ready', { name: 'Kurucu', favors: [...DEFAULT_FAVORS] }))
-    data(await guest.emitWithAck('room:ready', { name: 'Misafir', favors: [...DEFAULT_FAVORS] }))
+    initialPreparationId = views.get(host)!.preparationId
+    data(await host.emitWithAck('room:ready', { preparationId: views.get(host)!.preparationId!, ready: true, name: 'Kurucu', favors: [...DEFAULT_FAVORS] }))
+    data(await guest.emitWithAck('room:ready', { preparationId: views.get(host)!.preparationId!, ready: true, name: 'Misafir', favors: [...DEFAULT_FAVORS] }))
     data(await host.emitWithAck('room:toss'))
     data(await host.emitWithAck('room:play'))
     await vi.waitFor(() => expect(matches.has(guest)).toBe(true))
@@ -68,10 +70,79 @@ async function setup(options: Parameters<typeof attachRoomServer>[1] = {}) {
     data(reply)
     await settle()
   }
-  return { host, guest, peer, joined, guestJoined, views, matches, closed, play, settle, command }
+  return { host, guest, peer, joined, guestJoined, views, matches, closed, play, settle, command, get initialPreparationId() { return initialPreparationId } }
 }
 
 describe('two-player Socket.IO rooms', () => {
+  it('lets either seat retract readiness, retains choices and rejects old preparation contexts', async () => {
+    for (const own of ['host', 'guest'] as const) {
+      const h = await setup()
+      data(await h.host.emitWithAck('room:start'))
+      const actor = h[own], other = own === 'host' ? h.guest : h.host
+      const id = own === 'host' ? 'player-1' : 'player-2'
+      const preparationId = h.views.get(h.host)!.preparationId!
+      const request = { preparationId, ready: true as const, name: 'Eivor', favors: [...DEFAULT_FAVORS] }
+      data(await actor.emitWithAck('room:ready', request))
+      data(await actor.emitWithAck('room:ready', request)) // Idempotent replay.
+      data(await actor.emitWithAck('room:ready', { preparationId, ready: false }))
+      data(await actor.emitWithAck('room:ready', { preparationId, ready: false }))
+      await vi.waitFor(() => expect(h.views.get(other)!.players.find(p => p.id === id)).toMatchObject({ ready: false, name: 'Eivor', favors: DEFAULT_FAVORS }))
+      expect((await actor.emitWithAck('room:ready', { preparationId: 'old-preparation', ready: false })).ok).toBe(false)
+      const changed = ['baldrs-invulnerability', 'bragis-verve', 'skadis-hunt'] as const
+      data(await actor.emitWithAck('room:ready', { ...request, favors: [...changed] }))
+      actor.disconnect()
+      await vi.waitFor(() => expect(h.views.get(other)!.players.find(p => p.id === id)?.connected).toBe(false))
+      const resumed = await h.peer()
+      const joined = data(await resumed.emitWithAck('room:resume', own === 'host' ? h.joined.session : h.guestJoined.session))
+      expect(joined.room.players.find(p => p.id === id)).toMatchObject({ ready: true, favors: changed })
+      data(await resumed.emitWithAck('room:ready', { preparationId, ready: false }))
+      expect(h.views.get(other)!.stage).toBe('gods')
+    }
+  })
+  it('serializes unready-before-ready and rejects a late withdrawal once both are ready', async () => {
+    const h = await setup()
+    data(await h.host.emitWithAck('room:start'))
+    const preparationId = h.views.get(h.host)!.preparationId!
+    const hostReady = { preparationId, ready: true as const, name: 'Host', favors: [...DEFAULT_FAVORS] }
+    data(await h.host.emitWithAck('room:ready', hostReady))
+    // Awaited acceptance fixes the server order; no timing-based race assertions.
+    data(await h.host.emitWithAck('room:ready', { preparationId, ready: false }))
+    data(await h.guest.emitWithAck('room:ready', { ...hostReady, name: 'Guest' }))
+    expect(h.views.get(h.guest)!.stage).toBe('gods')
+    expect(h.views.get(h.guest)!.players.map(p => p.ready)).toEqual([false, true])
+    data(await h.host.emitWithAck('room:ready', hostReady))
+    expect(h.views.get(h.host)!.stage).toBe('coin')
+    expect((await h.guest.emitWithAck('room:ready', { preparationId, ready: false })).ok).toBe(false)
+    expect(h.views.get(h.host)!.stage).toBe('coin')
+  })
+  it('resolves simultaneous second-ready and withdrawal as one server-ordered outcome', async () => {
+    const h = await setup()
+    data(await h.host.emitWithAck('room:start'))
+    const preparationId = h.views.get(h.host)!.preparationId!
+    const ready = { preparationId, ready: true as const, name: 'Eivor', favors: [...DEFAULT_FAVORS] }
+    data(await h.host.emitWithAck('room:ready', ready))
+    const [withdrawal, secondReady] = await Promise.all([
+      h.host.emitWithAck('room:ready', { preparationId, ready: false }),
+      h.guest.emitWithAck('room:ready', ready),
+    ])
+    expect(secondReady.ok).toBe(true)
+    const authoritative = data(await h.host.emitWithAck('room:resume', h.joined.session)).room
+    expect(authoritative.stage).toBe(withdrawal.ok ? 'gods' : 'coin')
+    expect(authoritative.players.map(p => p.ready)).toEqual([!withdrawal.ok, true])
+    const other = data(await h.guest.emitWithAck('room:resume', h.guestJoined.session)).room
+    expect(other).toEqual(authoritative)
+  })
+  it('requires membership and a current gods stage, and derives the affected seat from the socket', async () => {
+    const h = await setup(), outsider = await h.peer()
+    expect((await h.host.emitWithAck('room:ready', { preparationId: 'none', ready: false })).ok).toBe(false)
+    data(await h.host.emitWithAck('room:start'))
+    const preparationId = h.views.get(h.host)!.preparationId!
+    expect((await outsider.emitWithAck('room:ready', { preparationId, ready: false })).ok).toBe(false)
+    data(await h.guest.emitWithAck('room:ready', { preparationId, ready: true, name: 'Guest', favors: [...DEFAULT_FAVORS] }))
+    const spoofed = { preparationId, ready: false as const, playerId: 'player-2' }
+    data(await h.host.emitWithAck('room:ready', spoofed))
+    expect(h.views.get(h.host)!.players.map(p => p.ready)).toEqual([false, true])
+  })
   it('publishes a batch selection as one shared revision/event and leaves identical selections idle', async () => {
     const h = await setup()
     await h.play()
@@ -161,12 +232,18 @@ describe('two-player Socket.IO rooms', () => {
     const editing = data(await h.host.emitWithAck('room:resume', h.joined.session))
     expect(editing.match).toBeNull()
     expect(editing.room).toMatchObject({ stage: 'gods', waiting: false, code: h.joined.room.code })
+    expect(editing.room.preparationId).not.toBe(h.initialPreparationId)
+    expect((await h.host.emitWithAck('room:ready', { preparationId: h.initialPreparationId!, ready: false })).ok).toBe(false)
     const changed = ['thors-strike', 'baldrs-invulnerability', 'vidars-might'] as const
-    data(await h.host.emitWithAck('room:ready', { name: 'Kurucu', favors: [...changed] }))
+    data(await h.host.emitWithAck('room:ready', { preparationId: h.views.get(h.host)!.preparationId!, ready: true, name: 'Kurucu', favors: [...changed] }))
+    data(await h.host.emitWithAck('room:ready', { preparationId: editing.room.preparationId!, ready: false }))
+    expect(h.views.get(h.host)!.players[0]).toMatchObject({ ready: false, favors: changed })
+    data(await h.host.emitWithAck('room:ready', { preparationId: editing.room.preparationId!, ready: true, name: 'Kurucu', favors: [...changed] }))
     expect(h.matches.get(h.host)!.state.gameId).toBe(previousId)
-    expect((await h.host.emitWithAck('room:ready', { name: 'Kurucu', favors: [...DEFAULT_FAVORS] })).ok).toBe(false)
-    data(await h.guest.emitWithAck('room:ready', { name: 'Misafir', favors: [...DEFAULT_FAVORS] }))
+    expect((await h.host.emitWithAck('room:ready', { preparationId: h.views.get(h.host)!.preparationId!, ready: true, name: 'Kurucu', favors: [...DEFAULT_FAVORS] })).ok).toBe(false)
+    data(await h.guest.emitWithAck('room:ready', { preparationId: h.views.get(h.host)!.preparationId!, ready: true, name: 'Misafir', favors: [...DEFAULT_FAVORS] }))
     await vi.waitFor(() => expect(h.matches.get(h.guest)!.state.gameId).not.toBe(previousId))
+    expect((await h.host.emitWithAck('room:ready', { preparationId: editing.room.preparationId!, ready: false })).ok).toBe(false)
     const next = h.matches.get(h.host)!.state
     expect(h.matches.get(h.guest)!.state).toEqual(next)
     expect(next.revision).toBe(0)
@@ -298,11 +375,11 @@ describe('two-player Socket.IO rooms', () => {
   it('validates each loadout, seals ready choices, and protects the shared coin toss', async () => {
     const h = await setup()
     data(await h.host.emitWithAck('room:start'))
-    expect((await h.host.emitWithAck('room:ready', { name: 'A', favors: [DEFAULT_FAVORS[0], DEFAULT_FAVORS[0], DEFAULT_FAVORS[0]] })).ok).toBe(false)
-    expect((await h.guest.emitWithAck('room:ready', { name: '', favors: [...DEFAULT_FAVORS] })).ok).toBe(false)
-    data(await h.guest.emitWithAck('room:ready', { name: ' B ', favors: [...DEFAULT_FAVORS] }))
-    expect((await h.guest.emitWithAck('room:ready', { name: 'C', favors: [...DEFAULT_FAVORS] })).ok).toBe(false)
-    data(await h.host.emitWithAck('room:ready', { name: 'A', favors: [...DEFAULT_FAVORS] }))
+    expect((await h.host.emitWithAck('room:ready', { preparationId: h.views.get(h.host)!.preparationId!, ready: true, name: 'A', favors: [DEFAULT_FAVORS[0], DEFAULT_FAVORS[0], DEFAULT_FAVORS[0]] })).ok).toBe(false)
+    expect((await h.guest.emitWithAck('room:ready', { preparationId: h.views.get(h.host)!.preparationId!, ready: true, name: '', favors: [...DEFAULT_FAVORS] })).ok).toBe(false)
+    data(await h.guest.emitWithAck('room:ready', { preparationId: h.views.get(h.host)!.preparationId!, ready: true, name: ' B ', favors: [...DEFAULT_FAVORS] }))
+    expect((await h.guest.emitWithAck('room:ready', { preparationId: h.views.get(h.host)!.preparationId!, ready: true, name: 'C', favors: [...DEFAULT_FAVORS] })).ok).toBe(false)
+    data(await h.host.emitWithAck('room:ready', { preparationId: h.views.get(h.host)!.preparationId!, ready: true, name: 'A', favors: [...DEFAULT_FAVORS] }))
     expect((await h.guest.emitWithAck('room:toss')).ok).toBe(false)
     data(await h.host.emitWithAck('room:toss'))
     expect((await h.host.emitWithAck('room:toss')).ok).toBe(false)

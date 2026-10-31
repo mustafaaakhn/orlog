@@ -130,11 +130,19 @@ export function createOnlineClient(callbacks: {
     }, true)
     return accepted === true
   }
+  async function readiness(ready: boolean, name = '', favors: FavorId[] = []) {
+    const preparationId = room.value?.preparationId
+    if (!connected.value || !identity.value || busy.value || room.value?.stage !== 'gods' || !preparationId) return
+    return request(() => socket.timeout(8000).emitWithAck('room:ready', ready
+      ? { preparationId, ready: true, name, favors: [...favors] }
+      : { preparationId, ready: false }), true)
+  }
   return {
     room, identity, connected, bothConnected, busy, error,
     create: () => enter(), join: (code: string) => enter(code),
     start: () => request(() => socket.timeout(8000).emitWithAck('room:start')),
-    ready: (name: string, favors: FavorId[]) => request(() => socket.timeout(8000).emitWithAck('room:ready', { name, favors })),
+    ready: (name: string, favors: FavorId[]) => readiness(true, name, favors),
+    unready: () => readiness(false),
     toss: () => request(() => socket.timeout(8000).emitWithAck('room:toss')),
     play: () => request(() => socket.timeout(8000).emitWithAck('room:play')),
     rematch: (gameId: string) => request(() => socket.timeout(8000).emitWithAck('game:rematch', gameId)),

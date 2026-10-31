@@ -11,6 +11,7 @@ export interface RoomPlayer {
 export interface RoomView {
   code: string
   stage: RoomStage
+  preparationId: string | null
   players: RoomPlayer[]
   firstPlayerId: PlayerId | null
   revision: number
@@ -32,13 +33,17 @@ export interface JoinedRoom {
   room: RoomView
   match: MatchUpdate | null
 }
+export type ReadinessRequest = { preparationId: string } & (
+  | { ready: false }
+  | { ready: true; name: string; favors: FavorId[] }
+)
 export interface ClientEvents {
   'room:create': (ack: Ack<JoinedRoom>) => void
   'room:join': (code: string, ack: Ack<JoinedRoom>) => void
   'room:resume': (session: RoomSession, ack: Ack<JoinedRoom>) => void
   'room:leave': (ack: Ack) => void
   'room:start': (ack: Ack) => void
-  'room:ready': (loadout: { name: string; favors: FavorId[] }, ack: Ack) => void
+  'room:ready': (request: ReadinessRequest, ack: Ack) => void
   'room:toss': (ack: Ack) => void
   'room:play': (ack: Ack) => void
   'game:rematch': (gameId: string, ack: Ack) => void

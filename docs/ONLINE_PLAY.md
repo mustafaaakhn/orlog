@@ -52,3 +52,18 @@ açılır. Kaybolmuş kabul cevabı komutun tekrar gönderilmesine yol açmaz.
 - Çoklu sunucu, hesap, kalıcı maç geçmişi ve genel eşleştirme bulunmaz.
 - Gizli sekme veya açık yardımcı pencere diğer oyuncuyu sunum onayıyla bekletmez;
   insan oyuncunun kendi hamlesini vermesi gerekir.
+
+## Hazırlığı geri alma
+
+Tanrı hazırlığında tek oyuncu hazırken aynı düğme **Hazır değilim** olur.
+Geri almak adını ve üç tanrını korur; düzenleme yeniden açılır. Tekrar
+**Hazırım** ile yeni seçim sunucuya verilir. Diğer koltuk güncel durumu görür.
+Bu akış aynı odadaki yeniden maç hazırlığında da geçerlidir.
+
+İstek hedef durumu açıkça taşır; tekrarı durumu tersine çevirmez. İsim/tanrı
+alanları ve düğme yanıt beklerken veya bağlantı yokken kilitlenir. Etiket
+yalnız sunucunun oda yayını/snapshot'ından değişir. Her hazırlığın ayrı
+kimliği vardır; eski oda/maç hazırlığından kalan istek yeni hazırlığa yazamaz.
+İki hazır onayı önce kabul edilmişse yazı tura/maç aşamasına geçilir; geç
+geri alma reddedilir ve istemci yetkili durumla uzlaştırılır. Geri alma önce
+kabul edilirse diğer oyuncunun hazır olması tek başına maçı başlatmaz.
