@@ -1,7 +1,8 @@
 # Aşama 13 — Saldırgan zar hareketi
 
 31 Ekim 2026. Kullanıcı isteğiyle yalnız Aşama 13–15 ele alındı;
-Aşama 10–12 uygulanmadı. Bu nedenle Aşama 12'nin genel yüz sürekliliği ve
+Bu işte Aşama 10–12 uygulanmadı. Aşama 10 eşzamanlı ayrı çalışma olarak
+`da2c608` commit’iyle geldi; Aşama 11–12 açık kaldı. Bu nedenle Aşama 12'nin genel yüz sürekliliği ve
 olay odaklı kadrajı mevcut kabul edilmedi.
 
 ## Uygulama
@@ -33,7 +34,7 @@ Tarayıcı kanıtları Git dışındaki `output/stage13/` altındadır:
 kaydedilir; statik ekran görüntüsü tek başına hareket kanıtı sayılmaz.
 
 Fiziksel iPhone/Safari ve Android/Chrome erişimi yoktur. Cihaz kabulü ve
-Aşama 10–12 bağımlılıkları açık kalır; Aşama 15 bunları tamamlandı saymaz.
+Aşama 11–12 bağımlılıkları açık kalır; Aşama 15 bunları tamamlandı saymaz.
 
 Chromium **143.0.7499.4**: 390×844, 844×390 ve 1440×900'de
 normal/azaltılmış hareketle ilk tur ve ikinci turun açılması tamamlandı.

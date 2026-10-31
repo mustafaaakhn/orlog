@@ -233,3 +233,9 @@ kilidini kullanır; red resume ile uzlaştırılır, kayıp ACK tekrar istek
 üretmeden yeniden bağlanır. Bağlantı yokken hazır isteği buffer'a alınmaz.
 Hazır, bekleyen istek veya kopma ad/tanrı düzenlemesini kilitler. Geri alma
 onayı seçimleri silmez. Core ve yerel/bot hazırlığı değişmez.
+
+Aşama 15'in masaüstü regresyonunda sıradan seçim sunumu hedef listesini
+boşaltıp klavye odağını kaybettiriyordu. `publishTargets` saldırı dışındaki
+sunumlarda eski hedefleri korur; canlı savaş izdüşümü yalnız aktif roller
+varken yayınlanır ve son karesi bir kez temizlenir. Dekoratif `span` yalnız
+mobil aktif savaş yüzüne uygulanır; masaüstü düğmesi kilitte korunur.

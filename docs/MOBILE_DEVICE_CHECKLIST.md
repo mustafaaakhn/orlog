@@ -1,13 +1,17 @@
 # Fiziksel mobil cihaz kabulü
 
-Bu liste, ROADMAP Aşama 9'un birleşik cihaz kabulü ile Aşama 4–5'in açık
-fiziksel kontrolleri içindir. Tarayıcı boyutu ve CDP dokunma benzetimi bu
+Bu liste, ROADMAP Aşama 15 ve 9'un birleşik cihaz kabulü ile Aşama 4–5'in
+açık fiziksel kontrolleri içindir. Tarayıcı boyutu ve CDP dokunma benzetimi bu
 kaydın yerine geçmez. Gerçek iPhone/Safari ve Android/Chrome ayrı ayrı
 denenmelidir. Son güncelleme: 31 Ekim 2026.
 
 Aşama 9'un masaüstü tarayıcı kontrolleri ve açık sınırları
 [doğrulama raporundadır](review/mobile-batch-acceptance.md). Aşağıdaki
 cihaz kayıtları henüz doldurulmadı; yazılım kontrolü bunları kapatmaz.
+Aşama 13–15'in yazılım/tarayıcı kaydı [birleşik rapordadır](review/gameplay-acceptance.md).
+Aşama 11–12'nin sabit oyuncu sıraları ve genel yüz/kadraj sürekliliği açık;
+12/18 zar düzenini tamamlanmış kabul etmeyin. Aşama 10 ayrı commit ile geldi;
+botun tek toplu taşıması da cihazda kontrol edilmelidir.
 
 ## Bağlanma ve kayıt
 
@@ -37,6 +41,9 @@ etkilenen kontrolleri yeni sürümde tekrar yap.
 | Dar alan kaydırması / yön değişimi | — | — |
 | Tarayıcı çubukları / güvenli kenarlar | — | — |
 | Bot / yerel / ağ / yeniden maç | — | — |
+| Botun toplu seçimi / 12–18 zarın sahipliği | — | — |
+| Saldırgan zar / blok / can taşı teması | — | — |
+| Hazır geri alma / tanrı değişimi / yeniden maç | — | — |
 | Akıcılık / ısınma / kalan sorun | — | — |
 
 ## Her iki telefonda yapılacaklar
@@ -90,12 +97,31 @@ etkilenen kontrolleri yeni sürümde tekrar yap.
     takılma veya belirgin ısınma görülürse cihazı, modu, yaklaşık süreyi ve
     tetikleyen adımı kaydet. Ekran görüntüsü performans kabulü sayılmaz.
 
+11. **Bot ve çok zar:** Bot birden fazla zar seçtiğinde tek ortak taşıma
+    olmalı; insanın 2 saniyelik beklemesi bota eklenmemeli. İki tarafta
+    altışar ve ek zarlarla dokuzar yüz varsa hangi yüzün kime ait olduğunu,
+    kaldırılan zarların durumunu ve kısa yatay kaydırmayı kaydet. Sabit
+    oyuncu sıraları uygulanmadan bu kısım tamamlandı sayılmaz.
+12. **Saldırı:** Normal harekette saldırgan 3B zarın blok zarına/can taşına
+    yaklaşmasını, savunma tepkisini ve kayıtlı yere dönüşünü izle. Can
+    temasla düşmeli; çok değerli zar son katkısından önce toplanmamalı.
+    Aktif okunur yüz aynı kimlikle hareket etmeli ve seçilememeli.
+    Azaltılmış harekette yolculuk yerine kaynak/hedef ve temas bildirimi
+    olmalı. Kalite/hız seçeneklerini de dene; takılma/ısınmayı ayrıca kaydet.
+13. **Lobi ve yeniden maç:** İki cihazla hazır ol. Diğeri henüz hazır
+    değilken Hazır değilim ile geri al; adın/tanrıların korunmalı, düzenleme
+    açılmalı. Tanrı değiştirip tekrar hazır ver. Her iki koltukta dene;
+    karşı cihazda durum güncellenmeli. İkinci hazır ile geri alma yarışında
+    başlamış maç geri dönmemeli. Bekleyen istek/kopmada düğme ve düzenleme
+    kilitli kalmalı. Yeniden bağlanınca ve aynı odada Yeni oyun hazırlığında
+    aynı akışı tekrar et.
+
 ## Sorun kaydı ve kapanış
 
 Her sorun için cihaz/tarayıcı, commit, yön, oyun modu, tur/faz, beklenen ve
 gerçek davranış ile tekrar adımlarını yaz. Test edilmeyen adımı açıkça belirt.
 Düzeltmeden sonra aynı cihazda ilgili senaryoyu yeniden dene.
 
-İki telefonun sonuçları gelmeden ROADMAP Aşama 9'un fiziksel cihaz maddesi,
+İki telefonun sonuçları gelmeden ROADMAP Aşama 15 ve 9'un fiziksel cihaz maddeleri,
 Aşama 5'in fiziksel kabulü ve Aşama 4'ün fiziksel dokunması `[x]` yapılmaz.
 Bu maddeler, eksik cihaz veya açık sorun varken açık kalır.

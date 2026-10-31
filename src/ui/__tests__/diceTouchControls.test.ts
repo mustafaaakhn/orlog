@@ -36,6 +36,15 @@ function pointer(button: HTMLElement, type: string, x = 160, y = 450) {
 function click(button: HTMLElement) { button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1, clientX: 380, clientY: 700 })) }
 
 describe('mobile projected dice interaction', () => {
+  it('preserves the desktop button node and keyboard focus across a presentation lock', async () => {
+    const m = await mount('player-1', 1440, 900), button = m.button('player-1/die-1')
+    button.focus()
+    m.disabled.value = true; await nextTick()
+    expect(m.button('player-1/die-1')).toBe(button)
+    expect(button.tagName).toBe('BUTTON')
+    m.disabled.value = false; await nextTick()
+    expect(document.activeElement).toBe(button)
+  })
   it('tracks active combat faces as decorative spans without opening interaction or moving idle slots', async () => {
     const m = await mount()
     m.disabled.value = true

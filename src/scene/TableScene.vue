@@ -269,9 +269,15 @@ const seatTurn = createSeatTurn(props.viewerId, {
     if (!seatTurning) publishTargets();
   },
 });
+let combatTargetsPublished = false;
 function publishTargets() {
   if (sceneClosed || seatTurning || !sizes.width.value || !sizes.height.value)
     return;
+  const combatActive = [...board.dice.values()].some(die => !!die.userData.combatRole);
+  // Preserve existing DOM targets/focus through ordinary roll/selection playback.
+  // Only combat owns live readonly projections; clear its final frame once.
+  if (props.batch && !combatActive && !combatTargetsPublished) return;
+  combatTargetsPublished = !!props.batch && combatActive;
   board.setDiceReadability(!props.batch, sizes.width.value <= 600 || (sizes.height.value <= 500 && sizes.width.value > sizes.height.value));
   board.object.updateMatrixWorld(true);
   camera.updateMatrixWorld(true);

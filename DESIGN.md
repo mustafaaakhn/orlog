@@ -158,3 +158,8 @@ korunarak düzenleme açılır; düğme **Hazırım** olur. Bekleyen istek ve ba
 kaybında düğme/ad/tanrı seçimi kilitlidir. Etiket sunucu onayını izler;
 hata, hazır açıklaması tarafından gizlenmez. İlk maç ve aynı odada yeniden
 maç, mobil ve masaüstünde aynı akışı kullanır.
+
+Masaüstünde geçici atış/seçim kilidi zar düğmesinin DOM kimliğini ve klavye
+odağını korur. Mobildeki dekoratif savaş yüzleri masaüstü odak akışını
+etkilemez. Birleşik kabul ve açık bağımlılıklar
+`docs/review/gameplay-acceptance.md` içinde kayıtlıdır.

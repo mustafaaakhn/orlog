@@ -9,8 +9,11 @@ Bu dosya planı gösterir; geliştirmelerin tamamlandığı anlamına gelmez.
 ## Güncel hedef — Bot seçimi, düzenli zar sıraları, savaş ve lobi
 
 31 Ekim 2026 yayın sonrası kullanıcı testi ve incelemesiyle yeni çalışma
-**Aşama 10–15** olarak belirlendi. Bu güncelleme yalnız plandır; aşağıdaki
-yeni aşamalar uygulanmadı ve geliştirmeye başlama yetkisi vermez.
+**Aşama 10–15** olarak belirlendi. Güncel uygulama ve doğrulama durumu
+aşağıdaki onay kutuları ve aşama sonu kayıtlarındadır. Aşama 10 ayrı çalışma
+olarak tamamlandı; bu istekte yalnız 13–15 ele alındı. Aşama 11–12 ve
+fiziksel cihaz kabulü açık kaldı. Plan, başka aşamaları otomatik uygulama
+yetkisi vermez.
 
 | Sıra | Aşama | Hedef | Bağımlılık |
 | --- | --- | --- | --- |
@@ -559,7 +562,8 @@ aittir; kural sonucu önceki olay kaydıyla aynıdır.
 **Aşama 13 — Uygulandı; Aşama 12 bağımlılığı açık — 31 Ekim 2026.**
 Kaynak zar hareketi, savunma tepkisi, gerçek can taşı teması, geri dönüş,
 son katkıda toplama ve mobil aktif yüz takibi eklendi. Kullanıcının kapsam
-kararıyla Aşama 10–12 uygulanmadı. Bu yüzden genel sabit sıralar, bütün savaş
+kararıyla bu işte Aşama 10–12 uygulanmadı. Aşama 10 ayrı `da2c608`
+commit'iyle geldi ve korundu; Aşama 11–12 açık kaldı. Genel sabit sıralar, bütün savaş
 olaylarında yüz sürekliliği ve olay odaklı yakın kadraj tamamlanmış sayılmaz.
 Doğrulama ve sınırlar: [Aşama 13 kaydı](docs/review/combat-dice-motion.md).
 
@@ -614,22 +618,22 @@ hatalar düzeltilir. Önceki açık cihaz kabulüyle birlikte kayıt tutulur.
   toplu seçimini, insanın 2000 ms seçimini, 12/18 zar yerleşimini ve olay
   boyunca yüz/kadraj/hareket sürekliliğini doğrula. Aynı durumları kullanıcının
   yayın sonrası görüntülerindeki düzensiz kümelerle karşılaştır.
-- [ ] Botla tam maç, yerel iki koltukta sıra değişimi ve iki gerçek çevrim
+- [x] Botla tam maç, yerel iki koltukta sıra değişimi ve iki gerçek çevrim
   içi koltukta hazırlığı geri alma → tanrı değiştirme → maç → sonuç → yeniden
   maç akışını normal/azaltılmış harekette tamamla. Tablet/masaüstünde mevcut
   insan tekli seçimi, klavye, odak ve kamera davranışını ayrıca kontrol et.
-- [ ] Savaş öncesi/sonrası güçlerin aynı olay sırasını ve ödeme anını
+- [x] Savaş öncesi/sonrası güçlerin aynı olay sırasını ve ödeme anını
   koruduğunu doğrula. 5 + 1 kazanım + 2 çalma örneğinde 8 bedelli savaş
   öncesi gücün başarısızlığını ve savaş sonrası gücün, başka kayıp yoksa,
   çalışmasını kontrol et; bu farkı hata olarak kapatma.
-- [ ] Uzun basma/iptal, hızlı tekrar onayı, yön değişimi, sekmeden çıkıp
+- [x] Uzun basma/iptal, hızlı tekrar onayı, yön değişimi, sekmeden çıkıp
   dönme, bağlantı kaybı ve WebGL toparlanmasında yüz kimliklerini, sunum
   kilitlerini, kaynak temaslarını ve lobi durumunu birlikte denetle.
 - [ ] Fiziksel iPhone/Safari ve Android/Chrome üzerinde hızlı seçim, botun
   tek taşıması, 12/18 yüzün okunurluğu, savaş hareketleri, lobi hazır geri
   alma, yön değişimi ve tarayıcı çubuklarını test et. Cihaz akıcılığı/ısınması
   gözlemlerini kaydet; donanım yoksa bu maddeyi açık bırak.
-- [ ] Son değişikliklerden sonra `npm run check` ve `npm run test:ci`
+- [x] Son değişikliklerden sonra `npm run check` ve `npm run test:ci`
   çalıştır. Tarayıcı/cihaz, test akışları, ekran görüntüsü ve hareket kanıtı
   konumlarını, açık sorunları `docs/review/` altında kaydet;
   `docs/MOBILE_DEVICE_CHECKLIST.md` yönergesini yeni akışlarla güncelle.
@@ -640,6 +644,23 @@ hatalar düzeltilir. Önceki açık cihaz kabulüyle birlikte kayıt tutulur.
 kayıtlarıyla tutarlıdır. Statik ekran görüntüsü hareket kabulünün; tarayıcı
 benzetimi fiziksel cihaz kabulünün yerine geçmez. Donanım doğrulaması eksikse
 yalnız yazılım/tarayıcı kapsamının tamamlandığı bildirilir.
+
+**Aşama 15 — İstenen kapsamın yazılım/tarayıcı kontrolü tamamlandı;
+bağımlılık ve fiziksel kabul açık — 31 Ekim 2026.** 43 dosyada 529 test,
+`npm run check` ve tarayıcı kontrolleri geçti. Masaüstünde geçici sunumun
+hedef düğmesini kaldırarak klavye odağını kaybettirmesi düzeltildi.
+Normal/azaltılmış yerel maçların 140 olaylık kayıtları birebir aynıydı.
+Bot, yerel ve iki gerçek ağ koltuğunda tam maç/yeniden maç; hazır geri alma,
+beş mobil boyut, 18 zar uç durumu, yön değişimi, CDP uzun basma, gerçek Chrome
+sekme geçişi, WebGL kaybı ve bağlantı dönüşü kontrol edildi.
+
+İlk madde kısmen doğrulandı: 44px hedefler ve 12/18 zar görüntülendi; fakat
+Aşama 11–12 uygulanmadığından sahipliğe göre kararlı sıralar ve bütün savaşta
+yüz/kadraj sürekliliği kabul edilmedi. Kullanıcının özgün fotoğrafları bu
+çalışmada mevcut değildi; birebir görüntü karşılaştırması iddia edilmez.
+Fiziksel iPhone/Safari ve Android/Chrome denenmedi. Bu iki açık madde ve
+önceki Aşama 4–5/9 cihaz maddeleri `[ ]` kalır.
+Ayrıntı/kanıtlar: [birleşik kabul raporu](docs/review/gameplay-acceptance.md).
 
 ## Doğrulama ve devam notları — Önceki Aşama 1–5
 

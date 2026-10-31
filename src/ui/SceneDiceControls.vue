@@ -236,7 +236,7 @@ function navigate(event: KeyboardEvent) {
     </svg>
     <div class="die-target-list" :class="{ 'is-overflow': overflow, 'is-short': size.height - safeArea.top - safeArea.bottom < 100 }" :style="listStyle" :role="overflow ? 'group' : undefined" :aria-label="overflow ? 'Masadaki zarlar, kaydırarak incele ve seç' : undefined">
     <component
-      :is="disabled ? 'span' : 'button'"
+      :is="disabled && mobile && target.combatRole ? 'span' : 'button'"
       v-for="target in controls"
       :key="target.id"
       class="scene-die-target"
@@ -250,7 +250,7 @@ function navigate(event: KeyboardEvent) {
       :aria-label="disabled ? undefined : target.label"
       :aria-pressed="target.canSelect ? target.selected : undefined"
       :aria-disabled="disabled"
-      :tabindex="disabled ? undefined : 0"
+      :tabindex="disabled ? mobile && target.combatRole ? undefined : -1 : 0"
       :aria-describedby="preview?.id === target.id ? 'die-face-preview' : undefined"
       :data-die-id="target.id"
       :data-selectable="target.canSelect"
