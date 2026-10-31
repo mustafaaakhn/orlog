@@ -12,7 +12,6 @@ export function useTableInsets(viewport: Ref<HTMLElement | null>) {
     const box = (selector: string) => root.querySelector<HTMLElement>(selector)?.getBoundingClientRect()
     const header = box('.masthead')
     const opponent = box('.mobile-resource-row.is-opponent')
-    const summary = box('.opponent-dice-summary')
     const round = box('.table-round')
     const footer = box('.mobile-match-footer')
     const self = box('.mobile-resource-row.is-self')
@@ -22,10 +21,10 @@ export function useTableInsets(viewport: Ref<HTMLElement | null>) {
     const next = landscape ? {
       top: Math.max(header?.bottom ?? 56, round?.bottom ?? 0) - bounds.top + 12,
       bottom: bounds.bottom - Math.min(self?.top ?? bounds.bottom - 70, action?.height ? action.top : bounds.bottom - 70) + 12,
-      left: Math.max(opponent?.right ?? 0, summary?.right ?? 0) - bounds.left + 16,
+      left: (opponent?.right ?? 0) - bounds.left + 16,
       right: Math.max(12, bounds.right - (round?.right ?? bounds.right)),
     } : {
-      top: Math.max(opponent?.bottom ?? 160, summary?.bottom ?? 0, network?.bottom ?? 0) - bounds.top + 12,
+      top: Math.max(opponent?.bottom ?? 160, network?.bottom ?? 0) - bounds.top + 12,
       bottom: bounds.bottom - (footer?.height ? footer.top : self?.top ?? bounds.bottom - 150) + 12,
       left: Math.max(12, (opponent?.left ?? 12) - bounds.left),
       right: Math.max(12, bounds.right - (opponent?.right ?? bounds.right - 12)),
@@ -35,7 +34,7 @@ export function useTableInsets(viewport: Ref<HTMLElement | null>) {
   onMounted(() => {
     observer = new ResizeObserver(measure)
     const root = viewport.value?.closest('.experience')
-    if (root) for (const element of root.querySelectorAll('.table-viewport, .masthead, .mobile-resource-row, .mobile-match-footer, .match-actions, .opponent-dice-summary, .table-round, .network-status')) observer.observe(element)
+    if (root) for (const element of root.querySelectorAll('.table-viewport, .masthead, .mobile-resource-row, .mobile-match-footer, .match-actions, .table-round, .network-status')) observer.observe(element)
     measure()
   })
   watch(viewport, measure, { flush: 'post' })

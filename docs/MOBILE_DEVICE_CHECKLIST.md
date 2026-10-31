@@ -37,7 +37,8 @@ API anahtarı gerekmez. Test sonunda geliştirme sunucusunu Ctrl+C ile kapat.
 3. **Uzun basma ve iptal:** En az yarım saniye bas; yalnız bilgi açılmalı.
    Parmağı kaldırıp Kapat'a dokun; zar seçilmemeli. Sonraki kısa dokunma
    seçmeli. Parmağı sürükleyip hareketi iptal etmek seçim üretmemeli.
-   Kilitli zar ve rakip özeti yalnız bilgi göstermeli.
+   Kilitli zar ve rakibin merkezdeki zarı yalnız bilgi göstermeli. Aşama 6
+   ile kaldırılan rakip hazne özeti ve ona ait dokunma hedefi görünmemeli.
 4. **Güç paneli:** Tanrı gücü'nü aç; üç tanrıyı ve rakibin tanrılarını incele,
    listeyi parmakla kaydır. Başlık/Kapat görünür kalmalı. Kapat ve dış alana
    dokunma oyun komutu veya pas üretmemeli. Frigg/Loki ile gereken sayıda

@@ -19,6 +19,7 @@ const props = defineProps<{
   safeArea?: DieTargetArea;
 }>();
 const emit = defineEmits<{ select: [id: DieId]; highlight: [id: DieId | null] }>();
+// Mobile exposes the near bowl and both center rows; the far bowl has no touch targets.
 const inspected = computed(() => inspectableDice(
   props.players, props.targets, props.selectablePlayer, props.collected,
 ).filter(target => !mobile.value || target.id.startsWith(`${props.viewerId}/`) || target.location !== "Haznede"));

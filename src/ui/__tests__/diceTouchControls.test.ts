@@ -1,30 +1,28 @@
 // @vitest-environment happy-dom
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, shallowRef } from 'vue'
 import { Game } from '../../core'
 import type { FaceId, PlayerId } from '../../core'
 import SceneDiceControls from '../SceneDiceControls.vue'
 
 const unmounts: (() => void)[] = []
-beforeEach(() => {
+afterEach(() => { unmounts.splice(0).forEach(fn => fn()); document.body.innerHTML = ''; vi.useRealTimers(); vi.unstubAllGlobals() })
+async function mount(viewerId: PlayerId = 'player-1', width = 390, height = 844) {
   vi.stubGlobal('ResizeObserver', class {
     constructor(private callback: (entries: unknown[]) => void) {}
-    observe() { this.callback([{ contentRect: { width: 390, height: 844 } }]) }
+    observe() { this.callback([{ contentRect: { width, height } }]) }
     disconnect() {}
   })
-})
-afterEach(() => { unmounts.splice(0).forEach(fn => fn()); document.body.innerHTML = ''; vi.useRealTimers(); vi.unstubAllGlobals() })
-async function mount() {
   const initial = new Game().state
   const players = Object.values(initial.players).map(player => ({ ...player, dice: player.dice.map((die, index) => ({
     ...die, faceId: (['arrow', 'helmet', 'hand', 'shield', 'axe-1', 'axe-2'] as FaceId[])[index]!, kept: index === 1, selected: index === 2, value: index === 2 ? 3 : 1,
   })) }))
   const targets = shallowRef(players.flatMap(player => player.dice.map((d, i) => ({ id: d.id, x: 40 + i * 3, y: player.id === 'player-1' ? 55 : 45 }))))
-  const disabled = shallowRef(false), selectablePlayer = shallowRef<PlayerId | null>('player-1'), select = vi.fn()
+  const disabled = shallowRef(false), selectablePlayer = shallowRef<PlayerId | null>(viewerId), select = vi.fn()
   const root = document.createElement('div')
   document.body.append(root)
   const app = createApp({ render: () => h(SceneDiceControls, { players, targets: targets.value, disabled: disabled.value,
-    collected: [], viewerId: 'player-1', selectablePlayer: selectablePlayer.value, safeArea: { top: 200, bottom: 160, left: 12, right: 12 }, onSelect: select }) })
+    collected: [], viewerId, selectablePlayer: selectablePlayer.value, safeArea: { top: 200, bottom: 160, left: 12, right: 12 }, onSelect: select }) })
   app.mount(root)
   unmounts.push(() => app.unmount())
   await nextTick()
@@ -68,11 +66,24 @@ describe('mobile projected dice interaction', () => {
     }
     expect(m.select).not.toHaveBeenCalled()
   })
-  it('leaves opponent bowl dice to the touchable summary instead of duplicating their controls', async () => {
-    const m = await mount()
-    expect(m.button('player-2/die-1')).toBeNull()
-    expect(m.button('player-2/die-2')).not.toBeNull()
-    expect(m.button('player-2/die-3')).not.toBeNull()
+  it.each([[390, 844], [844, 390]])('excludes the far bowl but keeps both center rows for either seat at %ix%i', async (width, height) => {
+    for (const viewer of ['player-1', 'player-2'] as const) {
+      const m = await mount(viewer, width, height)
+      const opponent = viewer === 'player-1' ? 'player-2' : 'player-1'
+      expect(m.button(`${opponent}/die-1`)).toBeNull()
+      expect(m.button(`${viewer}/die-1`)).not.toBeNull()
+      for (const owner of [viewer, opponent]) {
+        for (const index of [2, 3]) expect(m.root.querySelectorAll(`[data-die-id="${owner}/die-${index}"]`)).toHaveLength(1)
+      }
+      click(m.button(`${opponent}/die-3`))
+      await nextTick()
+      expect(m.root.querySelector('.die-face-preview')!.textContent).toContain('Jeton getirir')
+    }
+  })
+  it.each([[768, 1024], [1440, 900]])('retains inspection targets in both bowls on tablet and desktop at %ix%i', async (width, height) => {
+    const m = await mount('player-1', width, height)
+    expect(m.button('player-1/die-1')).not.toBeNull()
+    expect(m.button('player-2/die-1')).not.toBeNull()
   })
   it('consumes a long press without selecting, then allows a fresh short tap', async () => {
     vi.useFakeTimers()

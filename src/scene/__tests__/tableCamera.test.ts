@@ -28,7 +28,7 @@ describe('table framing', () => {
   })
 
   it.each(mobileSizes)('fits the near bowl and both nine-die battle lines inside the actual HUD gap at %ix%i', (width, height) => {
-    const insets = width > height ? { top: 112, bottom: 80, left: 280, right: 16 } : { top: 236, bottom: 190, left: 16, right: 16 }
+    const insets = width > height ? { top: 112, bottom: 80, left: 280, right: 16 } : { top: 172, bottom: 190, left: 16, right: 16 }
     for (const player of ['player-1', 'player-2'] as const) {
       const side = playerSide(player), camera = new PerspectiveCamera(42, width / height, .1, 100)
       frameTableCamera(camera, width, height, player, width < 620 && width < height, undefined, { insets })
@@ -47,7 +47,7 @@ describe('table framing', () => {
 
   it('includes both resource/god contact areas during mobile resolution and clears the offset on desktop', () => {
     const camera = new PerspectiveCamera(42, 390 / 844, .1, 100)
-    const insets = { top: 236, bottom: 190, left: 16, right: 16 }
+    const insets = { top: 172, bottom: 190, left: 16, right: 16 }
     for (const player of ['player-1', 'player-2'] as const) {
       frameTableCamera(camera, 390, 844, player, true, undefined, { insets, combat: true })
       for (const x of [-6.8, 6.8]) for (const z of [-7.8, 9.9]) {

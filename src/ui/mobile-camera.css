@@ -1,49 +1,8 @@
-.opponent-dice-summary { display: none; }
-@media (max-width: 600px), (max-height: 500px) and (orientation: landscape) {
-  .opponent-dice-summary {
-    position: absolute;
-    top: calc(var(--match-header-height, 64px) + var(--match-safe-top, 0px) + 104px);
-    left: var(--match-edge-left, 12px);
-    right: var(--match-edge-right, 12px);
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px 12px;
-    padding: 8px 10px;
-    background: var(--panel, #1c2921);
-    color: var(--text, #f5ebd8);
-    border-radius: 4px;
-    pointer-events: none;
-  }
-  .opponent-dice-label, .opponent-dice-empty { font-size: 11px; line-height: 1.5; }
-  .opponent-dice-label { color: var(--muted, #c6bca7); }
-  .opponent-dice-summary ul { display: flex; flex-wrap: wrap; gap: 5px; margin: 0; padding: 0; list-style: none; }
-  .opponent-dice-summary li {
-    position: relative;
-    display: grid;
-    place-items: center;
-    width: 30px;
-    height: 30px;
-    padding: 3px;
-    border: 2px solid transparent;
-    border-radius: 4px;
-    background: #f5ebd8;
-    color: #30271d;
-  }
-  .opponent-dice-summary .grants-token { border-color: #d3b176; }
-  .opponent-dice-summary li > svg:first-child { width: 100%; height: 100%; }
-  .opponent-dice-summary .token-icon { position: absolute; right: -4px; bottom: -4px; width: 12px; height: 12px; }
-  .summary-die-value { position: absolute; right: -4px; top: -6px; background: #1c2921; color: #f5ebd8; font-size: 10px; padding: 1px 3px; }
-  .summary-die-unknown { font-size: 16px; }
-  .in-match .network-status { top: 184px; }
-}
 @media (max-height: 500px) and (orientation: landscape) {
   .in-match .match-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; max-width: calc(100% - min(260px, 45%) - var(--match-edge-left) - var(--match-edge-right) - 12px); }
   .in-match .match-actions .field-error { flex-basis: 100%; margin: 0; }
   .in-match .match-actions .primary-action { font-size: 14px; padding: 10px 12px; }
   .in-match .match-actions .mobile-favor-trigger { font-size: 12px; padding: 10px 12px; white-space: nowrap; }
   .in-match .mobile-resource-row { width: min(260px, calc(45% - var(--match-edge-left))); }
-  .opponent-dice-summary { right: auto; width: min(260px, calc(45% - var(--match-edge-left, 12px))); top: calc(var(--match-header-height, 56px) + var(--match-safe-top, 0px) + 60px); }
-  .opponent-dice-label { width: 100%; }
-  .in-match .network-status { top: 172px; max-width: min(260px, calc(45% - var(--match-edge-left))); }
+  .in-match .network-status { max-width: min(260px, calc(45% - var(--match-edge-left))); }
 }

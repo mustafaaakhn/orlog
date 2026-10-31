@@ -44,7 +44,7 @@ botta ve ağ oyununda kişisel koltuk sabittir. Gizli sekme veya odak kaybı
 oyunun gerçek ilerlemesini engellemez. Dönüşte mevcut sahne güncel durumla
 eşitlenir; WebGL kaybı ayrı yeniden kurma yolunu kullanır.
 
-Mobil kamera `useTableInsets` ile gerçek HUD/özet/eylem boyutlarını ölçer;
+Mobil kamera `useTableInsets` ile gerçek HUD/eylem boyutlarını ölçer;
 `frameTableCamera` bu boş alanda yakın hazne ve dokuz zara kadar iki merkez
 sırasını kadrajlar. Çözümleme olay gruplarında iki tarafın kaynak ve tanrı
 temas noktaları da kapsanır. GSAP yalnız kadraj genişleme katsayısını ve
@@ -54,13 +54,16 @@ zar seçim hedefleri aynı kamera izdüşümünü okur; HUD altında kalan merke
 görünmez seçim alanları oluşturmaz. Masaüstünde kamera kaydırması temizlenir
 ve önceki tam masa hesaplaması kullanılır.
 
-`useVisibleDice`, rakip hazne özeti için yalnız tamamlanmış `presented`
-olaylarından bir zar görünümü tutar. Atış/yeniden atış yüzleri olay sunumu
-bitene kadar yayınlanmaz; bekleyen olaylardan yalnız atılan zar kimlikleri
-maskeleme için okunur. Kaldırma, saklama ve değer değişimleri aynı olaylarla
-ilerler. Grup sonu veya toparlanmada oturumun mevcut sunum durumu esas alınır;
-eski grupların callback'leri reddedilir. Özet yalnız zar verisini gösterir,
-güç niyetlerini okumaz ve yeni sonuç/rastgelelik üretmez.
+Mobil rakip hazne özeti ve yalnız ona hizmet eden `useVisibleDice` kaldırıldı.
+`useTableInsets` özet alanı ölçmez; dikeyde kaynak satırı/ağ bildiriminin
+altından başlayan boş alanı, kısa yatayda sol kaynak sütununun sağını kullanır.
+Kamera yakın hazne ve iki merkez sırasını kadrajlamaya devam eder; rakip
+hazneyi ayrıca kapsamaz. `SceneDiceControls` mobilde rakibin hazne hedeflerini
+filtreler, merkezdeki seçili/kilitli zarların tek hedefini ve incelemesini korur.
+`FavorPicker` hedeflerini kadrajdan değil mevcut oyun durumundan ve core
+kurallarından alır; haznedeki geçerli hedefler panelde kalır. `presented`,
+`progress`, `collected` ve oturumun ortak olay akışı korunur; kaynak sunumu,
+fizik kayıtları, kurallar ve botun gördüğü bilgi değişmez.
 
 Sesler `src/audio/catalog.ts` üzerinden yerel dosyalardan yüklenir. İki müzik
 sırayla, ortam döngüyle oynar. Tarayıcı otomatik oynatmayı engellerse ilk

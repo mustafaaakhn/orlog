@@ -46,19 +46,19 @@ zarları hover/odakla incelenebilir. Tanrı önizlemesi geçicidir; güç seçim
 bilinçli tıklama, dokunma veya klavye eylemiyle sabitlenir.
 
 Mobil kamera, dış masa sınırı yerine kendi hazneni ve iki merkez zar sırasını
-kadrajlar. Rakip haznenin tamamını sığdırmak zorunlu değildir. Üst HUD'un
-altında rakibin henüz merkeze alınmamış zarlarının simgeleri, jeton işaretleri
-ve varsa artırılmış değerleri görünür. Atılmamış zarlar çizgiyle, henüz sunumu
-bitmemiş atışlar üç noktayla gösterilir; gelecek yüzler erkenden açıklanmaz.
-Saklanan, seçili, kaldırılmış ve kullanılıp toplanmış zarlar bu özetten çıkar.
+kadrajlar. Rakip hazne için ayrı bir özet, başlık veya inceleme hedefi
+yoktur; haznenin kendisi kadraja ayrıca sığdırılmaz. Rakibin merkezdeki
+zarlarının yüzleri, jeton işaretleri ve incelemesi korunur. Güç paneli,
+seçilen tanrının mevcut kurallarına göre haznede kalanlar dahil bütün
+geçerli zar hedeflerini sunar.
 
-Kamera başlık, kaynaklar, zar özeti ve alt eylemlerin ölçülen alanını boş
-bırakır. Kısa yatayda kaynak/özet solda, yakın oyun alanı sağdadır; eylemler
-yer varsa yan yana durur. Çözümleme sırasında iki tarafın can/jeton/tanrı
+Kamera başlık, kaynaklar ve alt eylemlerin ölçülen alanını boş bırakır;
+kaldırılan özet için boş şerit ayırmaz. Kısa yatayda kaynaklar solda,
+yakın oyun alanı sağdadır; eylemler yer varsa yan yana durur. Çözümleme sırasında iki tarafın can/jeton/tanrı
 temaslarını göstermek için kadraj geçici olarak genişler. Normal harekette
 geçiş yumuşaktır; azaltılmış harekette kamera animasyonu yapılmaz. Masaüstü
 tam masa kadrajını korur. Koltuk yönü mevcut yerel/bot/çevrim içi davranışını
-izler; kamera ve özet oyun sonucu üretmez.
+izler; kamera oyun sonucu üretmez.
 
 Mobilde beş simge açık kemik zeminli, kameranın açısından etkilenmeyen 44px
 zar yüzlerinde de okunur. Yakın hedefler 4px aralıkla ayrılır; gerçek zardan
@@ -70,8 +70,8 @@ ayrı bir altın jeton simgesi eşlik eder. Seçili/kilitli durum açık camgöb
 Kısa dokunma kendi uygun zarını merkeze alır veya geri getirir. Kilitli/rakip
 zarına dokunma ve kendi zarına uzun basma simge, etki ve Jeton getirir bilgisini
 açar; görünür Kapat eylemi vardır. Uzun basma veya sürükleme seçim üretmez.
-Rakibin haznesi yalnız üst özetteki 44px düğmelerden incelenir; aynı zara
-iki mobil hedef çizilmez. Masaüstünde mevcut 3B yüzler, hover bilgisi ve
+Rakibin haznesindeki zarlar için mobil dokunma hedefi üretilmez; merkezdeki
+her zarın tek hedefi vardır. Masaüstünde mevcut 3B yüzler, hover bilgisi ve
 klavye hedefleri korunur.
 
 Mobil maçta **Tanrı gücü** düğmesi alttan açılan bir panel sunar. Oyuncunun

@@ -27,14 +27,15 @@ işaretleri korunur. Önceki fiziksel cihaz kabulünün açık maddeleri açık 
   onay penceresi eklenmez.
 
 Bu hedef, önceki planın rakip hazne özetini zorunlu tutan maddelerinin ve her
-dokunuşta anında taşıma davranışının yerini alır. Yeni davranış henüz
-uygulanmadığından `DESIGN.md` ve `ARCHITECTURE.md` mevcut uygulamayı anlatmaya
-devam eder; ilgili aşama uygulanırken güncellenir.
+dokunuşta anında taşıma davranışının yerini alır. Aşama 6 ile özet kaldırıldı;
+toplu seçim henüz uygulanmadı. `DESIGN.md` ve
+`ARCHITECTURE.md` güncel uygulamayı anlatır; ilgili aşama uygulanırken
+yeniden güncellenir.
 
 ## İlerleme biçimi
 
 - Her istekte yalnızca belirtilen aşama uygulanır. Sonraki aşamaya otomatik
-  geçilmez. Sıradaki iş: **“ROADMAP.md içindeki Aşama 6'yı uygula.”**
+  geçilmez. Sıradaki iş: **“ROADMAP.md içindeki Aşama 7'yi uygula.”**
 - Aşamalar sırayla ilerler. Her biri ayrı kısa ömürlü branch, doğrulama ve
   commit ile teslim edilir; doğrulanan iş yerel `main` branch'ine birleştirilir.
 - Yalnız gerçekten uygulanıp doğrulanan maddeler aynı işin commit'inde `[x]`
@@ -201,22 +202,38 @@ hazırdır; tarayıcı benzetimi bu kayıtların yerine geçmez.
 
 Bağımlılık: Mevcut Aşama 1–5 uygulaması. Toplu seçim bu aşamada eklenmez.
 
-- [ ] Mobil dikey ve kısa yatay görünümde **Rakibin haznesi** başlığını,
+- [x] Mobil dikey ve kısa yatay görünümde **Rakibin haznesi** başlığını,
   özet zarlarını ve bunlara ait inceleme açılır alanını kaldır. Aynı zarlar
   için görünmez veya yinelenen dokunma hedefleri bırakma.
-- [ ] Özetin kapladığı boşluğu ve kamera inset ölçümünü temizle. Kadrajı
+- [x] Özetin kapladığı boşluğu ve kamera inset ölçümünü temizle. Kadrajı
   kendi haznen ve iki merkez sırası için kullan; rakibin haznesini ayrıca
   sığdırma. Can/jeton, tur/sıra ve ana eylemler okunaklı kalsın.
-- [ ] Rakibin merkezdeki zar yüzlerini, jeton işaretlerini ve incelemesini
+- [x] Rakibin merkezdeki zar yüzlerini, jeton işaretlerini ve incelemesini
   koru. Hedef isteyen tanrı güçlerinin mevcut geçerli hedeflerini panelden
   seçme yolu kaybolmasın; oyun kuralları ve botun karar bilgisi değişmesin.
-- [ ] Artık kullanılmayan özet kodunu ve yalnız ona ait testleri gözden geçir;
+- [x] Artık kullanılmayan özet kodunu ve yalnız ona ait testleri gözden geçir;
   başka sunum işlevlerinin kullandığı olay verisini kaldırma.
-- [ ] Dikey/kısa yatay mobil, tablet ve masaüstünü tarayıcıda kontrol et;
+- [x] Dikey/kısa yatay mobil, tablet ve masaüstünü tarayıcıda kontrol et;
   zorunlu komutları çalıştır, ilgili belgeleri güncelle ve commit et.
 
 **Kabul:** Mobilde rakip hazne özeti görünmez ve boş şerit bırakmaz. Kendi
 haznen, merkez zarları, kaynaklar ve güç hedefleri kullanılabilir kalır.
+
+**Aşama 6 tamamlandı — 30 Ekim 2026.** Rakip hazne özeti, inceleme alanı,
+özel stilleri ve yalnız özete ait sunum görünümü/testleri kaldırıldı. Kamera
+ölçümü kaynaklar ile eylemlerden kalan alanı kullanır. Merkez zarlarının
+incelemesi, jeton işaretleri ve paneldeki geçerli güç hedefleri korunur.
+
+- Node 24.22.1 ile `npm run check` ve `npm run test:ci` geçti: **35 dosyada
+  459 test**. İki koltuk/dikey/kısa yatay hedef filtresi, tablet/masaüstü
+  hazne hedefleri ve panelde haznedeki/kaldırılan güç hedefleri doğrulandı.
+- Chromium 143: 360×800, 390×844, 430×932, 844×390, 568×320, 768×1024,
+  1440×900; özet/boş şerit yokluğu, 44px merkez hedefleri, inceleme, kaynaklar
+  ve eylemler kontrol edildi. Normal harekette atış, koltuk dönüşü,
+  seçim/geri alma ve merkezdeki rakip zarının altın jeton işareti de denendi.
+- Ayrıntılar ve yerel kanıtlar: [Aşama 6 doğrulaması](docs/review/mobile-summary-removal.md).
+  Fiziksel cihaz kabulü Aşama 4–5'te açık kalır. Toplu seçim ve zamanlayıcı
+  eklenmedi; sonraki istek Aşama 7'dir.
 
 ## Aşama 7 — İki saniyelik toplu seçim ve tek taşıma
 

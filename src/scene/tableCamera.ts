@@ -9,7 +9,7 @@ function frameMobile(camera: PerspectiveCamera, width: number, height: number, a
   const landscape = width > height
   const edge = insets ?? (landscape
     ? { top: 110, bottom: 86, left: Math.min(280, width * .45), right: 12 }
-    : { top: 230, bottom: 190, left: 16, right: 16 })
+    : { top: 172, bottom: 190, left: 16, right: 16 })
   const areaWidth = Math.max(100, width - edge.left - edge.right)
   const areaHeight = Math.max(100, height - edge.top - edge.bottom)
   const centerX = edge.left + areaWidth / 2

@@ -82,6 +82,30 @@ describe('mobile favor panel commands and drafts', () => {
     await nextTick()
     expect(m.root.querySelectorAll('fieldset')).toHaveLength(1)
   })
+  it('retains unkept bowl targets in the panel and omits removed dice', async () => {
+    const m = mount()
+    const opponent = m.state.value.players['player-2']
+    m.state.value = { ...m.state.value, players: { ...m.state.value.players,
+      'player-2': { ...opponent, dice: opponent.dice.map((die, index) => ({ ...die, kept: false, removed: index === 5 })) } } }
+    m.button('Tanrı gücü').click()
+    await nextTick()
+    for (const [tier, count, id] of [[3, 11, 'friggs-sight'], [6, 5, 'lokis-trick']] as const) {
+      m.tiers()[tier]!.click()
+      await nextTick()
+      const targets = [...m.root.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')]
+      expect(targets).toHaveLength(count)
+      const target = targets.find(input => input.value === 'player-2/die-1')!
+      target.click()
+      await nextTick()
+      if (id === 'friggs-sight') targets.find(input => input.value === 'player-1/die-1')!.click()
+      await nextTick()
+      m.button('Gücü onayla').click()
+      expect(m.choose).toHaveBeenLastCalledWith(id, 1, { dieIds: id === 'friggs-sight'
+        ? ['player-2/die-1', 'player-1/die-1'] : ['player-2/die-1'] })
+      m.button('Tanrı gücü').click()
+      await nextTick()
+    }
+  })
   it('limits Loki to enemy dice and forwards the exact chosen targets', async () => {
     const m = mount()
     m.button('Tanrı gücü').click()
