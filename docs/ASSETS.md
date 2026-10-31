@@ -90,3 +90,10 @@ geliştirme bağımlılığıdır; yeni görsel, model veya ses eklenmedi.
 Mobil zar yüzleri, hedeflerdeki simgeler ve jeton işareti mevcut proje SVG
 yolları ve prosedürel canvas çizimlerinden üretilir. Aşama 4 için dış görsel,
 model, doku, ses veya yeni paket eklenmedi.
+
+## Ses düzenlemesi — 31 Ekim 2026
+
+Ortam/su döngüsü `ambience` oynatma kataloğundan çıkarıldı; tarihsel kaynak
+kaydı korunur. Var olan iki müziğin yalnız sonundaki sessizlik, Opus paketleri
+yeniden kodlanmadan kırpıldı (yaklaşık 158,7 ve 141,1 saniye). Yukarıdaki
+kaynak/lisans koşulları değişmez; yeni dış kayıt eklenmedi.

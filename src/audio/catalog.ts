@@ -9,7 +9,6 @@ export const SOUND_CATALOG = {
   'earn-money': 'elevenlabs/earn-money.mp3',
   'coin-flip': 'elevenlabs/coin-flip.mp3', 'game-start': 'elevenlabs/game-start.mp3',
   victory: 'elevenlabs/victory.mp3', defeat: 'elevenlabs/defeat.mp3',
-  ambience: 'elevenlabs/ambience.mp3',
   'music-1': 'background-1.opus', 'music-2': 'background-2.opus',
 } as const
 export const MUSIC_PLAYLIST = ['music-1', 'music-2'] as const

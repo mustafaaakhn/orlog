@@ -9,20 +9,26 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
   const voices: { howl: Howl; id: number }[] = []
   const failures = new Set<SoundId>()
   const autoplayBlocked = new Set<SoundId>()
+  const pendingMusic = new Set<SoundId>()
+  const musicVoices = new Map<SoundId, number>()
   function report(id: SoundId, failed: boolean) { if (failed) failures.add(id); else failures.delete(id); onError(failures.size > 0) }
   let settings: AudioSettings = { muted: false, music: .35, effects: .65 }
   let unlocked = false, hidden = false, disposed = false
   let musicIndex = 0
   let announcedResult: string | null = null
-  const background = (id: SoundId) => id === 'music-1' || id === 'music-2' || id === 'ambience'
+  const background = (id: SoundId) => id === 'music-1' || id === 'music-2'
   function loops() {
-    for (const id of [...MUSIC_PLAYLIST, 'ambience'] as const) {
+    for (const id of MUSIC_PLAYLIST) {
       const sound = sounds.get(id)
       if (!sound || sound.state() !== 'loaded') continue
-      if (disposed || hidden || settings.muted || !settings.music || (id !== 'ambience' && id !== MUSIC_PLAYLIST[musicIndex])) {
+      if (disposed || hidden || settings.muted || !settings.music || id !== MUSIC_PLAYLIST[musicIndex]) {
         if (sound.playing()) sound.pause()
+        pendingMusic.delete(id)
       }
-      else if (!autoplayBlocked.has(id) && !sound.playing()) sound.play()
+      else if (!autoplayBlocked.has(id) && !pendingMusic.has(id) && !sound.playing()) {
+        pendingMusic.add(id)
+        musicVoices.set(id, sound.play(musicVoices.get(id)))
+      }
     }
   }
   function stopEffects() {
@@ -50,21 +56,27 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
           const sound = new Howl({
             src: [`${import.meta.env.BASE_URL}assets/audio/${SOUND_CATALOG[id]}`],
             html5: id === 'music-1' || id === 'music-2',
-            loop: id === 'ambience', volume: background(id) ? settings.music * (id === 'ambience' ? .45 : .7) : settings.effects,
+            loop: false, volume: background(id) ? settings.music * .7 : settings.effects,
             onload: () => { report(id, false); loops() },
             onloaderror: () => report(id, true),
             onplayerror: () => {
               // Autoplay policy is expected on a fresh visit. The first gesture
               // retries the current track; it is not a broken audio file.
-              if (background(id)) autoplayBlocked.add(id)
+              if (background(id)) { pendingMusic.delete(id); autoplayBlocked.add(id) }
               else report(id, true)
             },
             onunlock: () => { autoplayBlocked.delete(id); loops() },
-            onplay: () => report(id, false),
+            onplay: () => {
+              pendingMusic.delete(id)
+              if (background(id) && (hidden || settings.muted || !settings.music)) sound.pause()
+              report(id, false)
+            },
             onend: (voice) => {
               const index = voices.findIndex(v => v.howl === sound && v.id === voice)
               if (index >= 0) voices.splice(index, 1)
-              if (!disposed && id === MUSIC_PLAYLIST[musicIndex]) {
+              if (!disposed && id === MUSIC_PLAYLIST[musicIndex] && musicVoices.get(id) === voice) {
+                pendingMusic.delete(id)
+                musicVoices.delete(id)
                 musicIndex = (musicIndex + 1) % MUSIC_PLAYLIST.length
                 loops()
               }
@@ -81,7 +93,7 @@ export function createAudioPlayer(onError: (failed: boolean) => void = () => {})
       settings = { ...value }
       for (const [id, sound] of sounds) {
         sound.mute(settings.muted)
-        sound.volume(background(id) ? settings.music * (id === 'ambience' ? .45 : .7) : settings.effects)
+        sound.volume(background(id) ? settings.music * .7 : settings.effects)
       }
       if (settings.muted || !settings.effects) stopEffects()
       if (unlocked) loops()

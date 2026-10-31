@@ -66,8 +66,10 @@ kurallarından alır; haznedeki geçerli hedefler panelde kalır. `presented`,
 fizik kayıtları, kurallar ve botun gördüğü bilgi değişmez.
 
 Sesler `src/audio/catalog.ts` üzerinden yerel dosyalardan yüklenir. İki müzik
-sırayla, ortam döngüyle oynar. Tarayıcı otomatik oynatmayı engellerse ilk
-etkileşim yeniden dener; gizli sekme sesi duraklatır.
+sırayla oynar; ortam/su döngüsü kaldırıldı. Tarayıcı otomatik oynatmayı engellerse ilk
+etkileşim yeniden dener; gizli sekme sesi duraklatır. HTML5 oynatma isteği
+tamamlanana kadar parça kimliği ve bekleyen istek korunur; yükleme callback’leri
+aynı parçayı tekrar başlatamaz. Duraklatılan parça aynı ses kimliğiyle sürer.
 
 ## Mobil güç paneli
 
