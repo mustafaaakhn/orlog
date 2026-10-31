@@ -19,13 +19,13 @@ export function dieSlot(id: SceneDieTarget['id'], columns: number) {
   const index = Number(number) - 1
   return { column: index % columns, row: (kind === 'bonus' ? Math.ceil(6 / columns) : 0) + Math.floor(index / columns) }
 }
-export function dieLayoutMetrics(width: number, height: number, area: DieTargetArea) {
+export function dieLayoutMetrics(width: number, height: number, area: DieTargetArea, lanes: readonly DieLane[] = DIE_LANES) {
   const availableWidth = Math.max(0, width - area.left - area.right)
   const availableHeight = Math.max(0, height - area.top - area.bottom)
   const columns = Math.max(1, Math.min(6, Math.floor((availableWidth + 8) / STEP)))
   const rows = Math.ceil(6 / columns) + Math.ceil(3 / columns)
-  const laneHeight = Math.max(LABEL + rows * STEP, availableHeight / 3)
-  const contentHeight = laneHeight * 3
+  const laneHeight = Math.max(LABEL + rows * STEP, availableHeight / lanes.length)
+  const contentHeight = laneHeight * lanes.length
   return { columns, laneHeight, contentHeight, availableHeight, availableWidth,
     overflow: contentHeight > availableHeight + .01 }
 }
@@ -34,15 +34,15 @@ export function dieTargetCapacity(width: number, height: number, area: DieTarget
   return m.overflow ? 0 : 18
 }
 export function layoutDieTargets<T extends SceneDieTarget & { location?: string }>(
-  targets: readonly T[], width: number, height: number, area: DieTargetArea, viewer: PlayerId = 'player-1',
+  targets: readonly T[], width: number, height: number, area: DieTargetArea, viewer: PlayerId = 'player-1', lanes: readonly DieLane[] = DIE_LANES,
 ): (T & { sourceX: number; sourceY: number; lane: DieLane; slot: number })[] {
   if (!width || !height) return []
-  const m = dieLayoutMetrics(width, height, area)
+  const m = dieLayoutMetrics(width, height, area, lanes)
   const gridWidth = (m.columns - 1) * STEP + DIE_TARGET_SIZE
   return targets.map(target => {
     const lane = dieLane(target, viewer), slot = dieSlot(target.id, m.columns)
     return { ...target, sourceX: target.x, sourceY: target.y, lane, slot: slot.row * m.columns + slot.column,
       x: (area.left + (m.availableWidth - gridWidth) / 2 + 22 + slot.column * STEP) / width * 100,
-      y: (area.top + DIE_LANES.indexOf(lane) * m.laneHeight + LABEL + 22 + slot.row * STEP) / height * 100 }
+      y: (area.top + lanes.indexOf(lane) * m.laneHeight + LABEL + 22 + slot.row * STEP) / height * 100 }
   })
 }

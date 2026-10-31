@@ -66,6 +66,26 @@ describe('mobile selection draft face controls', () => {
     expect(m.session.pending.value!.events.map(event => event.type)).toEqual(['DiceSelectionChanged'])
     expect(m.dispatch).toHaveBeenCalledTimes(1)
   })
+  it('replaces the card with a projected target after selection, then restores it after undo', async () => {
+    const m = await mount()
+    const id = 'player-1/die-1'
+    click(m.button(1)); await nextTick()
+    expect(m.button(1).querySelector('svg')).not.toBeNull()
+    await vi.advanceTimersByTimeAsync(2000)
+    m.session.settle(m.session.pending.value!.id); await nextTick()
+    expect(m.button(1).classList.contains('is-projected')).toBe(true)
+    expect(m.button(1).querySelector('svg, .die-target-check')).toBeNull()
+    expect(m.button(1).style.left).toBe('25%')
+    click(m.button(1)); await nextTick()
+    expect(m.draft.selectedIds.value).toEqual([])
+    expect(m.button(1).classList.contains('is-projected')).toBe(true)
+    await vi.advanceTimersByTimeAsync(2000)
+    m.session.settle(m.session.pending.value!.id); await nextTick()
+    expect(m.button(1).classList.contains('is-projected')).toBe(false)
+    expect(m.button(1).querySelector('svg')).not.toBeNull()
+    expect(m.session.state.value.players['player-1'].dice.find(die => die.id === id)!.selected).toBe(false)
+    expect(m.dispatch).toHaveBeenCalledTimes(2)
+  })
   it('undoes the check on a second tap without changing the authoritative face or issuing a command', async () => {
     const m = await mount(), face = m.session.state.value.players['player-1'].dice[0]!.faceId
     click(m.button(1)); await nextTick()

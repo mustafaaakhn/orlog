@@ -28,13 +28,23 @@ async function mount(viewerId: PlayerId = 'player-1', width = 390, height = 844)
   app.mount(root)
   unmounts.push(() => app.unmount())
   await nextTick()
+  vi.spyOn(root.querySelector('.scene-die-controls')!, 'getBoundingClientRect').mockReturnValue({ x: 0, y: 0, top: 0, left: 0, right: width, bottom: height, width, height, toJSON() {} })
+  root.querySelector('.scene-die-controls')!.setAttribute('data-test-width', String(width))
+  root.querySelector('.scene-die-controls')!.setAttribute('data-test-height', String(height))
   const button = (id: string) => root.querySelector<HTMLButtonElement>(`[data-die-id="${id}"]`)!
   return { root, targets, players, collected, disabled, selectablePlayer, select, button }
 }
 function pointer(button: HTMLElement, type: string, x = 160, y = 450) {
   button.dispatchEvent(new PointerEvent(type, { bubbles: true, pointerType: 'touch', pointerId: 1, isPrimary: true, clientX: x, clientY: y }))
 }
-function click(button: HTMLElement) { button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1, clientX: 380, clientY: 700 })) }
+function click(button: HTMLElement) {
+  const projected = button.classList.contains('is-projected')
+  const root = button.closest('.scene-die-controls')!
+  const width = Number(root?.getAttribute('data-test-width') ?? 390), height = Number(root?.getAttribute('data-test-height') ?? 844)
+  button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1,
+    clientX: projected ? parseFloat(button.style.left) * width / 100 : 380,
+    clientY: projected ? parseFloat(button.style.top) * height / 100 : 700 }))
+}
 
 describe('mobile projected dice interaction', () => {
   it('preserves the desktop button node and keyboard focus across a presentation lock', async () => {
@@ -96,10 +106,26 @@ describe('mobile projected dice interaction', () => {
     pointer(m.button('player-1/die-1'), 'pointerleave') // Normal touch exit precedes the synthetic click.
     click(m.button('player-1/die-1'))
     expect(m.select).toHaveBeenLastCalledWith('player-1/die-1')
-    expect(m.button('player-1/die-3').querySelector('.die-target-value')!.textContent).toBe('×3')
+    expect(m.button('player-1/die-3').querySelector('.die-target-value')).toBeNull()
+    expect(m.button('player-1/die-3').getAttribute('aria-label')).toContain('etki 3')
     click(m.button('player-1/die-3'))
     expect(m.select).toHaveBeenLastCalledWith('player-1/die-3')
     expect(m.select).toHaveBeenCalledTimes(2)
+  })
+  it('resolves overlapping center targets at pointerdown and keeps that identity through release', async () => {
+    vi.useFakeTimers()
+    const m = await mount()
+    const overlapping = m.button('player-1/die-2')
+    // The kept neighbour receives the DOM hit, but the selected die is nearer.
+    pointer(overlapping, 'pointerdown', 46 * 390 / 100, 55 * 844 / 100)
+    pointer(overlapping, 'pointerup', 46 * 390 / 100, 55 * 844 / 100)
+    click(overlapping)
+    expect(m.select).toHaveBeenCalledExactlyOnceWith('player-1/die-3')
+    pointer(overlapping, 'pointerdown', 46 * 390 / 100, 55 * 844 / 100)
+    await vi.advanceTimersByTimeAsync(410)
+    pointer(overlapping, 'pointerup'); click(overlapping); await nextTick()
+    expect(m.root.querySelector('.die-face-preview')!.textContent).toContain('El')
+    expect(m.select).toHaveBeenCalledTimes(1)
   })
   it('inspects locked and opponent dice with a persistent description and an explicit close action', async () => {
     const m = await mount()
@@ -120,14 +146,21 @@ describe('mobile projected dice interaction', () => {
     }
     expect(m.select).not.toHaveBeenCalled()
   })
-  it.each([[390, 844], [844, 390]])('excludes the far bowl but keeps both center rows for either seat at %ix%i', async (width, height) => {
+  it.each([[390, 844], [844, 390]])('exposes cards only in the near bowl and projected targets in both centers for either seat at %ix%i', async (width, height) => {
     for (const viewer of ['player-1', 'player-2'] as const) {
       const m = await mount(viewer, width, height)
       const opponent = viewer === 'player-1' ? 'player-2' : 'player-1'
       expect(m.button(`${opponent}/die-1`)).toBeNull()
-      expect(m.button(`${viewer}/die-1`)).not.toBeNull()
+      expect(m.button(`${viewer}/die-1`).querySelector('svg')).not.toBeNull()
+      expect([...m.root.querySelectorAll('.die-lane-label')].map(el => el.textContent)).toEqual(['Sen · Hazne'])
       for (const owner of [viewer, opponent]) {
-        for (const index of [2, 3]) expect(m.root.querySelectorAll(`[data-die-id="${owner}/die-${index}"]`)).toHaveLength(1)
+        for (const index of [2, 3]) {
+          const target = m.button(`${owner}/die-${index}`)
+          expect(m.root.querySelectorAll(`[data-die-id="${owner}/die-${index}"]`)).toHaveLength(1)
+          expect(target.classList.contains('is-projected')).toBe(true)
+          expect(target.querySelector('svg, .die-target-check, .die-target-value')).toBeNull()
+          expect(target.style.left).toBe(`${m.targets.value.find(t => t.id === `${owner}/die-${index}`)!.x}%`)
+        }
       }
       click(m.button(`${opponent}/die-3`))
       await nextTick()
@@ -197,7 +230,7 @@ describe('mobile projected dice interaction', () => {
     const m = await mount(), first = m.button('player-1/die-1')
     first.focus()
     first.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true, cancelable: true }))
-    expect(document.activeElement).toBe(m.button('player-1/die-2'))
+    expect(document.activeElement).toBe(m.button('player-1/die-4'))
     first.focus()
     first.click()
     expect(m.select).toHaveBeenCalledExactlyOnceWith('player-1/die-1')

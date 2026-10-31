@@ -53,3 +53,17 @@
   outline: 2px solid #f4d899;
   outline-offset: 2px;
 }
+
+/* Center dice retain one accessible 44px target at their real projection.
+   Their face, token border and selection live on the 3D die itself. */
+.mobile-die-controls .scene-die-target.is-projected,
+.mobile-die-controls .scene-die-target.is-projected:hover:enabled {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  outline: none;
+}
+.mobile-die-controls .scene-die-target.is-projected:focus-visible {
+  outline: 3px solid #fff8e8;
+  outline-offset: 3px;
+}

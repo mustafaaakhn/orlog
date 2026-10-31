@@ -61,20 +61,21 @@ geçiş yumuşaktır; azaltılmış harekette kamera animasyonu yapılmaz. Masa�
 tam masa kadrajını korur. Koltuk yönü mevcut yerel/bot/çevrim içi davranışını
 izler; kamera oyun sonucu üretmez.
 
-Mobilde beş simge açık kemik zeminli, kameranın açısından etkilenmeyen 44px
-zar yüzlerinde de okunur. Yüzler kimliğe ait düzenli yuvalarda 8px aralıkla ayrılır. Rakibin merkez
-sırası üstte, kendi merkez sıran altta, haznedekiler ayrı alt gruptadır.
-Normal altı zarı ek zarların ikinci sırası izler. Kaldırılan kimliğin boşluğu
-korunur; seçim taslağı yüzü taşımaz. İncelenen/işaret edilen yüzü gerçek
-3B izdüşümüne ince çizgi bağlar. Jetonlu yüzün altın çerçevesine sağ üstte
-ayrı bir altın jeton simgesi eşlik eder. Seçili/kilitli durum açık camgöbeği
-çizgi ve sol alttaki onay imiyle gösterilir; jeton kazancı ile karışmaz.
-Dar alanda satırlar düzenli sarılır; kısa ekranda başlıklı gruplar aynı
-44px büyüklükte kaydırılır. Hazne–merkez geçişinde yalnız ilgili yüzün
-grubu değişir; diğer zarlar boşluk kapatmaz.
+Mobilde açık kemik zeminli 44px seçim kartları yalnız kendi haznemizde
+bulunur. Kimliğe ait yuvalar 8px aralıklarla ayrılır; ek zarlar ikinci
+sırayı kullanır, kaldırılan kimliğin boşluğu korunur. Altın çerçeve ve sağ
+üstteki jeton simgesi kazancı, camgöbeği vurgu ve onay imi bekleyen seçimi
+anlatır. Kısa alanda yalnız hazne kartları kendi yüzeyinde kaydırılır.
+
+İki tarafın merkezinde kalıcı yüz kartı ve merkez başlığı bulunmaz. Zarın
+3B izdüşümündeki görünmez 44×44px hedef kısa dokunma ve incelemeyi korur;
+kendi kilitsiz merkez zarına dokunmak geri alma taslağı oluşturur. Merkez
+hedefleri hazne kaydırmasının dışında kalır. Kartın hazne–merkez geçişi
+yetkili sunum durumunu izler; bekleyen taslak kartı taşımaz. Geçici saldırı
+ve savunma yüzleri sonraki roadmap adımı tamamlanana kadar korunur.
 
 Mobil kısa dokunma kendi uygun zarının bekleyen seçimini anında camgöbeği
-vurgu ve onay imiyle değiştirir; ikinci dokunuş geri alır. Yüzler ve 44px
+vurgu ve onay imiyle değiştirir; ikinci dokunuş geri alır. Hazne kartları ve merkezdeki görünmez 44px
 hedefler beklerken yerinde kalır. Son geçerli seçim değişikliğinden **2000 ms**
 sonra son seçim tek grupta uygulanır; saklamak için seçilenler merkeze,
 seçimden çıkarılan kilitsiz zarlar hazneye birlikte gider. Her seçim/geri
@@ -171,6 +172,9 @@ etkilemez. Birleşik kabul ve açık bağımlılıklar
 `docs/review/gameplay-acceptance.md` içinde kayıtlıdır.
 
 ## Savaş boyunca okunur yüzler — Aşama 12
+
+Bu tarihsel aşamanın kalıcı merkez kartları, yeni mobil roadmap’in 1.
+adımıyla kaldırıldı; geçici saldırı/savunma yüzleri halen korunur.
 
 Savaşa girince mevcut okunur yüzler görünür kalır. Kilitli yüzler dekoratiftir;
 tıklama ve odak hedefi oluşturmaz. O anki olayın kaynak/hedef kimlikleri

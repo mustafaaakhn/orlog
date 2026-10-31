@@ -12,13 +12,13 @@
 
 ## 1. Kartları yalnız kendi haznemizde tut
 
-- [ ] Okunaklı seçim kartlarını yalnız kendi haznemizdeki zarlar için göster.
+- [x] Okunaklı seçim kartlarını yalnız kendi haznemizdeki zarlar için göster.
   Rakibin hazne kartlarını ve iki tarafın merkez kartlarını kaldır.
-- [ ] “Sen · Merkez” ve “Rakip · Merkez” başlıklarını kaldır. Merkezde
+- [x] “Sen · Merkez” ve “Rakip · Merkez” başlıklarını kaldır. Merkezde
   iki tarafın yalnız gerçek 3B zarları görünsün.
-- [ ] Zar merkeze taşındığında kartını kaldır; hazneye geri döndüğünde
+- [x] Zar merkeze taşındığında kartını kaldır; hazneye geri döndüğünde
   yeniden göster. Mevcut iki saniyelik toplu seçim ve erken onay korunsun.
-- [ ] Kendi merkezimizdeki kilitsiz zarı doğrudan 3B zar üzerinden geri
+- [x] Kendi merkezimizdeki kilitsiz zarı doğrudan 3B zar üzerinden geri
   almayı koru; görünmez dokunma alanları en az 44×44px olsun.
 
 ## 2. 3B zarların netliğini artır

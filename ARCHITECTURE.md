@@ -282,3 +282,18 @@ hareketinin `combatRole` yüzü 3B izdüşümünü takip eder, diğer yuvalar ak
 Bu hareketli yüz kaydırma kabının dışında durur; kısa yatayda da HUD içinde
 kalır. İptal, yeniden maç ve sahne kurulumunda olay/gizleme/bitmiş kimlikleri
 temizlenir; sekme dönüşünde aynı yetkili durumla eşitlenir.
+
+## Mobil hazne kartları — yeni roadmap, adım 1
+
+`SceneDiceControls` okunur seçim kartlarını yalnız `viewerId` koltuğunun
+`Haznede` konumundaki görünür zarları için üretir. `dieTargetLayout` tek
+hazne şeridiyle kullanılır; kartların kaydırma yüzeyi merkezleri kapsamaz.
+Merkezdeki kimlikler aynı `inspectableDice` verisi ve güncel 3B izdüşümüyle
+44×44px görünmez hedef olarak kalır. Merkez başlıkları üretilmez.
+
+Kart/izdüşüm ayrımı `location` sunum değerini izler; `draftSelectedIds`
+yalnız seçimi vurgular. Süre dolumu, geri alma ve erken onay mevcut
+`diceSelectionDraft`/oturum komutlarını kullanır. Fizik, GSAP, core ve
+olay sınırları değişmez. Masaüstü mevcut izdüşüm hedeflerini korur.
+Geçici `combatRole` yüzleri, ayrı savaş sadeleştirme adımının kapsamındadır.
+Bu karar önceki Aşama 11–12’nin kalıcı merkez kartı düzeninin yerini alır.
