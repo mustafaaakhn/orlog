@@ -129,10 +129,10 @@ export function decideCommand(observation: GameState, id: PlayerId, difficulty: 
     return choice.status === 'skipped' ? { type: 'SkipFavor', playerId: id } : { type: 'ChooseFavor', playerId: id, favorId: choice.favorId, level: choice.level, ...(choice.input ? { input: choice.input } : {}) }
   }
   if (phase.step === 'awaiting-roll') return { type: 'RollDice', playerId: id }
-  for (const die of state.players[id].dice) {
-    if (die.kept || !die.faceId) continue
-    const selected = desirability(state, id, die, difficulty) >= -0.02
-    if (die.selected !== selected) return { type: 'SetDieSelection', playerId: id, dieId: die.id, selected }
-  }
+  const dice = state.players[id].dice
+  const dieIds = dice.filter(die => !die.kept && !die.removed && die.faceId &&
+    desirability(state, id, die, difficulty) >= -0.02).map(die => die.id)
+  if (dice.some(die => die.selected !== dieIds.includes(die.id)))
+    return { type: 'SetDiceSelection', playerId: id, dieIds }
   return { type: 'ConfirmRoll', playerId: id }
 }

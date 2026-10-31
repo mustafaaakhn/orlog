@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 import { Game, createSeededRandom, FAVOR_CATALOG, PLAYER_IDS, validFavorInput } from '../../core'
 import type { Difficulty } from '../computer'
 import { decideCommand, MAX_CANDIDATES, observeGame } from '../computer'
-import type { FavorId, GameCommand, PlayerId } from '../../core'
+import type { DieId, FavorId, GameCommand, PlayerId } from '../../core'
 import * as resolution from '../../core/resolution'
 
 type Draft = Parameters<typeof resolution.resolveRound>[0]
@@ -57,11 +57,11 @@ describe('computer information boundary and decisions', () => {
     player.health = 3; player.rollsUsed = 1
     const die = player.dice[0]!
     die.kept = false; die.faceId = 'helmet'
-    expect(decideCommand(state, 'player-2', 'normal')).toMatchObject({ type: 'SetDieSelection', dieId: die.id, selected: true })
+    expect(decideCommand(state, 'player-2', 'normal')).toMatchObject({ type: 'SetDiceSelection', dieIds: [die.id] })
     state.players['player-1'].dice.forEach(d => { d.faceId = 'hand' })
     expect(decideCommand(state, 'player-2', 'normal')).toMatchObject({ type: 'ConfirmRoll' })
     die.faceId = 'arrow' // die-1 has a framed arrow.
-    expect(decideCommand(state, 'player-2', 'normal')).toMatchObject({ type: 'SetDieSelection', selected: true })
+    expect(decideCommand(state, 'player-2', 'normal')).toMatchObject({ type: 'SetDiceSelection', dieIds: [die.id] })
   })
   it('uses this round’s gold to select a lethal post-combat favor', () => {
     const state = board()
@@ -136,3 +136,41 @@ it('completes 180 seeded full games with every catalog favor, both first players
   durations.sort((a, b) => a - b)
   console.info('Computer simulation', { games: 180, commands, maxRounds, maxDecisionMs, favorP95Ms: durations[Math.floor(durations.length * .95)] })
 }, 120000)
+
+// Recorded from the previous per-die evaluator before the batch conversion.
+it.each(['easy', 'normal', 'hard'] as const)('preserves legacy final sets for %s in one revision and supports returning dice', difficulty => {
+  const normal = [[2, 6], [1, 2, 3, 4, 5], [2, 3, 4, 6], [2, 3, 4, 5], [1, 2, 3, 4, 5, 6]]
+  const easy = [[2, 5, 6], [1, 2, 3, 4, 5], [1, 2, 3, 4, 6], [2, 3, 4, 5], [2, 3, 4, 5, 6]]
+  for (const [index, seed] of [1, 2, 3, 42, 91].entries()) {
+    const game = new Game({ firstPlayerId: 'player-2', random: createSeededRandom(seed) })
+    game.dispatch({ type: 'RollDice', playerId: 'player-2' })
+    // Start with the opposite set to exercise simultaneous selection and return.
+    const ids: DieId[] = (difficulty === 'easy' ? easy : normal)[index]!.map(n => `player-2/die-${n}` as DieId)
+    game.dispatch({ type: 'SetDiceSelection', playerId: 'player-2', dieIds: game.state.players['player-2'].dice.filter(d => !ids.includes(d.id)).map(d => d.id) })
+    const before = game.state
+    const command = decideCommand(before, 'player-2', difficulty)!
+    expect(command).toEqual({ type: 'SetDiceSelection', playerId: 'player-2', dieIds: ids })
+    const result = game.dispatch(command)
+    expect(result.ok).toBe(true)
+    expect(result.state.revision).toBe(before.revision + 1)
+    expect(result.events).toHaveLength(1)
+    expect(result.events[0]).toMatchObject({ type: 'DiceSelectionChanged', dieIds: ids })
+    expect(decideCommand(game.state, 'player-2', difficulty)).toEqual({ type: 'ConfirmRoll', playerId: 'player-2' })
+    game.dispatch({ type: 'ConfirmRoll', playerId: 'player-2' })
+    expect(game.state.players['player-2'].dice.filter(d => d.kept).map(d => d.id)).toEqual(ids)
+  }
+})
+
+it('leaves previously locked dice out of the batch and preserves the third-roll automatic flow', () => {
+  const game = new Game({ firstPlayerId: 'player-2', random: createSeededRandom(1) })
+  for (let steps = 0; steps < 50 && game.state.phase.name === 'roll'; steps++) {
+    const phase = game.state.phase
+    const id = phase.activePlayerId
+    const command = decideCommand(game.state, id, 'normal')!
+    if (command.type === 'SetDiceSelection')
+      expect(command.dieIds.every(dieId => !game.state.players[id].dice.find(d => d.id === dieId)!.kept)).toBe(true)
+    expect(game.dispatch(command).ok).toBe(true)
+  }
+  expect(game.state.phase.name).toBe('favor')
+  expect(Object.values(game.state.players).every(p => p.dice.every(d => d.kept))).toBe(true)
+})

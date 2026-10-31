@@ -179,3 +179,15 @@ ayrı yayın kopyasında yalnız güncel kod/config/varlık yolları geçmiş bo
 tutulur. Eski belgeler geçmişe dahil edilmez; kısa güncel rehberler sonradan
 eklenir. Yalnız yayın kopyasının `main` branch’i GitHub’a gönderilir; yerel
 arşiv, eski etiketler ve özgün geliştirme deposu gönderilmez.
+
+## Botun toplu seçimi
+
+`decideCommand`, kilitsiz ve görünür zarların son seçimini mevcut desirability
+hesabıyla tek `SetDiceSelection` komutunda döndürür. Değerlendirme seçili
+bayrağına bağlı olmadığından önceki tekli kararların nihai kümesi korunur;
+görünür bilgi, güç örneklemesi ve rastgele kaynak değişmez. Kilitli zarlar
+listeye girmez. Değişiklik yoksa doğrudan `ConfirmRoll` döner.
+`computerDriver` mevcut kısa düşünme süresini ve oturumun sunum kilidini
+kullanır; yeni taslak/zamanlayıcı yoktur. Kabul edilen seçim tek revision ve
+`DiceSelectionChanged` olayı üretir, `dicePresenter` tek ortak zaman çizgisi
+oynatır. Sunum bitmeden sürücü yeni onay üretemez.

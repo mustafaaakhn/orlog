@@ -2,7 +2,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { createComputerDriver } from '../computerDriver'
 import { createRollSession } from '../rollSession'
 import { DIFFICULTIES } from '../../ai/computer'
-import { Game } from '../../core'
+import { Game, createSeededRandom } from '../../core'
 
 afterEach(() => vi.useRealTimers())
 it('dispatches one ordinary command and waits for presentation before deciding again', () => {
@@ -36,4 +36,25 @@ it('cancels stale decisions on scene loss, hidden tab, restart, mode switch and 
   driver.update(turn)
   vi.runAllTimers()
   expect(dispatch).toHaveBeenCalledTimes(1)
+})
+
+it('waits for the accepted batch presentation, then confirms once without a human draft timer', () => {
+  vi.useFakeTimers()
+  const session = createRollSession({ firstPlayerId: 'player-2', random: createSeededRandom(1) })
+  session.dispatch({ type: 'RollDice', playerId: 'player-2' })
+  session.settle(session.pending.value!.id)
+  const dispatch = vi.fn(session.dispatch), driver = createComputerDriver(dispatch)
+  const update = () => driver.update({ state: session.state.value, playerId: 'player-2', difficulty: 'normal', blocked: !!session.pending.value })
+  update(); vi.advanceTimersByTime(350)
+  expect(dispatch).toHaveBeenCalledExactlyOnceWith({ type: 'SetDiceSelection', playerId: 'player-2', dieIds: ['player-2/die-2', 'player-2/die-6'] })
+  expect(session.pending.value!.events).toHaveLength(1)
+  update(); vi.advanceTimersByTime(5000)
+  expect(dispatch).toHaveBeenCalledTimes(1)
+  session.settle(session.pending.value!.id)
+  update(); vi.advanceTimersByTime(350)
+  expect(dispatch).toHaveBeenLastCalledWith({ type: 'ConfirmRoll', playerId: 'player-2' })
+  expect(dispatch).toHaveBeenCalledTimes(2)
+  update(); vi.runAllTimers()
+  expect(dispatch).toHaveBeenCalledTimes(2)
+  driver.dispose()
 })

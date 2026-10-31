@@ -433,23 +433,23 @@ hareket, bırakma tıklaması tüketilene kadar korunur; yeni dokunma çalışı
 Bağımlılık: Mevcut Aşama 7–9 uygulaması. İnsan seçimi ve yüz yerleşimi bu
 aşamada yeniden tasarlanmaz. Botun toplu seçimi mobil ve geniş ekranda aynıdır.
 
-- [ ] Botun aynı atışta saklamak veya geri almak istediği bütün kilitsiz
+- [x] Botun aynı atışta saklamak veya geri almak istediği bütün kilitsiz
   zarların son seçimini tek kararda üret; mevcut `SetDiceSelection` komutunu
   ve `DiceSelectionChanged` olayını kullan. Zar başına komut döndürme.
-- [ ] Mevcut zorluk profillerinin değerlendirmesini, görünür bilgi sınırını,
+- [x] Mevcut zorluk profillerinin değerlendirmesini, görünür bilgi sınırını,
   rastgele kaynağı ve önceki atışların kilitli zarlarını koru. Toplu seçim
   yeni atış veya daha güçlü bir bot profili oluşturmasın.
-- [ ] Mevcut kısa düşünme süresinden sonra tek toplu taşıma oynat; bota
+- [x] Mevcut kısa düşünme süresinden sonra tek toplu taşıma oynat; bota
   insanın 2000 ms taslak zamanlayıcısını veya zar başına bekleme ekleme.
   Seçim değişmiyorsa boş taşıma oluşturmadan mevcut onay yoluna geç.
-- [ ] `ConfirmRoll` yalnız seçim kabulü ve toplu sunum bitince bir kez
+- [x] `ConfirmRoll` yalnız seçim kabulü ve toplu sunum bitince bir kez
   gönderilsin. Sekme/odak kaybı, sahne kaybı, çıkış ve yeniden maç eski bot
   kararını yeni bağlama taşımasın; üçüncü atışın otomatik akışı korunsun.
-- [ ] Çoklu seçim/geri alma, değişmeyen seçim, kilitli zar ve kesintileri
+- [x] Çoklu seçim/geri alma, değişmeyen seçim, kilitli zar ve kesintileri
   anlamlı AI/sürücü/sunum testleriyle doğrula. Aynı atış durumunda eski
   değerlendirmeyle seçilen nihai zar kümesini karşılaştır; tek seçim
   revision/olayı, tek ortak taşıma ve sunum sonrası tek onayı denetle.
-- [ ] Normal/azaltılmış harekette mobil ve masaüstü bot sırasını tarayıcıda
+- [x] Normal/azaltılmış harekette mobil ve masaüstü bot sırasını tarayıcıda
   izle. Zorunlu komutları çalıştır; `ARCHITECTURE.md`, `DESIGN.md` ve ilgili
   doğrulama kaydını güncelle, doğrulanan maddeleri aynı commit'te işaretle.
 

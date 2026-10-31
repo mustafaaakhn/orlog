@@ -73,8 +73,10 @@ hedefler beklerken yerinde kalır. Son geçerli seçim değişikliğinden **2000
 sonra son seçim tek grupta uygulanır; saklamak için seçilenler merkeze,
 seçimden çıkarılan kilitsiz zarlar hazneye birlikte gider. Her seçim/geri
 alma süreyi yeniden başlatır. Taslak uygulanmış seçimle aynıysa taşıma olmaz.
-Bu süre zar atmaz, kilitlemez veya sıra geçirmez. Masaüstü ve botun mevcut
-tekli seçim akışı korunur.
+Bu süre zar atmaz, kilitlemez veya sıra geçirmez. Masaüstünde insanın tekli seçim akışı korunur. Bot, bütün ekranlarda mevcut
+kısa düşünme süresinden sonra son seçimini tek grupta uygular; insanın
+2000 ms beklemesini kullanmaz. Değişmeyen seçim taşıma üretmez; onay
+seçim sunumu bittikten sonra mevcut sürücü yoluyla bir kez gönderilir.
 
 Bekleyen seçim yalnız bir niyettir; zar yüzü, jeton, can veya fizik sonucu
 üretmez. Kilitli/rakip zarına dokunma ve kendi zarına uzun basma simge, etki
