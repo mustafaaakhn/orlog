@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t, locale } from '../i18n';
 import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import WelcomeIntro from "./WelcomeIntro.vue";
 import FavorPortrait from "./FavorPortrait.vue";
@@ -66,8 +67,16 @@ const selectedMode = ref<"computer" | "friend">(props.rematch?.opponent.mode ===
 const friendOpen = ref(false);
 const friendMode = ref<"local" | "host" | "join">("local");
 const names = ref<Record<PlayerId, string>>({
-  "player-1": props.rematch?.names['player-1'] ?? "Oyuncu I",
-  "player-2": props.rematch?.names['player-2'] ?? "Oyuncu II",
+  "player-1": props.rematch?.names['player-1'] ?? t("Oyuncu I"),
+  "player-2": props.rematch?.names['player-2'] ?? t("Oyuncu II"),
+});
+// Translate untouched default names in preparation; entered/online names stay data.
+watch(locale, (_value, previous) => {
+  if (props.rematch || room.value) return;
+  for (const id of PLAYER_IDS) {
+    const label = id === 'player-1' ? 'Oyuncu I' : 'Oyuncu II';
+    if (names.value[id] === t(label, undefined, previous)) names.value[id] = t(label);
+  }
 });
 const loadouts = ref<Record<PlayerId, FavorId[]>>({
   "player-1": [...(props.rematch?.options.loadouts?.['player-1'] ?? [])],
@@ -161,8 +170,8 @@ const canContinueGods = computed(() => {
 const shortName = (id: FavorId) => FAVOR_CATALOG[id].name.split("'")[0];
 const playerName = (id: PlayerId) =>
   id === "player-2" && !local.value
-    ? "Bilgisayar"
-    : names.value[id].trim() || (id === "player-1" ? "Oyuncu I" : "Oyuncu II");
+    ? t("Bilgisayar")
+    : names.value[id].trim() || t(id === "player-1" ? "Oyuncu I" : "Oyuncu II");
 watch(
   screen,
   async (value, previous) => {
@@ -325,7 +334,7 @@ function start() {
     aria-labelledby="welcome-title"
     :class="{ 'is-unavailable': welcomeArtFailed }"
   >
-    <h1 id="welcome-title" class="sr-only">Orlog</h1>
+    <h1 id="welcome-title" class="sr-only">{{ t("Orlog") }}</h1>
     <div class="welcome-stage">
       <picture v-if="!welcomeArtFailed" class="welcome-art">
         <source media="(min-width: 1024px)" srcset="/assets/art/welcome-orlog-desktop.webp" width="1672" height="941" />
@@ -333,115 +342,115 @@ function start() {
         <img
           src="/assets/art/welcome-orlog.webp"
           width="1536" height="1024" fetchpriority="high" decoding="async"
-          alt="Eivor ve Sigurd, fiyort manzarasına karşı Orlog oynuyor; oyma ahşap tanrılar masanın çevresinden oyunu izliyor."
+          :alt="t('Eivor ve Sigurd, fiyort manzarasına karşı Orlog oynuyor; oyma ahşap tanrılar masanın çevresinden oyunu izliyor.')"
           @error="welcomeArtFailed = true"
         />
       </picture>
-      <button class="welcome-play" @click="screen = 'mode'">Oyna</button>
+      <button class="welcome-play" @click="screen = 'mode'">{{ t("Oyna") }}</button>
     </div>
   </section>
   <section
     v-else-if="screen !== 'welcome'"
     class="setup-screen flow-screen"
     :class="[`screen-${screen}`, { 'cinematic-mode': screen === 'mode' && desktopWelcome, 'friend-open': friendOpen }]"
-    aria-label="Yeni oyun hazırlığı"
+    :aria-label="t('Yeni oyun hazırlığı')"
     :inert="introActive"
   >
-    <nav class="flow-navigation" aria-label="Hazırlık adımları">
+    <nav class="flow-navigation" :aria-label="t('Hazırlık adımları')">
       <button v-if="screen !== 'mode' || !desktopWelcome || friendOpen" class="text-button back-button" @click="goBack">
-        <UiIcon name="back" /> {{ rematching && room ? 'Odadan ayrıl' : 'Geri' }}
+        <UiIcon name="back" /> {{ t(rematching && room ? 'Odadan ayrıl' : 'Geri') }}
       </button>
       <span class="flow-nav-spacer"></span>
     </nav>
     <template v-if="screen === 'mode'">
       <div class="mode-body">
         <div v-if="!desktopWelcome" class="mode-intro flow-heading">
-          <h1 tabindex="-1">Masada kiminle karşılaşacaksın?</h1>
-          <p>Bir rakip seç. Sonra tanrılarını kuşanıp masaya geçelim.</p>
+          <h1 tabindex="-1">{{ t("Masada kiminle karşılaşacaksın?") }}</h1>
+          <p>{{ t("Bir rakip seç. Sonra tanrılarını kuşanıp masaya geçelim.") }}</p>
           <div class="mode-pantheon" aria-hidden="true"><FavorPortrait id="thors-strike" /><FavorPortrait id="iduns-rejuvenation" /><FavorPortrait id="freyjas-plenty" /></div>
-          <p class="mode-invitation">Her atış bir ihtimal.<br />Her tanrı başka bir yol.</p>
+          <p class="mode-invitation">{{ t("Her atış bir ihtimal.") }}<br />{{ t("Her tanrı başka bir yol.") }}</p>
         </div>
         <div class="mode-options">
-        <h1 v-if="desktopWelcome && !friendOpen" class="mode-brand" tabindex="-1" aria-label="Orlog — rakibini seç"><GameMark /><span>ORLOG</span></h1>
-        <div v-if="!desktopWelcome || !friendOpen" class="mode-selection" aria-label="Oyun modu">
+        <h1 v-if="desktopWelcome && !friendOpen" class="mode-brand" tabindex="-1" :aria-label="t('Orlog — rakibini seç')"><GameMark /><span>{{ t("ORLOG") }}</span></h1>
+        <div v-if="!desktopWelcome || !friendOpen" class="mode-selection" :aria-label="t('Oyun modu')">
           <button
             class="mode-robot-choice"
             :aria-pressed="desktopWelcome ? undefined : selectedMode === 'computer'"
-            aria-label="Robota karşı oyna"
+            :aria-label="t('Robota karşı oyna')"
             :disabled="networkBusy" @click="chooseComputer"
           >
             <img v-if="desktopWelcome" class="mode-scene" src="/assets/art/mode-robot.webp" width="1024" height="1536" alt="" decoding="async" />
             <span v-if="!desktopWelcome" class="mode-emblem"><UiIcon name="robot" /></span>
             <span class="mode-hover-shine" aria-hidden="true"></span>
-            <h2>Robota karşı</h2>
-            <p v-if="!desktopWelcome">Tanrılarını seç ve mücadeleye başla.</p>
-            <span class="mode-card-action"><span v-if="!desktopWelcome">Tek oyuncu</span><UiIcon name="arrow" /></span>
+            <h2>{{ t("Robota karşı") }}</h2>
+            <p v-if="!desktopWelcome">{{ t("Tanrılarını seç ve mücadeleye başla.") }}</p>
+            <span class="mode-card-action"><span v-if="!desktopWelcome">{{ t("Tek oyuncu") }}</span><UiIcon name="arrow" /></span>
           </button>
           <button
             class="mode-friend-choice"
             :aria-pressed="desktopWelcome ? undefined : selectedMode === 'friend'"
-            aria-label="Arkadaşınla oyna"
+            :aria-label="t('Arkadaşınla oyna')"
             @click="chooseFriend"
           >
             <img v-if="desktopWelcome" class="mode-scene" src="/assets/art/mode-friend.webp" width="1024" height="1536" alt="" decoding="async" />
             <span v-if="!desktopWelcome" class="mode-emblem"><UiIcon name="people" /></span>
             <span class="mode-hover-shine" aria-hidden="true"></span>
-            <h2>Arkadaşınla</h2>
-            <p v-if="!desktopWelcome">Aynı bilgisayarı paylaş veya kodla arkadaşına katıl.</p>
-            <span class="mode-card-action"><span v-if="!desktopWelcome">{{ selectedMode === "friend" ? "Seçildi" : "İki oyuncu" }}</span><UiIcon :name="!desktopWelcome && selectedMode === 'friend' ? 'check' : 'arrow'" /></span>
+            <h2>{{ t("Arkadaşınla") }}</h2>
+            <p v-if="!desktopWelcome">{{ t("Aynı bilgisayarı paylaş veya kodla arkadaşına katıl.") }}</p>
+            <span class="mode-card-action"><span v-if="!desktopWelcome">{{ t(selectedMode === "friend" ? "Seçildi" : "İki oyuncu") }}</span><UiIcon :name="!desktopWelcome && selectedMode === 'friend' ? 'check' : 'arrow'" /></span>
           </button>
         </div>
         <div v-if="selectedMode === 'friend' && (!desktopWelcome || friendOpen)" class="friend-area">
-          <div class="friend-heading"><h1 v-if="desktopWelcome" class="mode-friend-title" tabindex="-1">Arkadaşınla</h1><p>Nasıl buluşacaksınız?</p></div>
-          <div class="segmented-control" role="group" aria-label="Arkadaşınla oynama şekli">
+          <div class="friend-heading"><h1 v-if="desktopWelcome" class="mode-friend-title" tabindex="-1">{{ t("Arkadaşınla") }}</h1><p>{{ t("Nasıl buluşacaksınız?") }}</p></div>
+          <div class="segmented-control" role="group" :aria-label="t('Arkadaşınla oynama şekli')">
             <button v-for="path in friendPaths"
-              :key="path.id" :aria-pressed="friendMode === path.id" :disabled="networkBusy" @click="choosePath(path.id)"><UiIcon :name="path.icon" />{{ path.label }}</button>
+              :key="path.id" :aria-pressed="friendMode === path.id" :disabled="networkBusy" @click="choosePath(path.id)"><UiIcon :name="path.icon" />{{ t(path.label) }}</button>
           </div>
           <div v-if="friendMode === 'local'" class="friend-local">
             <div class="friend-seats" aria-hidden="true"><UiIcon name="people" /><span></span><UiIcon name="monitor" /><span></span><UiIcon name="people" /></div>
-            <h2>Bir masa, iki oyuncu.</h2>
-            <p>Yan yana oturun. Sırayla zar atıp aynı masayı paylaşın.</p>
+            <h2>{{ t("Bir masa, iki oyuncu.") }}</h2>
+            <p>{{ t("Yan yana oturun. Sırayla zar atıp aynı masayı paylaşın.") }}</p>
           </div>
           <template v-else>
-            <p id="room-note" class="preview-note">Kodu arkadaşınla paylaş. İkiniz de katılınca oda kurucusu oyunu başlatır.</p>
+            <p id="room-note" class="preview-note">{{ t("Kodu arkadaşınla paylaş. İkiniz de katılınca oda kurucusu oyunu başlatır.") }}</p>
             <div v-if="isHost" class="friend-room-inline">
-              <div><span class="room-code-label">Davet kodu</span><strong class="room-code">{{ room?.code ?? (networkBusy ? '…' : '—') }}</strong></div>
-              <button v-if="room" class="secondary-action" @click="copyCode"><UiIcon name="copy" />{{ copied ? 'Kod kopyalandı' : 'Kodu kopyala' }}</button>
-              <button v-else class="secondary-action" :disabled="networkBusy" @click="online.create()">{{ networkBusy ? 'Oda kuruluyor…' : 'Yeniden dene' }}</button>
+              <div><span class="room-code-label">{{ t("Davet kodu") }}</span><strong class="room-code">{{ t(room?.code ?? (networkBusy ? '…' : '—')) }}</strong></div>
+              <button v-if="room" class="secondary-action" @click="copyCode"><UiIcon name="copy" />{{ t(copied ? 'Kod kopyalandı' : 'Kodu kopyala') }}</button>
+              <button v-else class="secondary-action" :disabled="networkBusy" @click="online.create()">{{ t(networkBusy ? 'Oda kuruluyor…' : 'Yeniden dene') }}</button>
             </div>
             <form v-else-if="!roomJoined" class="friend-join-form" @submit.prevent="joinRoom">
-              <label for="room-code">Oda kodu</label>
-              <div class="friend-code-entry"><input id="room-code" v-model="roomCode" autocomplete="off" inputmode="numeric" spellcheck="false" maxlength="4" placeholder="Örn. 0427"
+              <label for="room-code">{{ t("Oda kodu") }}</label>
+              <div class="friend-code-entry"><input id="room-code" v-model="roomCode" autocomplete="off" inputmode="numeric" spellcheck="false" maxlength="4" :placeholder="t('Örn. 0427')"
                 :disabled="networkBusy" :aria-invalid="!!networkError" :aria-describedby="networkError ? 'room-note room-error' : 'room-note'" />
-                <button class="secondary-action" type="submit" :disabled="networkBusy">{{ networkBusy ? 'Katılıyor…' : 'Katıl' }}</button></div>
+                <button class="secondary-action" type="submit" :disabled="networkBusy">{{ t(networkBusy ? 'Katılıyor…' : 'Katıl') }}</button></div>
             </form>
-            <div v-else class="friend-room-inline"><div><span class="room-code-label">Katıldığın oda</span><strong class="room-code">{{ room?.code }}</strong></div></div>
-            <div v-if="room" class="room-players" aria-label="Odadaki oyuncular">
-              <div class="room-player"><UiIcon name="people" /><span><strong>Oda sahibi</strong><small>{{ isHost ? 'Sen' : 'Arkadaşın' }}</small></span><UiIcon name="check" /></div>
-              <div class="room-player" :class="{ 'is-waiting': isHost && !guestPresent }"><UiIcon :name="isHost && !guestPresent ? 'people' : 'check'" /><span><strong>Misafir</strong><small>{{ isHost ? guestPresent ? 'Arkadaşın' : 'Henüz katılmadı' : 'Sen' }}</small></span><span class="room-presence" :class="{ ready: !isHost || guestPresent }"></span></div>
+            <div v-else class="friend-room-inline"><div><span class="room-code-label">{{ t("Katıldığın oda") }}</span><strong class="room-code">{{ t(room?.code) }}</strong></div></div>
+            <div v-if="room" class="room-players" :aria-label="t('Odadaki oyuncular')">
+              <div class="room-player"><UiIcon name="people" /><span><strong>{{ t("Oda sahibi") }}</strong><small>{{ t(isHost ? 'Sen' : 'Arkadaşın') }}</small></span><UiIcon name="check" /></div>
+              <div class="room-player" :class="{ 'is-waiting': isHost && !guestPresent }"><UiIcon :name="isHost && !guestPresent ? 'people' : 'check'" /><span><strong>{{ t("Misafir") }}</strong><small>{{ t(isHost ? guestPresent ? 'Arkadaşın' : 'Henüz katılmadı' : 'Sen') }}</small></span><span class="room-presence" :class="{ ready: !isHost || guestPresent }"></span></div>
             </div>
             <div class="friend-room-status" role="status" aria-live="polite" :class="{ 'is-waiting': isHost && !guestPresent, 'is-ready': roomReady }">
               <span class="room-status-mark" aria-hidden="true"><UiIcon :name="roomReady ? 'check' : 'people'" /></span>
-              <span>{{ networkBusy ? 'Bağlantı kuruluyor…' : roomStatus }}<small v-if="room">{{ room.players.filter(player => player.connected).length }} / 2 oyuncu</small></span>
+              <span>{{ t(networkBusy ? 'Bağlantı kuruluyor…' : roomStatus) }}<small v-if="room">{{ t(room.players.filter(player => player.connected).length) }} {{ t("/ 2 oyuncu") }}</small></span>
             </div>
-            <p v-if="networkError" id="room-error" class="field-error" role="alert">{{ networkError }}</p>
-            <button v-if="room" class="text-button" :disabled="networkBusy" @click="online.leave()">Odadan ayrıl</button>
+            <p v-if="networkError" id="room-error" class="field-error" role="alert">{{ t(networkError) }}</p>
+            <button v-if="room" class="text-button" :disabled="networkBusy" @click="online.leave()">{{ t("Odadan ayrıl") }}</button>
           </template>
         </div>
         </div>
       </div>
       <div v-if="!desktopWelcome || friendOpen" class="flow-footer">
-        <span>{{ onlineMode ? isHost ? 'Arkadaşınla çevrim içi' : 'Oda kurucusunun başlatması bekleniyor' : selectedMode === 'friend' ? 'Aynı masada iki kişi' : 'Sen ve bilgisayar' }}</span>
-        <button v-if="!onlineMode || isHost" class="primary-action" :disabled="!roomReady" @click="continueMode">{{ onlineMode ? 'Oyunu başlat' : 'Tanrılarını seç' }}<UiIcon name="arrow" /></button>
+        <span>{{ t(onlineMode ? isHost ? 'Arkadaşınla çevrim içi' : 'Oda kurucusunun başlatması bekleniyor' : selectedMode === 'friend' ? 'Aynı masada iki kişi' : 'Sen ve bilgisayar') }}</span>
+        <button v-if="!onlineMode || isHost" class="primary-action" :disabled="!roomReady" @click="continueMode">{{ t(onlineMode ? 'Oyunu başlat' : 'Tanrılarını seç') }}<UiIcon name="arrow" /></button>
       </div>
     </template>
     <template v-else-if="screen === 'gods'">
       <div class="flow-heading gods-heading">
         <div>
-          <h1 tabindex="-1">Tanrılarını yanına al.</h1>
-          <p>Yirmi tanrıdan üçü seninle masaya oturacak.</p>
+          <h1 tabindex="-1">{{ t("Tanrılarını yanına al.") }}</h1>
+          <p>{{ t("Yirmi tanrıdan üçü seninle masaya oturacak.") }}</p>
         </div>
-        <div v-if="local || room" class="player-tabs" aria-label="Tanrılarını seçtiğin oyuncu">
+        <div v-if="local || room" class="player-tabs" :aria-label="t('Tanrılarını seçtiğin oyuncu')">
           <button
             v-for="id in PLAYER_IDS"
             :key="id"
@@ -449,25 +458,23 @@ function start() {
             :disabled="room ? id !== ownId : !local && id === 'player-2'"
             @click="editingPlayer = id"
           >
-            {{ playerName(id) }} <span>{{ readyPlayers[id] || (room?.players.find(player => player.id === id)?.ready) ? 'Hazır' : `${loadouts[id].length}/3` }}</span>
+            {{ playerName(id) }} <span>{{ t(readyPlayers[id] || (room?.players.find(player => player.id === id)?.ready) ? 'Hazır' : `${loadouts[id].length}/3`) }}</span>
           </button>
         </div>
       </div>
       <div class="gods-layout">
         <section class="god-description" aria-live="polite">
-          <div class="description-heading"><FavorPortrait :id="browsing" /><div><h2>{{ shortName(browsing) }}</h2><p class="god-effect-summary" :data-tone="favorSummary(browsing).tone"><UiIcon :name="favorSummary(browsing).icon" />{{ favorSummary(browsing).label }}</p></div></div>
+          <div class="description-heading"><FavorPortrait :id="browsing" /><div><h2>{{ t(shortName(browsing)) }}</h2><p class="god-effect-summary" :data-tone="favorSummary(browsing).tone"><UiIcon :name="favorSummary(browsing).icon" />{{ t(favorSummary(browsing).label) }}</p></div></div>
           <p class="favor-timing">
-            {{
-              FAVOR_CATALOG[browsing].timing === "before-resolution"
+            {{ t(FAVOR_CATALOG[browsing].timing === "before-resolution"
                 ? "Savaş öncesi"
-                : "Savaş sonrası"
-            }}
-            · Öncelik {{ FAVOR_CATALOG[browsing].priority }}
+                : "Savaş sonrası") }}
+            {{ t("· Öncelik") }} {{ t(FAVOR_CATALOG[browsing].priority) }}
           </p>
           <dl>
             <div v-for="tier in [1, 2, 3] as const" :key="tier">
-              <dt>{{ FAVOR_CATALOG[browsing].tiers[tier].cost }}<TokenIcon /><span class="sr-only"> jeton</span></dt>
-              <dd>{{ describeFavorTier(browsing, tier) }}</dd>
+              <dt>{{ t(FAVOR_CATALOG[browsing].tiers[tier].cost) }}<TokenIcon /><span class="sr-only"> {{ t(" jeton") }}</span></dt>
+              <dd>{{ t(describeFavorTier(browsing, tier)) }}</dd>
             </div>
           </dl>
           <p
@@ -477,11 +484,11 @@ function start() {
             "
             class="selection-hint"
           >
-            Kuşanmak için önce seçili bir tanrıyı kaldır.
+            {{ t("Kuşanmak için önce seçili bir tanrıyı kaldır.") }}
           </p>
         </section>
         <div class="god-selection">
-          <div class="god-gallery" role="group" aria-label="20 tanrı kataloğu">
+          <div class="god-gallery" role="group" :aria-label="t('20 tanrı kataloğu')">
             <button
               v-for="id in FAVOR_ART_IDS"
               :key="id"
@@ -489,29 +496,29 @@ function start() {
               :class="{ browsing: browsing === id }"
               :aria-pressed="currentLoadout.includes(id)"
               :aria-disabled="loadoutLocked"
-              :aria-label="`${shortName(id)}, ${favorSummary(id).label}${currentLoadout.includes(id) ? ', kuşanıldı; kaldır' : currentLoadout.length === 3 ? ', seçim sınırı dolu; gücü incele' : ', kuşan'}`"
+              :aria-label="t(`${shortName(id)}, ${t(favorSummary(id).label)}${t(currentLoadout.includes(id) ? ', kuşanıldı; kaldır' : currentLoadout.length === 3 ? ', seçim sınırı dolu; gücü incele' : ', kuşan')}`)"
               @pointerenter="browsing = id"
               @focus="browsing = id"
               @click="toggleFavor(id)"
             >
               <FavorPortrait :id="id" />
-              <span v-if="currentLoadout.includes(id)" class="god-equipped"><UiIcon name="check" /><span class="sr-only">Kuşanıldı</span></span>
-              <span class="god-tile-copy"><span class="god-tile-name">{{ shortName(id) }}</span>
-                <span class="god-tile-power" :data-tone="favorSummary(id).tone"><UiIcon :name="favorSummary(id).icon" /><span>{{ favorSummary(id).label }}</span></span>
+              <span v-if="currentLoadout.includes(id)" class="god-equipped"><UiIcon name="check" /><span class="sr-only">{{ t("Kuşanıldı") }}</span></span>
+              <span class="god-tile-copy"><span class="god-tile-name">{{ t(shortName(id)) }}</span>
+                <span class="god-tile-power" :data-tone="favorSummary(id).tone"><UiIcon :name="favorSummary(id).icon" /><span>{{ t(favorSummary(id).label) }}</span></span>
               </span>
             </button>
           </div>
           <aside
             class="loadout-sidebar"
-            aria-label="Seçilen tanrılar"
+            :aria-label="t('Seçilen tanrılar')"
           >
             <label class="name-field" v-if="editingPlayer === 'player-1' || local"
-              >Oyuncu adı<input v-model="names[editingPlayer]" maxlength="28" :disabled="loadoutLocked"
+              >{{ t("Oyuncu adı") }}<input v-model="names[editingPlayer]" maxlength="28" :disabled="loadoutLocked"
             /></label>
             <div class="loadout-heading">
-              <h2>Yanındaki tanrılar</h2>
+              <h2>{{ t("Yanındaki tanrılar") }}</h2>
               <span role="status" aria-live="polite"
-                >{{ currentLoadout.length }} / 3</span
+                >{{ t(currentLoadout.length) }} / 3</span
               >
             </div>
             <div class="chosen-gods">
@@ -521,15 +528,15 @@ function start() {
                 class="chosen-god"
               >
                 <FavorPortrait :id="id" /><span
-                  ><small>{{ index + 1 }}. tanrı</small
-                  ><strong>{{ shortName(id) }}</strong></span
+                  ><small>{{ t(index + 1) }}{{ t(". tanrı") }}</small
+                  ><strong>{{ t(shortName(id)) }}</strong></span
                 ><button
                   class="icon-button"
                   :disabled="loadoutLocked"
-                  :aria-label="`${shortName(id)} tanrısını kaldır`"
+                  :aria-label="t(`${shortName(id)} tanrısını kaldır`)"
                   @click="toggleFavor(id)"
                 >
-                  <UiIcon name="close" /><span>Kaldır</span>
+                  <UiIcon name="close" /><span>{{ t("Kaldır") }}</span>
                 </button>
               </div>
               <div
@@ -537,66 +544,60 @@ function start() {
                 :key="`empty-${slot}`"
                 class="empty-god"
               >
-                <span>{{ currentLoadout.length + slot }}</span
-                >Bir tanrı seç
+                <span>{{ t(currentLoadout.length + slot) }}</span
+                >{{ t("Bir tanrı seç") }}
               </div>
             </div>
           </aside>
         </div>
       </div>
       <div class="flow-footer">
-        <span v-if="networkError" class="field-error" role="alert">{{ networkError }}</span>
-        <span v-else-if="room && ownReady" role="status">Tanrıların hazır. Değiştirmek için Hazır değilim seç.</span>
-        <span v-else-if="selectionError" class="selection-warning" role="alert">{{ selectionError }}</span>
-        <span v-else>{{
-          currentLoadout.length === 3
+        <span v-if="networkError" class="field-error" role="alert">{{ t(networkError) }}</span>
+        <span v-else-if="room && ownReady" role="status">{{ t("Tanrıların hazır. Değiştirmek için Hazır değilim seç.") }}</span>
+        <span v-else-if="selectionError" class="selection-warning" role="alert">{{ t(selectionError) }}</span>
+        <span v-else>{{ t(currentLoadout.length === 3
             ? "Üç tanrın hazır."
-            : `${3 - currentLoadout.length} tanrı daha seç.`
-        }}</span
+            : `${3 - currentLoadout.length} tanrı daha seç.`) }}</span
         ><button
           class="primary-action"
           :disabled="!canContinueGods"
           @click="continueGods"
         >
-          {{
-            room && ownReady ? 'Hazır değilim' : room || rematching ? 'Hazırım' : local && editingPlayer === "player-1"
+          {{ t(room && ownReady ? 'Hazır değilim' : room || rematching ? 'Hazırım' : local && editingPlayer === "player-1"
               ? "İkinci oyuncunun tanrıları"
-              : "İlk hamleyi belirle"
-          }}<UiIcon name="arrow" />
+              : "İlk hamleyi belirle") }}<UiIcon name="arrow" />
         </button>
       </div>
     </template>
     <template v-else>
       <div class="coin-screen">
-        <h1 tabindex="-1">İlk hamle kaderden.</h1>
-        <p>Tanrılar seçildi. İlk zarı kimin atacağını belirleyelim.</p>
+        <h1 tabindex="-1">{{ t("İlk hamle kaderden.") }}</h1>
+        <p>{{ t("Tanrılar seçildi. İlk zarı kimin atacağını belirleyelim.") }}</p>
         <div class="coin-stage">
           <div
             class="toss-coin"
             :class="{ tossed: firstPlayer, 'lands-on-two': firstPlayer === 'player-2' }"
             :key="firstPlayer ?? 'untossed'"
             role="img"
-            :aria-label="firstPlayer ? `${firstPlayer === 'player-1' ? 'I' : 'II'} yüzü: ${playerName(firstPlayer)}` : 'İki yüzlü demir ve altın sikke: I ve II'"
+            :aria-label="t(firstPlayer ? `${firstPlayer === 'player-1' ? 'I' : 'II'} yüzü: ${playerName(firstPlayer)}` : 'İki yüzlü demir ve altın sikke: I ve II')"
           >
             <img class="coin-face coin-front" src="/assets/art/toss-coin-i.webp" width="512" height="512" alt="" aria-hidden="true" />
             <img class="coin-face coin-back" src="/assets/art/toss-coin-ii.webp" width="512" height="512" alt="" aria-hidden="true" />
           </div>
         </div>
         <p class="coin-announcement" role="status" aria-live="polite">
-          {{
-            firstPlayer
+          {{ t(firstPlayer
               ? `${firstPlayer === "player-1" ? "I" : "II"} · ${playerName(firstPlayer)} ilk başlayacak.`
-              : "Yazı mı, tura mı? Şans iki tarafa da eşit."
-          }}
+              : "Yazı mı, tura mı? Şans iki tarafa da eşit.") }}
         </p>
         <button v-if="!firstPlayer && (!room || isHost)" class="primary-action" :disabled="networkBusy || (!!room && !online.bothConnected.value)" @click="toss">
-          Yazı tura at <UiIcon name="arrow" /></button
+          {{ t("Yazı tura at") }} <UiIcon name="arrow" /></button
         ><button v-else-if="firstPlayer && (!room || isHost)" data-coin-start class="primary-action" :disabled="networkBusy || (!!room && !online.bothConnected.value)" @click="start">
-          Masaya geç
+          {{ t("Masaya geç") }}
           <UiIcon name="arrow" />
         </button>
-        <p v-if="room && !isHost" class="preview-note" role="status">{{ firstPlayer ? 'Oda kurucusunun masayı açması bekleniyor…' : 'Oda kurucusunun yazı tura atması bekleniyor…' }}</p>
-        <p v-if="networkError" class="field-error" role="alert">{{ networkError }}</p>
+        <p v-if="room && !isHost" class="preview-note" role="status">{{ t(firstPlayer ? 'Oda kurucusunun masayı açması bekleniyor…' : 'Oda kurucusunun yazı tura atması bekleniyor…') }}</p>
+        <p v-if="networkError" class="field-error" role="alert">{{ t(networkError) }}</p>
         <div class="coin-loadouts">
           <div v-for="id in PLAYER_IDS" :key="id">
             <strong>{{ playerName(id) }}</strong>

@@ -6,6 +6,7 @@ bir hayran yapımı zar oyunu. Ubisoft ile resmî bağlantısı yoktur.
 - Robota karşı, aynı bilgisayarda iki kişi veya oda koduyla çevrim içi oyun.
 - Fizik tabanlı 3B zarlar, 20 tanrı gücü ve olaylarla eşleşen animasyonlar.
 - Yerel müzik/ses ayarları, klavye kontrolleri ve azaltılmış hareket desteği.
+- English, Türkçe, Français ve Deutsch; ilk ziyarette İngilizce arayüz.
 
 ## Kurulum
 

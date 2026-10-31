@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../i18n';
 import { computed, watch, onMounted, onBeforeUnmount, ref, nextTick } from "vue";
 import { createDieHighlight } from "./dieHighlight";
 import type { DieId, PlayerState, PlayerId } from "../core";
@@ -27,7 +28,7 @@ const inspected = computed(() => inspectableDice(
   .map(target => {
     if (!mobile.value || props.draftSelectedIds == null || !target.canSelect) return target;
     const selected = props.draftSelectedIds.includes(target.id);
-    return { ...target, selected, label: `${target.label.split(';')[0]}; ${selected ? 'saklamak için seçildi, geri al' : 'yeniden atılacak, saklamak için seç'} (bekleyen seçim)` };
+    return { ...target, selected, label: t('{0}; {1} (bekleyen seçim)', [target.label.split(';')[0], t(selected ? 'saklamak için seçildi, geri al' : 'yeniden atılacak, saklamak için seç')]) };
   }));
 const size = ref({ width: 0, height: 0 });
 const mobile = computed(() => size.value.width > 0 && (size.value.width <= 600 ||
@@ -261,7 +262,7 @@ function navigate(event: KeyboardEvent) {
     class="scene-die-controls"
     :class="{ 'mobile-die-controls': mobile }"
     role="group"
-    aria-label="Masadaki zarları incele ve seç"
+    :aria-label="t('Masadaki zarları incele ve seç')"
     @keydown="navigate"
     @keydown.esc.stop="closePreview"
     @contextmenu.prevent
@@ -273,8 +274,8 @@ function navigate(event: KeyboardEvent) {
         :key="target.id" :x1="`${target.sourceX}%`" :y1="`${target.sourceY}%`"
         :x2="`${target.x}%`" :y2="`${target.y}%`" />
     </svg>
-    <span v-if="mobile && controls.some(t => t.lane === 'bowl')" class="die-lane-label" data-lane="bowl" :style="{ top: `${metrics.top - 20}px`, left: `${safeArea.left + metrics.availableWidth / 2}px` }" aria-hidden="true">Sen · Hazne</span>
-    <div v-for="group in renderGroups" :key="group.id" class="die-target-list" :class="{ 'is-overflow': overflow && group.id === 'slots', 'is-short': size.height - safeArea.top - safeArea.bottom < 100 }" :style="group.id === 'slots' ? listStyle : {}" :role="overflow ? 'group' : undefined" :aria-label="overflow ? 'Masadaki zarlar, kaydırarak incele ve seç' : undefined">
+    <span v-if="mobile && controls.some(t => t.lane === 'bowl')" class="die-lane-label" data-lane="bowl" :style="{ top: `${metrics.top - 20}px`, left: `${safeArea.left + metrics.availableWidth / 2}px` }" aria-hidden="true">{{ t("Sen · Hazne") }}</span>
+    <div v-for="group in renderGroups" :key="group.id" class="die-target-list" :class="{ 'is-overflow': overflow && group.id === 'slots', 'is-short': size.height - safeArea.top - safeArea.bottom < 100 }" :style="group.id === 'slots' ? listStyle : {}" :role="overflow ? 'group' : undefined" :aria-label="t(overflow ? 'Masadaki zarlar, kaydırarak incele ve seç' : undefined)">
     <div class="die-slot-surface" :style="group.id === 'slots' ? surfaceStyle : {}">
     <component
       :is="disabled && mobile ? 'span' : 'button'"
@@ -287,7 +288,7 @@ function navigate(event: KeyboardEvent) {
         zIndex: target.combatRole ? 5 : aimed === target.id ? 3 : undefined,
       }"
       :aria-hidden="disabled ? true : undefined"
-      :aria-label="disabled ? undefined : mobile ? `${target.label}; basılı tutarak veya F1 ile incele` : target.label"
+      :aria-label="t(disabled ? undefined : mobile ? `${target.label}; basılı tutarak veya F1 ile incele` : target.label)"
       :aria-keyshortcuts="mobile && !disabled ? 'F1' : undefined"
       :aria-pressed="target.canSelect ? target.selected : undefined"
       :aria-disabled="disabled"
@@ -313,24 +314,24 @@ function navigate(event: KeyboardEvent) {
         <SymbolIcon :symbol="target.face.symbol" />
         <span v-if="target.face.grantsToken" class="die-target-token"><TokenIcon /></span>
         <span v-if="target.selected || target.location === 'Kilitli'" class="die-target-check" aria-hidden="true">✓</span>
-        <span v-if="target.value !== 1" class="die-target-value" aria-hidden="true">×{{ target.value }}</span>
+        <span v-if="target.value !== 1" class="die-target-value" aria-hidden="true">×{{ t(target.value) }}</span>
       </template>
-      <span class="sr-only">{{ target.label }}</span>
+      <span class="sr-only">{{ t(target.label) }}</span>
     </component>
     </div>
     </div>
-    <div v-if="preview" ref="previewElement" id="die-face-preview" class="die-face-preview" :role="mobile ? 'region' : 'tooltip'" :aria-label="mobile ? 'Zar bilgisi' : undefined" :style="previewStyle">
+    <div v-if="preview" ref="previewElement" id="die-face-preview" class="die-face-preview" :role="mobile ? 'region' : 'tooltip'" :aria-label="t(mobile ? 'Zar bilgisi' : undefined)" :style="previewStyle">
       <div class="die-preview-content">
       <div class="die-preview-face" :class="{ 'grants-token': preview.face.grantsToken }">
         <SymbolIcon :symbol="preview.face.symbol" />
         <TokenIcon v-if="mobile && preview.face.grantsToken" class="die-preview-coin" />
       </div>
-      <strong>{{ preview.name }}<span v-if="preview.value !== 1"> × {{ preview.value }}</span></strong>
-      <span class="die-preview-effect">{{ preview.description }}</span>
-      <span v-if="preview.face.grantsToken" class="die-preview-token">Jeton getirir</span>
-      <span class="die-preview-owner">{{ preview.owner }} · {{ preview.location }}</span>
+      <strong>{{ t(preview.name) }}<span v-if="preview.value !== 1"> × {{ t(preview.value) }}</span></strong>
+      <span class="die-preview-effect">{{ t(preview.description) }}</span>
+      <span v-if="preview.face.grantsToken" class="die-preview-token">{{ t("Jeton getirir") }}</span>
+      <span class="die-preview-owner">{{ t(preview.owner) }} · {{ t(preview.location) }}</span>
       </div>
-      <button v-if="mobile" type="button" class="die-preview-close" @click="closePreview">Kapat</button>
+      <button v-if="mobile" type="button" class="die-preview-close" @click="closePreview">{{ t("Kapat") }}</button>
     </div>
   </div>
 </template>

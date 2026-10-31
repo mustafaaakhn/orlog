@@ -6,6 +6,8 @@
   position: fixed;
   inset: 76px clamp(16px, 3.3vw, 64px) auto auto;
   width: 220px;
+  max-height: calc(100dvh - 92px);
+  overflow-y: auto;
   max-width: calc(100vw - 32px);
   margin: 0;
   padding: 16px;

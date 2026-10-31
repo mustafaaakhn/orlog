@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../i18n';
 import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 import type { FavorId, FavorInput, FavorLevel, GameState, PlayerId } from '../core'
 import FavorPicker from './FavorPicker.vue'
@@ -87,27 +88,27 @@ onUnmounted(() => {
 <template>
   <button ref="trigger" class="mobile-favor-trigger secondary-action" :disabled="blocked"
     aria-haspopup="dialog" aria-controls="mobile-favor-panel" :aria-expanded="opened" @click="open">
-    Tanrı gücü
+    {{ t("Tanrı gücü") }}
   </button>
   <dialog ref="panel" id="mobile-favor-panel" class="mobile-favor-panel" aria-modal="true"
     aria-labelledby="mobile-favor-title" @cancel.prevent="close"
     @pointerdown="outside = outsidePanel($event)" @pointerup="endPointer" @pointercancel="outside = false">
     <header class="mobile-favor-heading">
-      <h2 id="mobile-favor-title">Tanrı gücü</h2>
-      <button type="button" autofocus @click="close">Kapat</button>
+      <h2 id="mobile-favor-title">{{ t("Tanrı gücü") }}</h2>
+      <button type="button" autofocus @click="close">{{ t("Kapat") }}</button>
     </header>
     <div class="mobile-favor-scroll">
-      <div class="mobile-favor-sides" role="group" aria-label="İncelenen tanrılar">
+      <div class="mobile-favor-sides" role="group" :aria-label="t('İncelenen tanrılar')">
         <button v-for="id in [viewerId, viewerId === 'player-1' ? 'player-2' : 'player-1'] as const"
           :key="id" :aria-pressed="ownerId === id" @click="ownerId = id">
-          {{ id === viewerId ? 'Senin tanrıların' : 'Rakibin tanrıları' }}
+          {{ t(id === viewerId ? 'Senin tanrıların' : 'Rakibin tanrıları') }}
         </button>
       </div>
       <p class="mobile-favor-owner">{{ names[ownerId] }}</p>
-      <p class="mobile-favor-balance"><TokenIcon /> Mevcut jeton: <strong>{{ owner.tokens }}</strong></p>
-      <p class="mobile-favor-help">{{ canAct
+      <p class="mobile-favor-balance"><TokenIcon /> {{ t("Mevcut jeton:") }} <strong>{{ t(owner.tokens) }}</strong></p>
+      <p class="mobile-favor-help">{{ t(canAct
         ? 'Seviye ve gerekiyorsa hedef seç; Gücü onayla ile kesinleştir. Bedel, gücün sırası geldiğinde ödenir.'
-        : 'Tanrıları inceliyorsun. Güç seçimi yalnız kendi tanrı gücü sıranda yapılabilir.' }}</p>
+        : 'Tanrıları inceliyorsun. Güç seçimi yalnız kendi tanrı gücü sıranda yapılabilir.') }}</p>
       <div class="mobile-favor-list">
         <FavorPicker v-for="id in owner.favors" :key="`${ownerId}/${id}`" :favor-id="id"
           :state="state" :player="owner" :disabled="!canAct" :preview="!canAct"
@@ -115,7 +116,7 @@ onUnmounted(() => {
       </div>
     </div>
     <footer v-if="canAct" class="mobile-favor-footer">
-      <button class="secondary-action" @click="skip">Güç kullanmadan devam et</button>
+      <button class="secondary-action" @click="skip">{{ t("Güç kullanmadan devam et") }}</button>
     </footer>
   </dialog>
 </template>

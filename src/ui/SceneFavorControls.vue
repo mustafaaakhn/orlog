@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../i18n';
 import { ref } from 'vue'
 import { closestDieTarget } from '../scene/dieTargets'
 import { FAVOR_CATALOG } from '../core'
@@ -25,7 +26,7 @@ function activate(event: MouseEvent, target: SceneFavorTarget) {
 </script>
 
 <template>
-  <div class="scene-favor-controls" role="group" aria-label="Masadaki tanrılar" @pointermove="aim" @pointerleave="emit('highlight', null)">
+  <div class="scene-favor-controls" role="group" :aria-label="t('Masadaki tanrılar')" @pointermove="aim" @pointerleave="emit('highlight', null)">
     <button
       v-for="target in targets"
       :key="`${target.playerId}/${target.favorId}`"
@@ -36,12 +37,12 @@ function activate(event: MouseEvent, target: SceneFavorTarget) {
       :aria-haspopup="target.playerId === activePlayer ? 'dialog' : undefined"
       :aria-expanded="target.playerId === activePlayer ? pinnedTarget?.favorId === target.favorId && pinnedTarget?.playerId === target.playerId : undefined"
       :aria-controls="target.playerId === activePlayer ? 'table-favor-menu' : undefined"
-      :aria-label="`${target.playerId === 'player-1' ? 'Oyuncu I' : 'Oyuncu II'}: ${FAVOR_CATALOG[target.favorId].name}`"
+      :aria-label="t(`${t(target.playerId === 'player-1' ? 'Oyuncu I' : 'Oyuncu II')}: ${t(FAVOR_CATALOG[target.favorId].name)}`)"
       @pointerenter="inspect(target)"
       @pointerleave="emit('highlight', null)"
       @focus="inspect(target)"
       @blur="emit('highlight', null)"
       @click="activate($event, target)"
-    ><span class="favor-target-name">{{ FAVOR_CATALOG[target.favorId].name.split("'")[0] }}</span></button>
+    ><span class="favor-target-name">{{ t(FAVOR_CATALOG[target.favorId].name.split("'")[0]) }}</span></button>
   </div>
 </template>

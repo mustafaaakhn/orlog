@@ -49,7 +49,7 @@ kopyaları tepe −3 dB olacak şekilde dengelenip 192 kbit/s olarak kodlanmış
 
 Dosyalar: `dice-0`, `dice-1`, `dice-2`, `dice-3`, `dice-roll`, `attack`, `block`,
 `token`, `favor`, `heal`, `earn-money`, `coin-flip`, `game-start`, `victory`,
-`defeat`, `ambience` (`.mp3`). Güncel katalog bunları kullanır; eski WAV kayıtları
+`defeat`, `ambience` (`.mp3`). Ortam kaydı sonradan oynatma kataloğundan çıkarıldı; eski WAV kayıtları
 ve üretim araçları yerel arşive taşınmıştır. Oyun API isteği yapmaz.
 
 Kaynaklar: [ElevenLabs Sound Effects](https://elevenlabs.io/sound-effects),

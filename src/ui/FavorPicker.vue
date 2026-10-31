@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../i18n';
 import { computed, ref, watch } from "vue";
 import {
   FAVOR_CATALOG,
@@ -98,14 +99,12 @@ function confirm() {
         <div class="favor-card-heading">
           <FavorPortrait :id="id" />
           <div>
-            <h3>{{ FAVOR_CATALOG[id].name }}</h3>
+            <h3>{{ t(FAVOR_CATALOG[id].name) }}</h3>
             <p>
-              Öncelik {{ FAVOR_CATALOG[id].priority }} ·
-              {{
-                FAVOR_CATALOG[id].timing === "before-resolution"
+              {{ t("Öncelik") }} {{ t(FAVOR_CATALOG[id].priority) }} ·
+              {{ t(FAVOR_CATALOG[id].timing === "before-resolution"
                   ? "Savaş öncesi"
-                  : "Savaş sonrası"
-              }}
+                  : "Savaş sonrası") }}
             </p>
           </div>
         </div>
@@ -119,8 +118,8 @@ function confirm() {
           @click="!preview && select(id, tier)"
         >
           <span class="tier-cost"
-            ><span>{{ FAVOR_CATALOG[id].tiers[tier].cost }}<span class="sr-only"> jeton</span></span><TokenIcon /></span
-          ><span class="tier-effect">{{ describeFavorTier(id, tier) }}<small class="tier-label">Seviye {{ tier }}<span v-if="selected === id && level === tier"> · Seçildi</span></small></span>
+            ><span>{{ t(FAVOR_CATALOG[id].tiers[tier].cost) }}<span class="sr-only"> {{ t(" jeton") }}</span></span><TokenIcon /></span
+          ><span class="tier-effect">{{ t(describeFavorTier(id, tier)) }}<small class="tier-label">{{ t("Seviye") }} {{ t(tier) }}<span v-if="selected === id && level === tier"> {{ t("· Seçildi") }}</span></small></span>
         </component>
       </article>
     </div>
@@ -129,28 +128,26 @@ function confirm() {
       class="favor-targets"
       :disabled="disabled"
     >
-      <legend>{{ definition.name }} · Seviye {{ level }}</legend>
+      <legend>{{ t(definition.name) }} {{ t("· Seviye") }} {{ t(level) }}</legend>
       <template
         v-if="
           definition.target === 'any-dice' || definition.target === 'enemy-dice'
         "
       >
         <p>
-          {{ definition.tiers[level].amount }} zar seç. Seçim sırası:
-          {{
-            dieIds
+          {{ t(definition.tiers[level].amount) }} {{ t("zar seç. Seçim sırası:") }}
+          {{ t(dieIds
               .map((id) =>
                 id.replace("player-1/", "I / ").replace("player-2/", "II / "),
               )
-              .join(", ") || "—"
-          }}
+              .join(", ") || "—") }}
         </p>
         <template v-for="owner in state.players" :key="owner.id">
           <div
             v-if="definition.target === 'any-dice' || owner.id !== player.id"
             class="target-dice"
           >
-            <p>Oyuncu {{ owner.id === "player-1" ? "I" : "II" }}</p>
+            <p>{{ t("Oyuncu") }} {{ t(owner.id === "player-1" ? "I" : "II") }}</p>
             <label
               v-for="(die, i) in owner.dice.filter(
                 (d) => !d.removed && d.faceId,
@@ -169,17 +166,16 @@ function confirm() {
               <SymbolIcon
                 :symbol="getDieFace(die.definitionId, die.faceId!).symbol"
               />
-              Zar {{ i + 1 }}
+              {{ t("Zar") }} {{ t(i + 1) }}
             </label>
           </div>
         </template>
         <p>
-          Seviye düşerse ilk hedefler kullanılır. Önceden kaldırılan hedef
-          atlanır.
+          {{ t("Seviye düşerse ilk hedefler kullanılır. Önceden kaldırılan hedef atlanır.") }}
         </p>
       </template>
       <label v-else-if="definition.target === 'health'"
-        >Feda edilecek can (0–{{ player.health }})
+        >{{ t("Feda edilecek can (0–") }}{{ t(player.health) }})
         <input
           v-model.number="health"
           type="number"
@@ -188,34 +184,31 @@ function confirm() {
           step="1"
         />
         <span
-          >Çağırma anındaki canla sınırlanır. Son canını feda edersen maçı
-          kaybedersin.</span
+          >{{ t("Çağırma anındaki canla sınırlanır. Son canını feda edersen maçı kaybedersin.") }}</span
         >
       </label>
       <label v-else-if="definition.target === 'majority'"
-        >Çoğunluk simgesi
+        >{{ t("Çoğunluk simgesi") }}
         <select v-model="chosenSymbol">
           <option
             v-for="symbol in majoritySymbols(state, player.id)"
             :key="symbol"
             :value="symbol"
           >
-            {{ symbolName(symbol) }}
+            {{ t(symbolName(symbol)) }}
           </option>
         </select>
         <span
-          >Eşitlikte seçimin kullanılır. Önceki güçler çoğunluğu değiştirirse
-          yeni çoğunluk geçerli olur; eşitlik sırası balta, ok, miğfer, kalkan,
-          el.</span
+          >{{ t("Eşitlikte seçimin kullanılır. Önceki güçler çoğunluğu değiştirirse yeni çoğunluk geçerli olur; eşitlik sırası balta, ok, miğfer, kalkan, el.") }}</span
         >
       </label>
-      <p v-else>Hedef ve etki otomatik uygulanır.</p>
+      <p v-else>{{ t("Hedef ve etki otomatik uygulanır.") }}</p>
       <button
         class="primary-action"
         :disabled="disabled || !valid"
         @click="confirm"
       >
-        Gücü onayla
+        {{ t("Gücü onayla") }}
       </button>
     </fieldset>
   </div>

@@ -1,0 +1,2022 @@
+{
+  "Oyna": [
+    "Play",
+    "Jouer",
+    "Spielen"
+  ],
+  "Oyuna Başla": [
+    "Start playing",
+    "Jouer",
+    "Jetzt spielen"
+  ],
+  "Kuzeyin zar oyunu": [
+    "A Norse dice game",
+    "Un jeu de dés nordique",
+    "Ein nordisches Würfelspiel"
+  ],
+  "Orlog ana sayfa": [
+    "Orlog home",
+    "Accueil Orlog",
+    "Orlog-Startseite"
+  ],
+  "Yardımcı alanlar": [
+    "Tools",
+    "Outils",
+    "Werkzeuge"
+  ],
+  "Dil seçimi": [
+    "Language",
+    "Langue",
+    "Sprache"
+  ],
+  "Ayarlar": [
+    "Settings",
+    "Paramètres",
+    "Einstellungen"
+  ],
+  "Oyun rehberi": [
+    "How to play",
+    "Règles du jeu",
+    "Spielanleitung"
+  ],
+  "Proje hakkında": [
+    "About the project",
+    "À propos du projet",
+    "Über das Projekt"
+  ],
+  "İletişim": [
+    "Contact",
+    "Contact",
+    "Kontakt"
+  ],
+  "Oyundan çık": [
+    "Leave game",
+    "Quitter la partie",
+    "Spiel verlassen"
+  ],
+  "Bu oyun, Assassin’s Creed Valhalla’daki Orlog’dan esinlenen bağımsız bir fan yapımıdır. Resmî bir Ubisoft oyunu değildir; Ubisoft ile bağlantısı yoktur.": [
+    "This is an independent fan game inspired by Orlog in Assassin’s Creed Valhalla. It is not an official Ubisoft game and is not affiliated with Ubisoft.",
+    "Ce jeu indépendant créé par un fan s’inspire de l’Orlog d’Assassin’s Creed Valhalla. Ce n’est pas un jeu officiel Ubisoft et il n’est pas affilié à Ubisoft.",
+    "Dies ist ein unabhängiges Fan-Spiel, inspiriert von Orlog aus Assassin’s Creed Valhalla. Es ist kein offizielles Ubisoft-Spiel und steht in keiner Verbindung zu Ubisoft."
+  ],
+  "Geri": [
+    "Back",
+    "Retour",
+    "Zurück"
+  ],
+  "Hazırlık adımları": [
+    "Preparation steps",
+    "Étapes de préparation",
+    "Vorbereitungsschritte"
+  ],
+  "Yeni oyun hazırlığı": [
+    "New game setup",
+    "Préparer une partie",
+    "Neues Spiel vorbereiten"
+  ],
+  "Masada kiminle karşılaşacaksın?": [
+    "Who will you face?",
+    "Qui affronteras-tu ?",
+    "Wen forderst du heraus?"
+  ],
+  "Bir rakip seç. Sonra tanrılarını kuşanıp masaya geçelim.": [
+    "Choose an opponent, then pick your gods and take your seat.",
+    "Choisis un adversaire, puis tes dieux et prends place.",
+    "Wähle einen Gegner, dann deine Götter und nimm Platz."
+  ],
+  "Her atış bir ihtimal.": [
+    "Every roll brings a chance.",
+    "Chaque lancer ouvre une possibilité.",
+    "Jeder Wurf bietet eine Chance."
+  ],
+  "Her tanrı başka bir yol.": [
+    "Every god offers a path.",
+    "Chaque dieu offre une voie.",
+    "Jeder Gott eröffnet einen Weg."
+  ],
+  "Orlog — rakibini seç": [
+    "Orlog — choose your opponent",
+    "Orlog — choisis ton adversaire",
+    "Orlog — wähle deinen Gegner"
+  ],
+  "Oyun modu": [
+    "Game mode",
+    "Mode de jeu",
+    "Spielmodus"
+  ],
+  "Robota karşı oyna": [
+    "Play against the computer",
+    "Jouer contre l’ordinateur",
+    "Gegen den Computer spielen"
+  ],
+  "Robota karşı": [
+    "Vs computer",
+    "Contre l’ordinateur",
+    "Gegen den Computer"
+  ],
+  "Tanrılarını seç ve mücadeleye başla.": [
+    "Choose your gods and begin the challenge.",
+    "Choisis tes dieux et relève le défi.",
+    "Wähle deine Götter und beginne die Herausforderung."
+  ],
+  "Tek oyuncu": [
+    "One player",
+    "Un joueur",
+    "Ein Spieler"
+  ],
+  "Arkadaşınla oyna": [
+    "Play with a friend",
+    "Jouer avec un ami",
+    "Mit einem Freund spielen"
+  ],
+  "Arkadaşınla": [
+    "With a friend",
+    "Avec un ami",
+    "Mit einem Freund"
+  ],
+  "Aynı bilgisayarı paylaş veya kodla arkadaşına katıl.": [
+    "Share this device or join your friend with a code.",
+    "Partage cet appareil ou rejoins ton ami avec un code.",
+    "Teilt euch dieses Gerät oder tritt mit einem Code bei."
+  ],
+  "İki oyuncu": [
+    "Two players",
+    "Deux joueurs",
+    "Zwei Spieler"
+  ],
+  "Seçildi": [
+    "Selected",
+    "Sélectionné",
+    "Ausgewählt"
+  ],
+  "Nasıl buluşacaksınız?": [
+    "How will you play together?",
+    "Comment allez-vous jouer ensemble ?",
+    "Wie möchtet ihr zusammen spielen?"
+  ],
+  "Arkadaşınla oynama şekli": [
+    "Ways to play with a friend",
+    "Jouer avec un ami",
+    "Spielart mit einem Freund"
+  ],
+  "Aynı bilgisayarda": [
+    "On this device",
+    "Sur cet appareil",
+    "Auf diesem Gerät"
+  ],
+  "Oda kur": [
+    "Create room",
+    "Créer un salon",
+    "Raum erstellen"
+  ],
+  "Odaya katıl": [
+    "Join room",
+    "Rejoindre un salon",
+    "Raum beitreten"
+  ],
+  "Bir masa, iki oyuncu.": [
+    "One table, two players.",
+    "Une table, deux joueurs.",
+    "Ein Tisch, zwei Spieler."
+  ],
+  "Yan yana oturun. Sırayla zar atıp aynı masayı paylaşın.": [
+    "Sit together, take turns rolling and share the table.",
+    "Installez-vous côte à côte et lancez les dés à tour de rôle.",
+    "Setzt euch zusammen und würfelt abwechselnd am selben Tisch."
+  ],
+  "Kodu arkadaşınla paylaş. İkiniz de katılınca oda kurucusu oyunu başlatır.": [
+    "Share the code with your friend. Once you are both here, the host starts the game.",
+    "Partage le code avec ton ami. Quand vous êtes tous les deux là, l’hôte lance la partie.",
+    "Teile den Code mit deinem Freund. Sobald ihr beide da seid, startet der Gastgeber das Spiel."
+  ],
+  "Davet kodu": [
+    "Invite code",
+    "Code d’invitation",
+    "Einladungscode"
+  ],
+  "Oda kodu": [
+    "Room code",
+    "Code du salon",
+    "Raumcode"
+  ],
+  "Oda kuruluyor…": [
+    "Creating room…",
+    "Création du salon…",
+    "Raum wird erstellt…"
+  ],
+  "Kodu kopyala": [
+    "Copy code",
+    "Copier le code",
+    "Code kopieren"
+  ],
+  "Kod kopyalandı": [
+    "Code copied",
+    "Code copié",
+    "Code kopiert"
+  ],
+  "Örn. 0427": [
+    "e.g. 0427",
+    "ex. 0427",
+    "z. B. 0427"
+  ],
+  "Katılıyor…": [
+    "Joining…",
+    "Connexion…",
+    "Beitritt läuft…"
+  ],
+  "Katıl": [
+    "Join",
+    "Rejoindre",
+    "Beitreten"
+  ],
+  "Katıldığın oda": [
+    "Your room",
+    "Ton salon",
+    "Dein Raum"
+  ],
+  "Odadaki oyuncular": [
+    "Players in room",
+    "Joueurs du salon",
+    "Spieler im Raum"
+  ],
+  "Oda sahibi": [
+    "Host",
+    "Hôte",
+    "Gastgeber"
+  ],
+  "Misafir": [
+    "Guest",
+    "Invité",
+    "Gast"
+  ],
+  "Sen": [
+    "You",
+    "Toi",
+    "Du"
+  ],
+  "Arkadaşın": [
+    "Your friend",
+    "Ton ami",
+    "Dein Freund"
+  ],
+  "Henüz katılmadı": [
+    "Not here yet",
+    "Pas encore arrivé",
+    "Noch nicht beigetreten"
+  ],
+  "Bağlantı kuruluyor…": [
+    "Connecting…",
+    "Connexion…",
+    "Verbindung wird hergestellt…"
+  ],
+  "/ 2 oyuncu": [
+    "/ 2 players",
+    "/ 2 joueurs",
+    "/ 2 Spieler"
+  ],
+  "Odadan ayrıl": [
+    "Leave room",
+    "Quitter le salon",
+    "Raum verlassen"
+  ],
+  "Arkadaşınla çevrim içi": [
+    "Online with a friend",
+    "En ligne avec un ami",
+    "Online mit einem Freund"
+  ],
+  "Oda kurucusunun başlatması bekleniyor": [
+    "Waiting for the host to start",
+    "En attente du lancement par l’hôte",
+    "Warten auf den Start durch den Gastgeber"
+  ],
+  "Aynı masada iki kişi": [
+    "Two players at one table",
+    "Deux joueurs à la même table",
+    "Zwei Spieler an einem Tisch"
+  ],
+  "Aynı cihazda iki kişi": [
+    "Two players on this device",
+    "Deux joueurs sur cet appareil",
+    "Zwei Spieler auf diesem Gerät"
+  ],
+  "Sen ve bilgisayar": [
+    "You and the computer",
+    "Toi et l’ordinateur",
+    "Du und der Computer"
+  ],
+  "Bilgisayar": [
+    "Computer",
+    "Ordinateur",
+    "Computer"
+  ],
+  "Oyunu başlat": [
+    "Start game",
+    "Lancer la partie",
+    "Spiel starten"
+  ],
+  "Tanrılarını seç": [
+    "Choose your gods",
+    "Choisir tes dieux",
+    "Götter wählen"
+  ],
+  "Tanrılarını yanına al.": [
+    "Bring your gods.",
+    "Emporte tes dieux.",
+    "Nimm deine Götter mit."
+  ],
+  "Yirmi tanrıdan üçü seninle masaya oturacak.": [
+    "Three of twenty gods will join you at the table.",
+    "Trois dieux parmi vingt t’accompagneront à la table.",
+    "Drei von zwanzig Göttern begleiten dich an den Tisch."
+  ],
+  "Tanrılarını seçtiğin oyuncu": [
+    "Player choosing gods",
+    "Joueur choisissant ses dieux",
+    "Spieler bei der Götterwahl"
+  ],
+  "Hazır": [
+    "Ready",
+    "Prêt",
+    "Bereit"
+  ],
+  "Savaş öncesi": [
+    "Before battle",
+    "Avant le combat",
+    "Vor dem Kampf"
+  ],
+  "Savaş sonrası": [
+    "After battle",
+    "Après le combat",
+    "Nach dem Kampf"
+  ],
+  "Öncelik": [
+    "Priority",
+    "Priorité",
+    "Priorität"
+  ],
+  "· Öncelik": [
+    "· Priority",
+    "· Priorité",
+    "· Priorität"
+  ],
+  "Kuşanmak için önce seçili bir tanrıyı kaldır.": [
+    "Remove a selected god before equipping another.",
+    "Retire un dieu sélectionné avant d’en équiper un autre.",
+    "Entferne erst einen gewählten Gott, um einen anderen auszurüsten."
+  ],
+  "20 tanrı kataloğu": [
+    "Catalog of 20 gods",
+    "Catalogue des 20 dieux",
+    "Katalog der 20 Götter"
+  ],
+  "Kuşanıldı": [
+    "Equipped",
+    "Équipé",
+    "Ausgerüstet"
+  ],
+  "Seçilen tanrılar": [
+    "Chosen gods",
+    "Dieux choisis",
+    "Gewählte Götter"
+  ],
+  "Oyuncu adı": [
+    "Player name",
+    "Nom du joueur",
+    "Spielername"
+  ],
+  "Yanındaki tanrılar": [
+    "Your companions",
+    "Tes compagnons",
+    "Deine Begleiter"
+  ],
+  ". tanrı": [
+    ". god",
+    ". dieu",
+    ". Gott"
+  ],
+  "Kaldır": [
+    "Remove",
+    "Retirer",
+    "Entfernen"
+  ],
+  "Bir tanrı seç": [
+    "Choose a god",
+    "Choisir un dieu",
+    "Einen Gott wählen"
+  ],
+  "Bir tanrı seç veya devam et.": [
+    "Choose a god or continue.",
+    "Choisis un dieu ou continue.",
+    "Wähle einen Gott oder fahre fort."
+  ],
+  "Tanrıların hazır. Değiştirmek için Hazır değilim seç.": [
+    "Your gods are ready. Choose Not ready to change them.",
+    "Tes dieux sont prêts. Choisis Pas prêt pour les modifier.",
+    "Deine Götter sind bereit. Wähle Nicht bereit, um sie zu ändern."
+  ],
+  "Üç tanrın hazır.": [
+    "Your three gods are ready.",
+    "Tes trois dieux sont prêts.",
+    "Deine drei Götter sind bereit."
+  ],
+  "{0} tanrı daha seç.": [
+    "Choose {0} more gods.",
+    "Choisis encore {0} dieux.",
+    "Wähle noch {0} Götter."
+  ],
+  "Hazır değilim": [
+    "Not ready",
+    "Pas prêt",
+    "Nicht bereit"
+  ],
+  "Hazırım": [
+    "I’m ready",
+    "Je suis prêt",
+    "Ich bin bereit"
+  ],
+  "İkinci oyuncunun tanrıları": [
+    "Player two’s gods",
+    "Dieux du deuxième joueur",
+    "Götter von Spieler zwei"
+  ],
+  "İlk hamleyi belirle": [
+    "Decide who starts",
+    "Décider qui commence",
+    "Startspieler bestimmen"
+  ],
+  "İlk hamle kaderden.": [
+    "Let fate choose the first move.",
+    "Le destin choisit qui commence.",
+    "Das Schicksal entscheidet den ersten Zug."
+  ],
+  "Tanrılar seçildi. İlk zarı kimin atacağını belirleyelim.": [
+    "Your gods are chosen. Let’s decide who rolls first.",
+    "Les dieux sont choisis. Déterminons qui lancera les dés en premier.",
+    "Die Götter sind gewählt. Bestimmen wir, wer zuerst würfelt."
+  ],
+  "İki yüzlü demir ve altın sikke: I ve II": [
+    "A two-sided iron and gold coin: I and II",
+    "Pièce en fer et en or à deux faces : I et II",
+    "Zweiseitige Münze aus Eisen und Gold: I und II"
+  ],
+  "{0} yüzü: {1}": [
+    "Side {0}: {1}",
+    "Face {0} : {1}",
+    "Seite {0}: {1}"
+  ],
+  "{0} · {1} ilk başlayacak.": [
+    "{0} · {1} will start.",
+    "{0} · {1} commencera.",
+    "{0} · {1} beginnt."
+  ],
+  "Yazı mı, tura mı? Şans iki tarafa da eşit.": [
+    "Heads or tails? Both sides have the same chance.",
+    "Pile ou face ? Les deux côtés ont autant de chances.",
+    "Kopf oder Zahl? Beide Seiten haben die gleiche Chance."
+  ],
+  "Yazı tura at": [
+    "Flip coin",
+    "Lancer la pièce",
+    "Münze werfen"
+  ],
+  "Masaya geç": [
+    "Take your seat",
+    "Passer à la table",
+    "An den Tisch"
+  ],
+  "Oda kurucusunun masayı açması bekleniyor…": [
+    "Waiting for the host to open the table…",
+    "En attente de l’ouverture de la table par l’hôte…",
+    "Warten auf die Tischfreigabe durch den Gastgeber…"
+  ],
+  "Oda kurucusunun yazı tura atması bekleniyor…": [
+    "Waiting for the host to flip the coin…",
+    "En attente du lancer de pièce par l’hôte…",
+    "Warten auf den Münzwurf des Gastgebers…"
+  ],
+  "Kolay": [
+    "Easy",
+    "Facile",
+    "Leicht"
+  ],
+  "Normal": [
+    "Normal",
+    "Normal",
+    "Normal"
+  ],
+  "Zor": [
+    "Hard",
+    "Difficile",
+    "Schwer"
+  ],
+  "Altın ve saldırıyı tercih eder; güçleri tek örnekle değerlendirir.": [
+    "Prefers tokens and attacks; evaluates powers with one sample.",
+    "Privilégie les jetons et l’attaque ; évalue les pouvoirs avec un seul échantillon.",
+    "Bevorzugt Marken und Angriffe; bewertet Kräfte anhand einer Stichprobe."
+  ],
+  "Savunmayı, jetonları ve rakibin olası gücünü değerlendirir.": [
+    "Considers defense, tokens and your likely power.",
+    "Évalue la défense, les jetons et ton pouvoir probable.",
+    "Berücksichtigt Verteidigung, Marken und deine wahrscheinliche Kraft."
+  ],
+  "Daha çok örnekle, rakibin güç kullanma ve pas olasılıklarını karşılaştırır.": [
+    "Uses more samples to compare the opponent’s chances of using a power or passing.",
+    "Utilise davantage d’échantillons pour comparer l’utilisation d’un pouvoir et la possibilité de passer.",
+    "Vergleicht mit mehr Stichproben, ob der Gegner eine Kraft einsetzt oder passt."
+  ],
+  "Oyun kontrollerine geç": [
+    "Skip to game controls",
+    "Aller aux commandes du jeu",
+    "Zu den Spielsteuerungen springen"
+  ],
+  "Oyun kontrolleri": [
+    "Game controls",
+    "Commandes du jeu",
+    "Spielsteuerung"
+  ],
+  "Tur ve sıra": [
+    "Round and turn",
+    "Manche et tour",
+    "Runde und Zug"
+  ],
+  "Tur": [
+    "Round",
+    "Manche",
+    "Runde"
+  ],
+  "Zar at": [
+    "Roll dice",
+    "Lancer les dés",
+    "Würfeln"
+  ],
+  "Seçimi onayla": [
+    "Confirm selection",
+    "Confirmer la sélection",
+    "Auswahl bestätigen"
+  ],
+  "Devam et": [
+    "Continue",
+    "Continuer",
+    "Weiter"
+  ],
+  "Tanrı gücü": [
+    "God power",
+    "Pouvoir divin",
+    "Götterkraft"
+  ],
+  "Tanrı jetonu": [
+    "God token",
+    "Jeton divin",
+    "Göttermarke"
+  ],
+  "Can": [
+    "Health",
+    "Vie",
+    "Leben"
+  ],
+  "jeton": [
+    "token",
+    "jeton",
+    "Marke"
+  ],
+  "jeton.": [
+    "tokens.",
+    "jetons.",
+    "Marken."
+  ],
+  "can,": [
+    "health,",
+    "points de vie,",
+    "Leben,"
+  ],
+  "Senin tarafın.": [
+    "Your side.",
+    "Ton côté.",
+    "Deine Seite."
+  ],
+  "Karşı taraf.": [
+    "Opponent’s side.",
+    "Côté adverse.",
+    "Gegnerische Seite."
+  ],
+  "Orlog oyun masası": [
+    "Orlog game table",
+    "Table de jeu Orlog",
+    "Orlog-Spieltisch"
+  ],
+  "Bilgisayar düşünüyor…": [
+    "The computer is thinking…",
+    "L’ordinateur réfléchit…",
+    "Der Computer denkt nach…"
+  ],
+  "Zarlar kâsede yatışıyor…": [
+    "The dice are settling…",
+    "Les dés se stabilisent…",
+    "Die Würfel kommen zur Ruhe…"
+  ],
+  "Olaylar masada çözülüyor…": [
+    "Resolving events on the table…",
+    "Résolution des événements sur la table…",
+    "Ereignisse am Tisch werden abgehandelt…"
+  ],
+  "Zarlar toplanıyor. Sonraki tur otomatik başlayacak.": [
+    "Collecting dice. The next round starts automatically.",
+    "Les dés sont ramassés. La manche suivante commencera automatiquement.",
+    "Die Würfel werden eingesammelt. Die nächste Runde beginnt automatisch."
+  ],
+  "İki güç kararı tamamlandı. Savaş otomatik başlıyor.": [
+    "Both powers are chosen. Battle starts automatically.",
+    "Les deux pouvoirs sont choisis. Le combat commence automatiquement.",
+    "Beide Kräfte sind gewählt. Der Kampf beginnt automatisch."
+  ],
+  "{0} kazandı. Yeni bir maç için yeniden başlat.": [
+    "{0} won. Start again for a new match.",
+    "{0} a gagné. Relance une nouvelle partie.",
+    "{0} hat gewonnen. Starte eine neue Partie."
+  ],
+  "{0} masadaki bir tanrıyı seçebilir veya Devam et ile geçebilir.": [
+    "{0} can choose a god on the table or pass with Continue.",
+    "{0} peut choisir un dieu sur la table ou passer avec Continuer.",
+    "{0} kann einen Gott am Tisch wählen oder mit Weiter passen."
+  ],
+  "Kendi haznendeki zarları at.": [
+    "Roll the dice in your bowl.",
+    "Lance les dés de ton bol.",
+    "Würfle die Würfel in deiner Schale."
+  ],
+  "Son atışın zarları saklandı; sıra otomatik ilerliyor.": [
+    "The final roll has been kept; the turn advances automatically.",
+    "Les dés du dernier lancer sont conservés ; le tour avance automatiquement.",
+    "Die Würfel des letzten Wurfs sind behalten; der Zug geht automatisch weiter."
+  ],
+  "Saklayacağın zarları seç; son değişiklikten 2 saniye sonra birlikte taşınır. Geri almak için tekrar dokun.": [
+    "Choose dice to keep; they move together 2 seconds after your last change. Tap again to take them back.",
+    "Choisis les dés à conserver ; ils se déplacent ensemble 2 secondes après ta dernière modification. Touche à nouveau pour les reprendre.",
+    "Wähle die Würfel zum Behalten; sie bewegen sich 2 Sekunden nach der letzten Änderung gemeinsam. Tippe erneut, um sie zurückzunehmen."
+  ],
+  "Saklayacağın zarlara dokun; merkezden geri almak için tekrar dokun.": [
+    "Tap dice to keep them; tap again to take them back from the center.",
+    "Touche les dés à conserver ; touche à nouveau pour les reprendre du centre.",
+    "Tippe auf Würfel zum Behalten; tippe erneut, um sie aus der Mitte zurückzunehmen."
+  ],
+  "{0} oynuyor…": [
+    "{0} is playing…",
+    "{0} joue…",
+    "{0} ist am Zug…"
+  ],
+  "Oyuncu": [
+    "Player",
+    "Joueur",
+    "Spieler"
+  ],
+  "Oyuncu I": [
+    "Player I",
+    "Joueur I",
+    "Spieler I"
+  ],
+  "Oyuncu II": [
+    "Player II",
+    "Joueur II",
+    "Spieler II"
+  ],
+  "Oyuncu {0}": [
+    "Player {0}",
+    "Joueur {0}",
+    "Spieler {0}"
+  ],
+  "1. Oyuncu": [
+    "Player 1",
+    "Joueur 1",
+    "Spieler 1"
+  ],
+  "2. Oyuncu": [
+    "Player 2",
+    "Joueur 2",
+    "Spieler 2"
+  ],
+  "Sıra sende": [
+    "Your turn",
+    "À toi de jouer",
+    "Du bist am Zug"
+  ],
+  "Tanrı bilgileri": [
+    "God details",
+    "Informations sur le dieu",
+    "Götterinformationen"
+  ],
+  "Tanrı gücü seçimi": [
+    "Choose a god power",
+    "Choisir un pouvoir divin",
+    "Götterkraft wählen"
+  ],
+  "Seviyeni seç · Escape ile kapat": [
+    "Choose a level · Escape to close",
+    "Choisis un niveau · Échap pour fermer",
+    "Stufe wählen · Escape zum Schließen"
+  ],
+  "Seçmek için tanrıya tıkla": [
+    "Click a god to choose it",
+    "Clique sur un dieu pour le choisir",
+    "Klicke auf einen Gott, um ihn zu wählen"
+  ],
+  "İki oyuncunun masadaki zarları": [
+    "Both players’ dice on the table",
+    "Dés des deux joueurs sur la table",
+    "Würfel beider Spieler auf dem Tisch"
+  ],
+  "Masa hazırlanıyor": [
+    "Preparing the table",
+    "Préparation de la table",
+    "Tisch wird vorbereitet"
+  ],
+  "Ahşap, kumaş ve kemik bir araya geliyor.": [
+    "Wood, cloth and bone come together.",
+    "Bois, tissu et os prennent place.",
+    "Holz, Stoff und Knochen finden zusammen."
+  ],
+  "Bu masa WebGL 2 gerektiriyor": [
+    "This table requires WebGL 2",
+    "Cette table nécessite WebGL 2",
+    "Dieser Tisch benötigt WebGL 2"
+  ],
+  "Güncel bir tarayıcı kullanıp donanım hızlandırmasını açarak yeniden deneyebilirsin.": [
+    "Try again with an up-to-date browser and hardware acceleration enabled.",
+    "Réessaie avec un navigateur à jour et l’accélération matérielle activée.",
+    "Versuche es mit einem aktuellen Browser und aktivierter Hardwarebeschleunigung erneut."
+  ],
+  "Sahne görüntülenemedi": [
+    "The scene could not be displayed",
+    "La scène n’a pas pu être affichée",
+    "Die Szene konnte nicht angezeigt werden"
+  ],
+  "Grafik bağlantısı kesilmiş veya sahne hazırlanırken bir sorun oluşmuş olabilir.": [
+    "The graphics connection may have been lost, or scene preparation may have failed.",
+    "La connexion graphique a peut-être été perdue ou la préparation de la scène a échoué.",
+    "Die Grafikverbindung wurde möglicherweise unterbrochen oder die Vorbereitung der Szene ist fehlgeschlagen."
+  ],
+  "Sahneyi yeniden yükle": [
+    "Reload scene",
+    "Recharger la scène",
+    "Szene neu laden"
+  ],
+  "Sahne yüklenemedi": [
+    "The scene could not be loaded",
+    "La scène n’a pas pu être chargée",
+    "Die Szene konnte nicht geladen werden"
+  ],
+  "Bağlantını kontrol edip yeniden deneyebilirsin.": [
+    "Check your connection and try again.",
+    "Vérifie ta connexion et réessaie.",
+    "Prüfe deine Verbindung und versuche es erneut."
+  ],
+  "Yeniden yükle": [
+    "Reload",
+    "Recharger",
+    "Neu laden"
+  ],
+  "Yeniden dene": [
+    "Try again",
+    "Réessayer",
+    "Erneut versuchen"
+  ],
+  "Masadaki tanrılar": [
+    "Gods on the table",
+    "Dieux sur la table",
+    "Götter auf dem Tisch"
+  ],
+  "Masadaki zarları incele ve seç": [
+    "Inspect and select dice on the table",
+    "Examiner et choisir les dés sur la table",
+    "Würfel auf dem Tisch ansehen und auswählen"
+  ],
+  "Masadaki zarlar, kaydırarak incele ve seç": [
+    "Table dice: scroll to inspect and select",
+    "Dés sur la table : faire défiler pour examiner et choisir",
+    "Tischwürfel: zum Ansehen und Auswählen scrollen"
+  ],
+  "Sen · Hazne": [
+    "You · Bowl",
+    "Toi · Bol",
+    "Du · Schale"
+  ],
+  "Zar bilgisi": [
+    "Die details",
+    "Détails du dé",
+    "Würfelinformationen"
+  ],
+  "Jeton getirir": [
+    "Grants a token",
+    "Rapporte un jeton",
+    "Gibt eine Marke"
+  ],
+  "Kapat": [
+    "Close",
+    "Fermer",
+    "Schließen"
+  ],
+  "Pencereyi kapat": [
+    "Close window",
+    "Fermer la fenêtre",
+    "Fenster schließen"
+  ],
+  "Balta": [
+    "Axe",
+    "Hache",
+    "Axt"
+  ],
+  "Ok": [
+    "Arrow",
+    "Flèche",
+    "Pfeil"
+  ],
+  "Miğfer": [
+    "Helmet",
+    "Casque",
+    "Helm"
+  ],
+  "Kalkan": [
+    "Shield",
+    "Bouclier",
+    "Schild"
+  ],
+  "El": [
+    "Hand",
+    "Main",
+    "Hand"
+  ],
+  "Yakın dövüş saldırısı": [
+    "Melee attack",
+    "Attaque de mêlée",
+    "Nahkampfangriff"
+  ],
+  "Menzilli saldırı": [
+    "Ranged attack",
+    "Attaque à distance",
+    "Fernkampfangriff"
+  ],
+  "Baltaya karşı savunma": [
+    "Defense against axes",
+    "Défense contre les haches",
+    "Verteidigung gegen Äxte"
+  ],
+  "Oka karşı savunma": [
+    "Defense against arrows",
+    "Défense contre les flèches",
+    "Verteidigung gegen Pfeile"
+  ],
+  "Rakipten jeton çalma": [
+    "Steals tokens from the opponent",
+    "Vole des jetons à l’adversaire",
+    "Stiehlt Marken vom Gegner"
+  ],
+  "Haznede": [
+    "In bowl",
+    "Dans le bol",
+    "In der Schale"
+  ],
+  "Seçili": [
+    "Selected",
+    "Sélectionné",
+    "Ausgewählt"
+  ],
+  "Kilitli": [
+    "Locked",
+    "Verrouillé",
+    "Gesperrt"
+  ],
+  "Kullanıldı": [
+    "Used",
+    "Utilisé",
+    "Verwendet"
+  ],
+  "haznede": [
+    "in bowl",
+    "dans le bol",
+    "in der Schale"
+  ],
+  "seçili": [
+    "selected",
+    "sélectionné",
+    "ausgewählt"
+  ],
+  "kilitli": [
+    "locked",
+    "verrouillé",
+    "gesperrt"
+  ],
+  "kullanıldı": [
+    "used",
+    "utilisé",
+    "verwendet"
+  ],
+  "kaldırıldı": [
+    "removed",
+    "retiré",
+    "entfernt"
+  ],
+  "kendi kenarında, kullanıldı": [
+    "on its own side, used",
+    "sur son bord, utilisé",
+    "am eigenen Rand, verwendet"
+  ],
+  "merkezde, kilitli": [
+    "in the center, locked",
+    "au centre, verrouillé",
+    "in der Mitte, gesperrt"
+  ],
+  "merkezde, seçili": [
+    "in the center, selected",
+    "au centre, sélectionné",
+    "in der Mitte, ausgewählt"
+  ],
+  ", altın çerçeveli": [
+    ", gold-bordered",
+    ", bordé d’or",
+    ", mit Goldrand"
+  ],
+  ", jeton getirir": [
+    ", grants a token",
+    ", rapporte un jeton",
+    ", gibt eine Marke"
+  ],
+  ", etki {0}": [
+    ", effect {0}",
+    ", effet {0}",
+    ", Wirkung {0}"
+  ],
+  "merkeze al": [
+    "move to center",
+    "déplacer au centre",
+    "in die Mitte legen"
+  ],
+  "geri al": [
+    "take back",
+    "reprendre",
+    "zurücknehmen"
+  ],
+  "incele": [
+    "inspect",
+    "examiner",
+    "ansehen"
+  ],
+  "saklamak için seçildi, geri al": [
+    "chosen to keep, take back",
+    "choisi pour être conservé, reprendre",
+    "zum Behalten gewählt, zurücknehmen"
+  ],
+  "yeniden atılacak, saklamak için seç": [
+    "to be rerolled, choose to keep",
+    "à relancer, choisir pour conserver",
+    "wird neu gewürfelt, zum Behalten wählen"
+  ],
+  "{0}; {1} (bekleyen seçim)": [
+    "{0}; {1} (pending selection)",
+    "{0} ; {1} (sélection en attente)",
+    "{0}; {1} (ausstehende Auswahl)"
+  ],
+  "{0}; basılı tutarak veya F1 ile incele": [
+    "{0}; hold or press F1 to inspect",
+    "{0} ; maintenir ou appuyer sur F1 pour examiner",
+    "{0}; zum Ansehen gedrückt halten oder F1 drücken"
+  ],
+  "{0}, zar {1}: {2}{3}{4}, {5}; {6}": [
+    "{0}, die {1}: {2}{3}{4}, {5}; {6}",
+    "{0}, dé {1} : {2}{3}{4}, {5} ; {6}",
+    "{0}, Würfel {1}: {2}{3}{4}, {5}; {6}"
+  ],
+  "Zar {0}: henüz atılmadı": [
+    "Die {0}: not rolled yet",
+    "Dé {0} : pas encore lancé",
+    "Würfel {0}: noch nicht gewürfelt"
+  ],
+  "Zar {0}: {1}{2}{3}, {4}": [
+    "Die {0}: {1}{2}{3}, {4}",
+    "Dé {0} : {1}{2}{3}, {4}",
+    "Würfel {0}: {1}{2}{3}, {4}"
+  ],
+  "Zar": [
+    "Die",
+    "Dé",
+    "Würfel"
+  ],
+  "{0} kazandı.": [
+    "{0} won.",
+    "{0} a gagné.",
+    "{0} hat gewonnen."
+  ],
+  "kazandı.": [
+    "won.",
+    "a gagné.",
+    "hat gewonnen."
+  ],
+  "turluk mücadele sona erdi.": [
+    "rounds played.",
+    "manches jouées.",
+    "Runden gespielt."
+  ],
+  "Sonucu göster": [
+    "Show result",
+    "Afficher le résultat",
+    "Ergebnis anzeigen"
+  ],
+  "Masayı incele": [
+    "Inspect table",
+    "Examiner la table",
+    "Tisch ansehen"
+  ],
+  "Yeni oyun": [
+    "New game",
+    "Nouvelle partie",
+    "Neues Spiel"
+  ],
+  "Oyuna dön": [
+    "Return to game",
+    "Reprendre la partie",
+    "Zurück zum Spiel"
+  ],
+  "Ana menüye dön": [
+    "Return to main menu",
+    "Retour au menu principal",
+    "Zurück zum Hauptmenü"
+  ],
+  "Çevrim içi · {0}": [
+    "Online · {0}",
+    "En ligne · {0}",
+    "Online · {0}"
+  ],
+  "Ses": [
+    "Sound",
+    "Son",
+    "Ton"
+  ],
+  "Ses ayarları": [
+    "Sound settings",
+    "Paramètres audio",
+    "Toneinstellungen"
+  ],
+  "Müzik seviyesi": [
+    "Music volume",
+    "Volume de la musique",
+    "Musiklautstärke"
+  ],
+  "Ses efekti seviyesi": [
+    "Sound effects volume",
+    "Volume des effets sonores",
+    "Effektlautstärke"
+  ],
+  "Müzik girişte başlar; tarayıcı izin isterse ilk dokunuş veya tuşla açılır. Arka sekmede durur.": [
+    "Music starts on entry; if your browser blocks it, tap or press a key to start it. It pauses in background tabs.",
+    "La musique démarre à l’arrivée ; si le navigateur la bloque, touche l’écran ou appuie sur une touche. Elle se met en pause en arrière-plan.",
+    "Die Musik beginnt beim Öffnen; falls der Browser sie blockiert, tippe oder drücke eine Taste. In Hintergrundtabs pausiert sie."
+  ],
+  "Ses açılamadı.": [
+    "Sound could not be started.",
+    "Le son n’a pas pu démarrer.",
+    "Der Ton konnte nicht gestartet werden."
+  ],
+  "Sesi yeniden dene": [
+    "Retry sound",
+    "Réessayer le son",
+    "Ton erneut starten"
+  ],
+  "Tanrıların hazır.": [
+    "Your gods are ready.",
+    "Tes dieux sont prêts.",
+    "Deine Götter sind bereit."
+  ],
+  "Tanrılarını değiştirmek için önce Hazır değilim seç.": [
+    "Choose Not ready before changing your gods.",
+    "Choisis Pas prêt avant de modifier tes dieux.",
+    "Wähle Nicht bereit, bevor du deine Götter änderst."
+  ],
+  "Senin tanrıların": [
+    "Your gods",
+    "Tes dieux",
+    "Deine Götter"
+  ],
+  "Rakibin tanrıları": [
+    "Opponent’s gods",
+    "Dieux adverses",
+    "Götter des Gegners"
+  ],
+  "İncelenen tanrılar": [
+    "Gods being inspected",
+    "Dieux examinés",
+    "Angezeigte Götter"
+  ],
+  "Mevcut jeton:": [
+    "Current tokens:",
+    "Jetons actuels :",
+    "Aktuelle Marken:"
+  ],
+  "Seviye ve gerekiyorsa hedef seç; Gücü onayla ile kesinleştir. Bedel, gücün sırası geldiğinde ödenir.": [
+    "Choose a level and any required targets, then Confirm power. The cost is paid when the power takes its turn.",
+    "Choisis un niveau et les cibles nécessaires, puis Confirmer le pouvoir. Le coût est payé lorsque vient le tour du pouvoir.",
+    "Wähle eine Stufe und gegebenenfalls Ziele, dann Kraft bestätigen. Die Kosten werden bezahlt, wenn die Kraft an der Reihe ist."
+  ],
+  "Tanrıları inceliyorsun. Güç seçimi yalnız kendi tanrı gücü sıranda yapılabilir.": [
+    "You are inspecting gods. You can choose a power only on your own god-power turn.",
+    "Tu examines les dieux. Tu ne peux choisir un pouvoir que pendant ton propre tour de pouvoir divin.",
+    "Du siehst dir Götter an. Eine Kraft kannst du nur in deinem eigenen Götterkraft-Zug wählen."
+  ],
+  "Güç kullanmadan devam et": [
+    "Continue without a power",
+    "Continuer sans pouvoir",
+    "Ohne Kraft fortfahren"
+  ],
+  "Seviye": [
+    "Level",
+    "Niveau",
+    "Stufe"
+  ],
+  "· Seviye": [
+    "· Level",
+    "· Niveau",
+    "· Stufe"
+  ],
+  "· Seçildi": [
+    "· Selected",
+    "· Sélectionné",
+    "· Ausgewählt"
+  ],
+  "zar seç. Seçim sırası:": [
+    "dice to choose. Selection order:",
+    "dés à choisir. Ordre de sélection :",
+    "Würfel wählen. Auswahlreihenfolge:"
+  ],
+  "Seviye düşerse ilk hedefler kullanılır. Önceden kaldırılan hedef atlanır.": [
+    "If the level is reduced, the first targets are used. Previously removed targets are skipped.",
+    "Si le niveau baisse, les premières cibles sont utilisées. Les cibles déjà retirées sont ignorées.",
+    "Wird die Stufe gesenkt, werden die ersten Ziele verwendet. Bereits entfernte Ziele werden übersprungen."
+  ],
+  "Feda edilecek can (0–": [
+    "Health to sacrifice (0–",
+    "Vie à sacrifier (0–",
+    "Zu opferndes Leben (0–"
+  ],
+  "Çağırma anındaki canla sınırlanır. Son canını feda edersen maçı kaybedersin.": [
+    "Limited to your health when invoked. Sacrificing your last health loses the match.",
+    "La limite dépend de ta vie au moment de l’invocation. Sacrifier ton dernier point de vie fait perdre la partie.",
+    "Begrenzt auf dein Leben beim Aufruf. Opferst du dein letztes Leben, verlierst du die Partie."
+  ],
+  "Çoğunluk simgesi": [
+    "Majority symbol",
+    "Symbole majoritaire",
+    "Mehrheitssymbol"
+  ],
+  "Eşitlikte seçimin kullanılır. Önceki güçler çoğunluğu değiştirirse yeni çoğunluk geçerli olur; eşitlik sırası balta, ok, miğfer, kalkan, el.": [
+    "Your choice breaks ties. If earlier powers change the majority, the new majority applies; tie order is axe, arrow, helmet, shield, hand.",
+    "Ton choix départage les égalités. Si des pouvoirs précédents changent la majorité, la nouvelle s’applique ; l’ordre est hache, flèche, casque, bouclier, main.",
+    "Deine Wahl entscheidet Gleichstände. Ändern frühere Kräfte die Mehrheit, gilt die neue Mehrheit; die Reihenfolge ist Axt, Pfeil, Helm, Schild, Hand."
+  ],
+  "Hedef ve etki otomatik uygulanır.": [
+    "Targets and effects are applied automatically.",
+    "Les cibles et les effets sont appliqués automatiquement.",
+    "Ziele und Wirkung werden automatisch angewendet."
+  ],
+  "Gücü onayla": [
+    "Confirm power",
+    "Confirmer le pouvoir",
+    "Kraft bestätigen"
+  ],
+  "Doğrudan hasar": [
+    "Direct damage",
+    "Dégâts directs",
+    "Direkter Schaden"
+  ],
+  "Can iyileştir": [
+    "Restore health",
+    "Soigner",
+    "Leben heilen"
+  ],
+  "Miğfer kaldır": [
+    "Remove helmets",
+    "Retirer des casques",
+    "Helme entfernen"
+  ],
+  "Savunmayı artır": [
+    "Boost defense",
+    "Renforcer la défense",
+    "Verteidigung stärken"
+  ],
+  "Ellerden ek jeton": [
+    "Extra tokens from hands",
+    "Jetons supplémentaires des mains",
+    "Zusätzliche Marken durch Hände"
+  ],
+  "Baltaları katla": [
+    "Multiply axes",
+    "Multiplier les haches",
+    "Äxte vervielfachen"
+  ],
+  "Ek zar at": [
+    "Roll extra dice",
+    "Lancer des dés supplémentaires",
+    "Zusätzliche Würfel werfen"
+  ],
+  "Çoğunluğu güçlendir": [
+    "Boost the majority",
+    "Renforcer la majorité",
+    "Mehrheit stärken"
+  ],
+  "Yeniden zar at": [
+    "Reroll dice",
+    "Relancer les dés",
+    "Neu würfeln"
+  ],
+  "Savunmadan can": [
+    "Health from blocks",
+    "Vie grâce aux blocages",
+    "Leben durch Abwehr"
+  ],
+  "Balta hasarından can": [
+    "Health from axe damage",
+    "Vie grâce aux dégâts de hache",
+    "Leben durch Axtschaden"
+  ],
+  "Rakibin zarını kaldır": [
+    "Remove an enemy die",
+    "Retirer un dé adverse",
+    "Gegnerischen Würfel entfernen"
+  ],
+  "Aldığın hasardan jeton": [
+    "Tokens from damage taken",
+    "Jetons grâce aux dégâts subis",
+    "Marken durch erlittenen Schaden"
+  ],
+  "Can feda et, jeton kazan": [
+    "Sacrifice health for tokens",
+    "Sacrifier de la vie pour des jetons",
+    "Leben für Marken opfern"
+  ],
+  "Okları güçlendir": [
+    "Boost arrows",
+    "Renforcer les flèches",
+    "Pfeile stärken"
+  ],
+  "Oklarla jeton yok et": [
+    "Destroy tokens with arrows",
+    "Détruire des jetons avec les flèches",
+    "Marken durch Pfeile zerstören"
+  ],
+  "Rakibin gücünü düşür": [
+    "Reduce the opponent’s power",
+    "Réduire le pouvoir adverse",
+    "Gegnerische Kraft senken"
+  ],
+  "Can feda et, jeton yok et": [
+    "Sacrifice health to destroy tokens",
+    "Sacrifier de la vie pour détruire des jetons",
+    "Leben opfern, um Marken zu zerstören"
+  ],
+  "Kalkanı aş": [
+    "Pierce shields",
+    "Percer les boucliers",
+    "Schilde durchdringen"
+  ],
+  "Rakibin bedelinden can": [
+    "Health from the opponent’s spending",
+    "Vie grâce aux dépenses adverses",
+    "Leben durch Ausgaben des Gegners"
+  ],
+  "{0} hasar ver.": [
+    "Deal {0} damage.",
+    "Inflige {0} dégâts.",
+    "Verursache {0} Schaden."
+  ],
+  "{0} can iyileştir.": [
+    "Restore {0} health.",
+    "Récupère {0} points de vie.",
+    "Heile {0} Leben."
+  ],
+  "Rakibin {0} miğfer zarını kaldır.": [
+    "Remove {0} enemy helmet dice.",
+    "Retire {0} dés casque adverses.",
+    "Entferne {0} gegnerische Helmwürfel."
+  ],
+  "Her miğfer ve kalkan zarına +{0} savunma.": [
+    "Add +{0} defense to every helmet and shield die.",
+    "Ajoute +{0} en défense à chaque dé casque et bouclier.",
+    "Jeder Helm- und Schildwürfel erhält +{0} Verteidigung."
+  ],
+  "Her el zarı için {0} ek jeton kazan.": [
+    "Gain {0} extra tokens per hand die.",
+    "Gagne {0} jetons supplémentaires par dé main.",
+    "Erhalte {0} zusätzliche Marken pro Handwürfel."
+  ],
+  "Toplam baltayı {0} ile çarp; yukarı yuvarla.": [
+    "Multiply the axe total by {0}; round up.",
+    "Multiplie le total des haches par {0} ; arrondis au supérieur.",
+    "Multipliziere die gesamte Axtstärke mit {0}; runde auf."
+  ],
+  "Bu tur {0} ek zar at.": [
+    "Roll {0} extra dice this round.",
+    "Lance {0} dés supplémentaires cette manche.",
+    "Wirf in dieser Runde {0} zusätzliche Würfel."
+  ],
+  "En çok gelen simgenin toplamına +{0}; eşitlikte seçimin geçerli.": [
+    "Add +{0} to the most common symbol’s total; your choice breaks ties.",
+    "Ajoute +{0} au total du symbole majoritaire ; ton choix départage les égalités.",
+    "Erhöhe den Gesamtwert des häufigsten Symbols um +{0}; deine Wahl entscheidet Gleichstände."
+  ],
+  "Kendi veya rakibinin {0} zarını yeniden at; seçim sırası korunur.": [
+    "Reroll {0} of your or the opponent’s dice; selection order is preserved.",
+    "Relance {0} dés à toi ou à l’adversaire ; l’ordre de sélection est conservé.",
+    "Würfle {0} eigene oder gegnerische Würfel neu; die Auswahlreihenfolge bleibt erhalten."
+  ],
+  "Engellediğin her saldırı için {0} can iyileştir.": [
+    "Restore {0} health for each attack you block.",
+    "Récupère {0} points de vie par attaque bloquée.",
+    "Heile {0} Leben für jeden abgewehrten Angriff."
+  ],
+  "Verdiğin her balta hasarı için {0} can iyileştir.": [
+    "Restore {0} health per point of axe damage dealt.",
+    "Récupère {0} points de vie par dégât de hache infligé.",
+    "Heile {0} Leben pro verursachtem Axtschaden."
+  ],
+  "Rakibin seçtiğin {0} zarını bu tur kaldır.": [
+    "Remove {0} chosen enemy dice for this round.",
+    "Retire {0} dés adverses de ton choix pour cette manche.",
+    "Entferne {0} gewählte gegnerische Würfel für diese Runde."
+  ],
+  "Aldığın her hasar için {0} jeton kazan.": [
+    "Gain {0} tokens per point of damage taken.",
+    "Gagne {0} jetons par dégât subi.",
+    "Erhalte {0} Marken pro erlittenem Schadenspunkt."
+  ],
+  "Feda ettiğin her can için {0} jeton kazan.": [
+    "Gain {0} tokens per health sacrificed.",
+    "Gagne {0} jetons par point de vie sacrifié.",
+    "Erhalte {0} Marken pro geopfertem Leben."
+  ],
+  "Her ok zarına +{0} ok.": [
+    "Add +{0} arrows to every arrow die.",
+    "Ajoute +{0} flèches à chaque dé flèche.",
+    "Jeder Pfeilwürfel erhält +{0} Pfeile."
+  ],
+  "Her ok zarı için rakibin {0} jetonunu yok et.": [
+    "Destroy {0} enemy tokens per arrow die.",
+    "Détruis {0} jetons adverses par dé flèche.",
+    "Zerstöre {0} gegnerische Marken pro Pfeilwürfel."
+  ],
+  "Rakibin henüz çağrılmamış gücünü {0} seviye düşür; sıfırda iptal.": [
+    "Reduce the opponent’s uninvoked power by {0} levels; cancel it at zero.",
+    "Réduis de {0} niveaux le pouvoir adverse non encore invoqué ; annule-le à zéro.",
+    "Senke die noch nicht aufgerufene Kraft des Gegners um {0} Stufen; bei null wird sie aufgehoben."
+  ],
+  "Feda ettiğin her can için rakibin {0} jetonunu yok et.": [
+    "Destroy {0} enemy tokens per health sacrificed.",
+    "Détruis {0} jetons adverses par point de vie sacrifié.",
+    "Zerstöre {0} gegnerische Marken pro geopfertem Leben."
+  ],
+  "İlk {0} okun kalkanları aşar.": [
+    "Your first {0} arrows pierce shields.",
+    "Tes {0} premières flèches percent les boucliers.",
+    "Deine ersten {0} Pfeile durchdringen Schilde."
+  ],
+  "Rakibin bundan sonra ödediği her jeton için {0} can iyileştir.": [
+    "Restore {0} health for each token the opponent spends from now on.",
+    "Récupère {0} points de vie par jeton dépensé ensuite par l’adversaire.",
+    "Heile ab jetzt {0} Leben für jede vom Gegner ausgegebene Marke."
+  ],
+  ", kuşan": [
+    ", equip",
+    ", équiper",
+    ", ausrüsten"
+  ],
+  ", kuşanıldı; kaldır": [
+    ", equipped; remove",
+    ", équipé ; retirer",
+    ", ausgerüstet; entfernen"
+  ],
+  ", seçim sınırı dolu; gücü incele": [
+    ", selection full; inspect power",
+    ", sélection complète ; examiner le pouvoir",
+    ", Auswahl voll; Kraft ansehen"
+  ],
+  "{0} tanrısını kaldır": [
+    "Remove {0}",
+    "Retirer {0}",
+    "{0} entfernen"
+  ],
+  "Masaya ilk kez mi oturuyorsun?": [
+    "Your first time at the table?",
+    "Première fois à cette table ?",
+    "Zum ersten Mal am Tisch?"
+  ],
+  "Altı zar, üç tanrı gücü. Rakibinin 15 canını sıfırlayan kazanır.": [
+    "Six dice, three god powers. Reduce your opponent’s 15 health to zero to win.",
+    "Six dés, trois pouvoirs divins. Réduis les 15 points de vie adverses à zéro pour gagner.",
+    "Sechs Würfel, drei Götterkräfte. Wer die 15 Leben des Gegners auf null bringt, gewinnt."
+  ],
+  "Zarlarını at ve sakla.": [
+    "Roll and keep your dice.",
+    "Lance et conserve tes dés.",
+    "Wirf und behalte deine Würfel."
+  ],
+  "Sırayla en fazla üç atış yap. Saklamak istediğin zarları seçip onayla.": [
+    "Take turns rolling up to three times. Choose the dice to keep and confirm.",
+    "Lancez à tour de rôle jusqu’à trois fois. Choisis les dés à conserver et confirme.",
+    "Würfelt abwechselnd bis zu dreimal. Wähle die Würfel zum Behalten und bestätige."
+  ],
+  "Jetonlarını biriktir.": [
+    "Collect your tokens.",
+    "Accumule tes jetons.",
+    "Sammle deine Marken."
+  ],
+  "Altın çerçeveli her zar bir tanrı jetonu verir. El, rakibinden jeton çalar.": [
+    "Each gold-bordered die grants a god token. Hands steal tokens from your opponent.",
+    "Chaque dé bordé d’or rapporte un jeton divin. Les mains volent des jetons à l’adversaire.",
+    "Jeder Würfel mit Goldrand gibt eine Göttermarke. Hände stehlen Marken vom Gegner."
+  ],
+  "Tanrını çağır.": [
+    "Invoke your god.",
+    "Invoque ton dieu.",
+    "Rufe deinen Gott an."
+  ],
+  "Bir güç ve seviye seç ya da pas geç. Jeton bedeli, güç çalıştığında ödenir.": [
+    "Choose a power and level, or pass. Tokens are paid when the power takes effect.",
+    "Choisis un pouvoir et un niveau, ou passe. Les jetons sont payés lorsque le pouvoir agit.",
+    "Wähle eine Kraft und Stufe oder passe. Die Marken werden bezahlt, wenn die Kraft wirkt."
+  ],
+  "Savaşı izle.": [
+    "Watch the battle.",
+    "Regarde le combat.",
+    "Beobachte den Kampf."
+  ],
+  "Güçler, oklar, baltalar ve çalma sırasıyla çözülür. Zarlar toplandıktan sonra yeni tur otomatik başlar; ilk oyuncu değişir.": [
+    "Powers, arrows, axes and stealing resolve in order. Once dice are collected, the next round starts automatically with the other player first.",
+    "Les pouvoirs, les flèches, les haches et le vol sont résolus dans cet ordre. Une fois les dés ramassés, la manche suivante commence automatiquement et l’autre joueur commence.",
+    "Kräfte, Pfeile, Äxte und Diebstahl werden der Reihe nach abgehandelt. Nach dem Einsammeln beginnt die nächste Runde automatisch; der Startspieler wechselt."
+  ],
+  "Masadaki zarlara Tab ile geçebilirsin. Space/Enter merkeze alır veya geri koyar; yön tuşları ve Home/End zarlar arasında dolaşır.": [
+    "Use Tab to reach table dice. Space/Enter moves them to the center or back; arrow keys and Home/End navigate between dice.",
+    "Utilise Tab pour atteindre les dés. Espace/Entrée les déplace au centre ou les reprend ; les flèches et Début/Fin parcourent les dés.",
+    "Mit Tab erreichst du die Würfel. Leertaste/Enter legt sie in die Mitte oder zurück; Pfeiltasten und Pos1/Ende wechseln zwischen Würfeln."
+  ],
+  "Üç boyutlu Orlog masası: iki ayrı ahşap hazne, ortada savaş zarları, solda can taşları ve sağda yatay tanrı levhaları. Zarları doğrudan masada seç. Klavyede Tab ile zarlara geç, Space veya Enter ile seç; yön tuşlarıyla gezin.": [
+    "3D Orlog table: two wooden bowls, battle dice in the center, health stones on the left and god plaques on the right. Select dice on the table. Use Tab to reach dice, Space or Enter to select, and arrow keys to navigate.",
+    "Table Orlog en 3D : deux bols en bois, dés de combat au centre, pierres de vie à gauche et plaques divines à droite. Choisis les dés sur la table. Utilise Tab pour les atteindre, Espace ou Entrée pour choisir et les flèches pour naviguer.",
+    "3D-Orlog-Tisch: zwei Holzschalen, Kampfwürfel in der Mitte, Lebenssteine links und Göttertafeln rechts. Wähle Würfel direkt am Tisch. Mit Tab erreichst du sie, mit Leertaste oder Enter wählst du sie, mit Pfeiltasten navigierst du."
+  ],
+  "Eivor ve Sigurd, fiyort manzarasına karşı Orlog oynuyor; oyma ahşap tanrılar masanın çevresinden oyunu izliyor.": [
+    "Eivor and Sigurd play Orlog overlooking a fjord, watched by carved wooden gods around the table.",
+    "Eivor et Sigurd jouent à l’Orlog face à un fjord, observés par les dieux sculptés en bois autour de la table.",
+    "Eivor und Sigurd spielen Orlog mit Blick auf einen Fjord; geschnitzte Holzgötter am Tisch sehen zu."
+  ],
+  "Eivor ve sarışın Viking kadını, bahar fiyordunun kıyısında karşılıklı Orlog oynuyor.": [
+    "Eivor and a fair-haired Viking woman play Orlog by a springtime fjord.",
+    "Eivor et une Viking blonde jouent à l’Orlog au bord d’un fjord printanier.",
+    "Eivor und eine blonde Wikingerin spielen Orlog an einem Fjord im Frühling."
+  ],
+  "Tur 1 · Zar atışı": [
+    "Round 1 · Dice roll",
+    "Manche 1 · Lancer de dés",
+    "Runde 1 · Würfelwurf"
+  ],
+  "Tur {0} · Zar atışı": [
+    "Round {0} · Dice roll",
+    "Manche {0} · Lancer de dés",
+    "Runde {0} · Würfelwurf"
+  ],
+  "Çözümleme": [
+    "Resolution",
+    "Résolution",
+    "Abhandlung"
+  ],
+  "Zarlar atılıyor.": [
+    "Rolling dice.",
+    "Lancer des dés.",
+    "Würfel werden geworfen."
+  ],
+  "Zarlar kendi kenarlarında toplanıyor.": [
+    "Dice are being collected at their own sides.",
+    "Les dés sont ramassés sur leurs bords respectifs.",
+    "Die Würfel werden an ihren eigenen Rändern eingesammelt."
+  ],
+  "Yeterli jeton yok · Güç kullanılamadı": [
+    "Not enough tokens · Power failed",
+    "Pas assez de jetons · Pouvoir échoué",
+    "Nicht genug Marken · Kraft fehlgeschlagen"
+  ],
+  "Güç iptal edildi · Seviye sıfıra indirildi": [
+    "Power cancelled · Level reduced to zero",
+    "Pouvoir annulé · Niveau réduit à zéro",
+    "Kraft aufgehoben · Stufe auf null gesenkt"
+  ],
+  "Güç kullanılamadı": [
+    "Power failed",
+    "Le pouvoir a échoué",
+    "Kraft fehlgeschlagen"
+  ],
+  "{0} saldırdı; {1} {2} engelledi.": [
+    "{0} attacked; {1} blocked {2}.",
+    "{0} a attaqué ; {1} a bloqué {2}.",
+    "{0} griff an; {1} wehrte {2} ab."
+  ],
+  "oku kalkanla": [
+    "the arrow with a shield",
+    "la flèche avec un bouclier",
+    "den Pfeil mit einem Schild"
+  ],
+  "baltayı miğferle": [
+    "the axe with a helmet",
+    "la hache avec un casque",
+    "die Axt mit einem Helm"
+  ],
+  "{0}{1} vurdu; {2} {3} hasar aldı.": [
+    "{0} attacked{1}; {2} took {3} damage.",
+    "{0} a attaqué{1} ; {2} a subi {3} dégâts.",
+    "{0} griff{1} an; {2} erlitt {3} Schaden."
+  ],
+  "okla": [
+    "with an arrow",
+    "avec une flèche",
+    "mit einem Pfeil"
+  ],
+  "baltayla": [
+    "with an axe",
+    "avec une hache",
+    "mit einer Axt"
+  ],
+  "güçle": [
+    "with a power",
+    "avec un pouvoir",
+    "mit einer Kraft"
+  ],
+  "{0} {1} altın jeton kazandı.": [
+    "{0} gained {1} gold tokens.",
+    "{0} a gagné {1} jetons d’or.",
+    "{0} erhielt {1} Goldmarken."
+  ],
+  "{0} {1} jeton çaldı.": [
+    "{0} stole {1} tokens.",
+    "{0} a volé {1} jetons.",
+    "{0} stahl {1} Marken."
+  ],
+  "{0}: {1} · {2} jeton ödendi.": [
+    "{0}: {1} · {2} tokens paid.",
+    "{0} : {1} · {2} jetons payés.",
+    "{0}: {1} · {2} Marken bezahlt."
+  ],
+  "{0}: {1} sıfır seviyeye indirildi; iptal edildi.": [
+    "{0}: {1} was reduced to level zero and cancelled.",
+    "{0} : {1} a été réduit au niveau zéro et annulé.",
+    "{0}: {1} wurde auf Stufe null gesenkt und aufgehoben."
+  ],
+  "{0}: {1} için {2} jeton yok; güç uygulanmadı.": [
+    "{0}: not enough tokens for {1} ({2}); power was not applied.",
+    "{0} : pas assez de jetons pour {1} ({2}) ; le pouvoir n’a pas été appliqué.",
+    "{0}: nicht genug Marken für {1} ({2}); die Kraft wurde nicht angewendet."
+  ],
+  "{0}: {1} kullanılamadı.": [
+    "{0}: {1} could not be used.",
+    "{0} : {1} n’a pas pu être utilisé.",
+    "{0}: {1} konnte nicht verwendet werden."
+  ],
+  "{0}: {1} ile {2} zar {3}.": [
+    "{0}: {2} dice {3} with {1}.",
+    "{0} : {2} dés {3} avec {1}.",
+    "{0}: {2} Würfel durch {1} {3}."
+  ],
+  "eklendi": [
+    "added",
+    "ajoutés",
+    "hinzugefügt"
+  ],
+  "yeniden atıldı": [
+    "rerolled",
+    "relancés",
+    "neu gewürfelt"
+  ],
+  "{0}: {1} zar bu tur kaldırıldı.": [
+    "{0}: {1} dice removed this round.",
+    "{0} : {1} dés retirés cette manche.",
+    "{0}: {1} Würfel in dieser Runde entfernt."
+  ],
+  "{0}: {1} ile {2} jeton kazandı.": [
+    "{0}: gained {2} tokens with {1}.",
+    "{0} : a gagné {2} jetons avec {1}.",
+    "{0}: erhielt durch {1} {2} Marken."
+  ],
+  "{0}: {1} ile {2} jeton yok edildi.": [
+    "{0}: {2} tokens destroyed by {1}.",
+    "{0} : {2} jetons détruits par {1}.",
+    "{0}: {2} Marken durch {1} zerstört."
+  ],
+  "{0} {1} can feda etti.": [
+    "{0} sacrificed {1} health.",
+    "{0} a sacrifié {1} points de vie.",
+    "{0} opferte {1} Leben."
+  ],
+  "{0}: {1} seviye {2} oldu; {3}.": [
+    "{0}: {1} is now level {2}; {3}.",
+    "{0} : {1} est au niveau {2} ; {3}.",
+    "{0}: {1} ist jetzt auf Stufe {2}; {3}."
+  ],
+  "düşük seviye bedeli ödenecek": [
+    "the lower-level cost will be paid",
+    "le coût du niveau inférieur sera payé",
+    "die Kosten der niedrigeren Stufe werden bezahlt"
+  ],
+  "güç iptal": [
+    "power cancelled",
+    "pouvoir annulé",
+    "Kraft aufgehoben"
+  ],
+  "bu tur etkin": [
+    "active this round",
+    "actif cette manche",
+    "in dieser Runde aktiv"
+  ],
+  "uygun hedef yok": [
+    "no valid target",
+    "aucune cible valide",
+    "kein gültiges Ziel"
+  ],
+  "uygun zar yok": [
+    "no eligible die",
+    "aucun dé éligible",
+    "kein geeigneter Würfel"
+  ],
+  "{0} {1} can iyileştirdi.": [
+    "{0} restored {1} health.",
+    "{0} a récupéré {1} points de vie.",
+    "{0} heilte {1} Leben."
+  ],
+  "{0}: {1} miğfer kaldırıldı.": [
+    "{0}: {1} helmets removed.",
+    "{0} : {1} casques retirés.",
+    "{0}: {1} Helme entfernt."
+  ],
+  "Arkadaşın bekleniyor…": [
+    "Waiting for your friend…",
+    "En attente de ton ami…",
+    "Warten auf deinen Freund…"
+  ],
+  "Arkadaşın geldi. Masanız hazır.": [
+    "Your friend is here. Your table is ready.",
+    "Ton ami est là. Votre table est prête.",
+    "Dein Freund ist da. Euer Tisch ist bereit."
+  ],
+  "Odaya katıldın. Oda sahibinin başlatması bekleniyor.": [
+    "You joined the room. Waiting for the host to start.",
+    "Tu as rejoint le salon. En attente du lancement par l’hôte.",
+    "Du bist dem Raum beigetreten. Warte, bis der Gastgeber startet."
+  ],
+  "Arkadaşının paylaştığı 4 rakamlı kodu gir.": [
+    "Enter the four-digit code shared by your friend.",
+    "Saisis le code à quatre chiffres partagé par ton ami.",
+    "Gib den vierstelligen Code deines Freundes ein."
+  ],
+  "4 rakamdan oluşan bir oda kodu gir.": [
+    "Enter a four-digit room code.",
+    "Saisis un code de salon à quatre chiffres.",
+    "Gib einen vierstelligen Raumcode ein."
+  ],
+  "Kod kopyalanamadı. {0} kodunu seçip kopyalayabilirsin.": [
+    "Could not copy the code. You can select and copy {0}.",
+    "Le code n’a pas pu être copié. Tu peux sélectionner et copier {0}.",
+    "Der Code konnte nicht kopiert werden. Du kannst {0} markieren und kopieren."
+  ],
+  "En fazla 3 tanrı seçebilirsin. Yeni bir tanrı seçmek için önce seçili bir tanrıyı kaldır.": [
+    "You can choose up to 3 gods. Remove a chosen god before selecting another.",
+    "Tu peux choisir jusqu’à 3 dieux. Retire un dieu choisi avant d’en sélectionner un autre.",
+    "Du kannst bis zu 3 Götter wählen. Entferne einen gewählten Gott, bevor du einen anderen wählst."
+  ],
+  "Oda sunucusuna ulaşılamadı. Bağlantını kontrol edip yeniden dene.": [
+    "Could not reach the room server. Check your connection and try again.",
+    "Le serveur des salons est inaccessible. Vérifie ta connexion et réessaie.",
+    "Der Raumserver ist nicht erreichbar. Prüfe deine Verbindung und versuche es erneut."
+  ],
+  "Yanıt alınamadı. Bağlantı yenileniyor…": [
+    "No response. Reconnecting…",
+    "Aucune réponse. Reconnexion…",
+    "Keine Antwort. Verbindung wird erneuert…"
+  ],
+  "Odaya yeniden bağlanılıyor…": [
+    "Reconnecting to room…",
+    "Reconnexion au salon…",
+    "Verbindung zum Raum wird wiederhergestellt…"
+  ],
+  "Arkadaşının bağlantısı bekleniyor. Maç iki dakika boyunca korunur.": [
+    "Waiting for your friend to reconnect. The match is kept for two minutes.",
+    "En attente de la reconnexion de ton ami. La partie est conservée pendant deux minutes.",
+    "Warten auf die erneute Verbindung deines Freundes. Die Partie bleibt zwei Minuten erhalten."
+  ],
+  "Arkadaşının masası hazırlanıyor…": [
+    "Your friend’s table is loading…",
+    "La table de ton ami se prépare…",
+    "Der Tisch deines Freundes wird vorbereitet…"
+  ],
+  "Diğer oyuncu ve masa bekleniyor.": [
+    "Waiting for the other player and table.",
+    "En attente de l’autre joueur et de sa table.",
+    "Warten auf den anderen Spieler und dessen Tisch."
+  ],
+  "Elinde açık bir oda yok.": [
+    "You have no active room.",
+    "Tu n’as aucun salon actif.",
+    "Du hast keinen aktiven Raum."
+  ],
+  "Önce mevcut odadan ayrıl.": [
+    "Leave your current room first.",
+    "Quitte d’abord ton salon actuel.",
+    "Verlasse zuerst deinen aktuellen Raum."
+  ],
+  "Odalar şu an dolu. Biraz sonra yeniden dene.": [
+    "All rooms are full. Try again shortly.",
+    "Tous les salons sont occupés. Réessaie dans un instant.",
+    "Alle Räume sind voll. Versuche es gleich erneut."
+  ],
+  "Bu kodla bir oda bulunamadı.": [
+    "No room was found with this code.",
+    "Aucun salon trouvé avec ce code.",
+    "Mit diesem Code wurde kein Raum gefunden."
+  ],
+  "Bu oda dolu veya oyun başlamış.": [
+    "This room is full or the game has started.",
+    "Ce salon est complet ou la partie a déjà commencé.",
+    "Dieser Raum ist voll oder das Spiel hat begonnen."
+  ],
+  "Oda oturumu sona erdi. Yeni bir oda kur veya katıl.": [
+    "The room session ended. Create or join a new room.",
+    "La session du salon est terminée. Crée ou rejoins un nouveau salon.",
+    "Die Raumsitzung ist beendet. Erstelle einen neuen Raum oder tritt einem bei."
+  ],
+  "Bu oda başka bir sekmede açıldı.": [
+    "This room was opened in another tab.",
+    "Ce salon a été ouvert dans un autre onglet.",
+    "Dieser Raum wurde in einem anderen Tab geöffnet."
+  ],
+  "Oyunculardan biri odadan ayrıldı. Yeni bir oda kurabilirsiniz.": [
+    "A player left the room. You can create a new room.",
+    "Un joueur a quitté le salon. Vous pouvez en créer un autre.",
+    "Ein Spieler hat den Raum verlassen. Ihr könnt einen neuen Raum erstellen."
+  ],
+  "Bağlantı süresi doldu. Yeni bir oda kurabilirsiniz.": [
+    "The connection timed out. You can create a new room.",
+    "La connexion a expiré. Vous pouvez créer un nouveau salon.",
+    "Die Verbindung ist abgelaufen. Ihr könnt einen neuen Raum erstellen."
+  ],
+  "Oda uzun süre kullanılmadığı için kapandı.": [
+    "The room closed after being inactive for too long.",
+    "Le salon a fermé après une longue période d’inactivité.",
+    "Der Raum wurde wegen längerer Inaktivität geschlossen."
+  ],
+  "Başlamak için iki oyuncu da bağlı olmalı.": [
+    "Both players must be connected to start.",
+    "Les deux joueurs doivent être connectés pour commencer.",
+    "Beide Spieler müssen zum Start verbunden sein."
+  ],
+  "Hazır olmak için iki oyuncu da bağlı olmalı.": [
+    "Both players must be connected to get ready.",
+    "Les deux joueurs doivent être connectés pour se déclarer prêts.",
+    "Beide Spieler müssen verbunden sein, um sich bereit zu melden."
+  ],
+  "Hazırlık durumu değişti. Güncel masayı bekle.": [
+    "Preparation changed. Wait for the updated table.",
+    "La préparation a changé. Attends la mise à jour de la table.",
+    "Die Vorbereitung hat sich geändert. Warte auf den aktualisierten Tisch."
+  ],
+  "Bir oyuncu adı ve üç farklı tanrı seç.": [
+    "Choose a player name and three different gods.",
+    "Choisis un nom de joueur et trois dieux différents.",
+    "Wähle einen Spielernamen und drei verschiedene Götter."
+  ],
+  "Oyunu yalnız oda kurucusu başlatabilir.": [
+    "Only the host can start the game.",
+    "Seul l’hôte peut lancer la partie.",
+    "Nur der Gastgeber kann das Spiel starten."
+  ],
+  "Yazı turayı oda kurucusu bir kez atabilir.": [
+    "Only the host can flip the coin, once.",
+    "Seul l’hôte peut lancer la pièce, une seule fois.",
+    "Nur der Gastgeber darf die Münze einmal werfen."
+  ],
+  "Masayı açmak için yazı turayı ve iki oyuncuyu bekle.": [
+    "Wait for the coin toss and both players before opening the table.",
+    "Attends le lancer de pièce et les deux joueurs avant d’ouvrir la table.",
+    "Warte auf den Münzwurf und beide Spieler, bevor der Tisch geöffnet wird."
+  ],
+  "Yeni oyun için iki oyuncu da bağlı olmalı.": [
+    "Both players must be connected for a new game.",
+    "Les deux joueurs doivent être connectés pour une nouvelle partie.",
+    "Für ein neues Spiel müssen beide Spieler verbunden sein."
+  ],
+  "Yeni oyun için mevcut maçın ve sunumunun bitmesini bekle.": [
+    "Wait for the current match and its presentation to finish before starting a new game.",
+    "Attends la fin de la partie et de ses animations avant d’en lancer une nouvelle.",
+    "Warte, bis die aktuelle Partie und ihre Darstellung beendet sind, bevor du ein neues Spiel startest."
+  ],
+  "Bu maç zaten yenilendi.": [
+    "A new match has already been created.",
+    "Une nouvelle partie a déjà été créée.",
+    "Eine neue Partie wurde bereits erstellt."
+  ],
+  "Geçersiz oyun komutu.": [
+    "Invalid game command.",
+    "Commande de jeu invalide.",
+    "Ungültiger Spielbefehl."
+  ],
+  "Yalnız kendi hamleni yapabilirsin.": [
+    "You can only make your own move.",
+    "Tu ne peux effectuer que ton propre coup.",
+    "Du kannst nur deinen eigenen Zug ausführen."
+  ],
+  "Maç durumu yenileniyor. Hamleni yeniden dene.": [
+    "Updating match state. Try your move again.",
+    "Mise à jour de la partie. Réessaie ton coup.",
+    "Der Spielstand wird aktualisiert. Versuche deinen Zug erneut."
+  ],
+  "A previously kept die cannot be changed.": [
+    "A previously kept die cannot be changed.",
+    "Un dé déjà conservé ne peut pas être modifié.",
+    "Ein bereits behaltener Würfel kann nicht geändert werden."
+  ],
+  "All dice have been kept.": [
+    "All dice have been kept.",
+    "Tous les dés ont été conservés.",
+    "Alle Würfel wurden behalten."
+  ],
+  "Choose valid targets for this favor.": [
+    "Choose valid targets for this power.",
+    "Choisis des cibles valides pour ce pouvoir.",
+    "Wähle gültige Ziele für diese Kraft."
+  ],
+  "Confirm the current roll before rolling again.": [
+    "Confirm the current roll before rolling again.",
+    "Confirme le lancer actuel avant de relancer.",
+    "Bestätige den aktuellen Wurf, bevor du erneut würfelst."
+  ],
+  "Favor level must be 1, 2 or 3.": [
+    "Power level must be 1, 2 or 3.",
+    "Le niveau du pouvoir doit être 1, 2 ou 3.",
+    "Die Kraftstufe muss 1, 2 oder 3 sein."
+  ],
+  "Favors can only be chosen in the favor phase.": [
+    "Powers can only be chosen during the power phase.",
+    "Les pouvoirs ne peuvent être choisis que pendant leur phase.",
+    "Kräfte können nur in der Kraftphase gewählt werden."
+  ],
+  "It is not this player’s turn.": [
+    "It is not this player’s turn.",
+    "Ce n’est pas le tour de ce joueur.",
+    "Dieser Spieler ist nicht am Zug."
+  ],
+  "Only visible dice can be selected.": [
+    "Only visible dice can be selected.",
+    "Seuls les dés visibles peuvent être sélectionnés.",
+    "Nur sichtbare Würfel können ausgewählt werden."
+  ],
+  "Roll before selecting dice or confirming.": [
+    "Roll before selecting dice or confirming.",
+    "Lance les dés avant de choisir ou de confirmer.",
+    "Würfle, bevor du Würfel auswählst oder bestätigst."
+  ],
+  "The first player advances the round.": [
+    "The first player advances the round.",
+    "Le premier joueur fait avancer la manche.",
+    "Der Startspieler leitet die nächste Runde ein."
+  ],
+  "The player has not equipped this favor.": [
+    "The player has not equipped this power.",
+    "Le joueur n’a pas équipé ce pouvoir.",
+    "Der Spieler hat diese Kraft nicht ausgerüstet."
+  ],
+  "The player has used all three rolls.": [
+    "The player has used all three rolls.",
+    "Le joueur a utilisé ses trois lancers.",
+    "Der Spieler hat alle drei Würfe verbraucht."
+  ],
+  "This command is unavailable in the current phase.": [
+    "This command is unavailable in the current phase.",
+    "Cette commande n’est pas disponible dans cette phase.",
+    "Dieser Befehl ist in der aktuellen Phase nicht verfügbar."
+  ],
+  "This command requires the roll phase.": [
+    "This command requires the roll phase.",
+    "Cette commande nécessite la phase de lancer.",
+    "Dieser Befehl erfordert die Würfelphase."
+  ],
+  "This die does not belong to the player.": [
+    "This die does not belong to the player.",
+    "Ce dé n’appartient pas au joueur.",
+    "Dieser Würfel gehört dem Spieler nicht."
+  ],
+  "Selection must contain unique die IDs.": [
+    "Select each die only once.",
+    "Ne sélectionne chaque dé qu’une seule fois.",
+    "Wähle jeden Würfel nur einmal aus."
+  ],
+  "Unknown command.": [
+    "Unknown command.",
+    "Commande inconnue.",
+    "Unbekannter Befehl."
+  ],
+  "Unknown player.": [
+    "Unknown player.",
+    "Joueur inconnu.",
+    "Unbekannter Spieler."
+  ],
+  "Thor's Strike": [
+    "Thor's Strike",
+    "Frappe de Thor",
+    "Thors Schlag"
+  ],
+  "Iðunn's Rejuvenation": [
+    "Iðunn's Rejuvenation",
+    "Rajeunissement d’Iðunn",
+    "Iðunns Verjüngung"
+  ],
+  "Víðarr's Might": [
+    "Víðarr's Might",
+    "Puissance de Víðarr",
+    "Víðarrs Macht"
+  ],
+  "Baldr's Invulnerability": [
+    "Baldr's Invulnerability",
+    "Invulnérabilité de Baldr",
+    "Baldrs Unverwundbarkeit"
+  ],
+  "Bragi's Verve": [
+    "Bragi's Verve",
+    "Verve de Bragi",
+    "Bragis Elan"
+  ],
+  "Brunhild's Fury": [
+    "Brunhild's Fury",
+    "Fureur de Brunhild",
+    "Brunhilds Zorn"
+  ],
+  "Freyja's Plenty": [
+    "Freyja's Plenty",
+    "Abondance de Freyja",
+    "Freyjas Fülle"
+  ],
+  "Freyr's Gift": [
+    "Freyr's Gift",
+    "Don de Freyr",
+    "Freyrs Gabe"
+  ],
+  "Frigg's Sight": [
+    "Frigg's Sight",
+    "Vision de Frigg",
+    "Friggs Sicht"
+  ],
+  "Heimdall's Watch": [
+    "Heimdall's Watch",
+    "Vigilance de Heimdall",
+    "Heimdalls Wacht"
+  ],
+  "Hel's Grip": [
+    "Hel's Grip",
+    "Étreinte de Hel",
+    "Hels Griff"
+  ],
+  "Loki's Trick": [
+    "Loki's Trick",
+    "Ruse de Loki",
+    "Lokis List"
+  ],
+  "Mímir's Wisdom": [
+    "Mímir's Wisdom",
+    "Sagesse de Mímir",
+    "Mímirs Weisheit"
+  ],
+  "Odin's Sacrifice": [
+    "Odin's Sacrifice",
+    "Sacrifice d’Odin",
+    "Odins Opfer"
+  ],
+  "Skaði's Hunt": [
+    "Skaði's Hunt",
+    "Chasse de Skaði",
+    "Skaðis Jagd"
+  ],
+  "Skuld's Claim": [
+    "Skuld's Claim",
+    "Revendication de Skuld",
+    "Skulds Anspruch"
+  ],
+  "Thrymr's Theft": [
+    "Thrymr's Theft",
+    "Larcin de Thrymr",
+    "Thrymrs Diebstahl"
+  ],
+  "Tyr's Pledge": [
+    "Tyr's Pledge",
+    "Serment de Tyr",
+    "Tyrs Schwur"
+  ],
+  "Ullr's Aim": [
+    "Ullr's Aim",
+    "Visée d’Ullr",
+    "Ullrs Ziel"
+  ],
+  "Vár's Bond": [
+    "Vár's Bond",
+    "Lien de Vár",
+    "Várs Bund"
+  ]
+}

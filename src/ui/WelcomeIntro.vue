@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../i18n';
 import { nextTick, onBeforeUnmount, ref, watch } from "vue";
 import UiIcon from "./UiIcon.vue";
 
@@ -127,14 +128,14 @@ onBeforeUnmount(() => {
     @keydown.esc.prevent="phase !== 'idle' && reveal(false)"
     @transitionend="onTransitionEnd"
   >
-    <h1 id="welcome-title" class="sr-only">Orlog</h1>
+    <h1 id="welcome-title" class="sr-only">{{ t("Orlog") }}</h1>
     <img
       v-if="!posterFailed"
       class="intro-poster"
       src="/assets/art/welcome-orlog-intro-2k.webp"
       width="2688" height="1536"
       fetchpriority="high" decoding="async"
-      alt="Eivor ve sarışın Viking kadını, bahar fiyordunun kıyısında karşılıklı Orlog oynuyor."
+      :alt="t('Eivor ve sarışın Viking kadını, bahar fiyordunun kıyısında karşılıklı Orlog oynuyor.')"
       @error="posterFailed = true"
     />
     <video
@@ -158,11 +159,11 @@ onBeforeUnmount(() => {
       class="welcome-play intro-start"
       @click="start"
     >
-      <span>Oyuna Başla</span>
+      <span>{{ t("Oyuna Başla") }}</span>
       <UiIcon name="arrow" />
     </button>
     <p class="sr-only" role="status" aria-live="polite">
-      {{ phase === 'playing' ? 'Zarlar atılıyor.' : '' }}
+      {{ t(phase === 'playing' ? 'Zarlar atılıyor.' : '') }}
     </p>
   </section>
 </template>

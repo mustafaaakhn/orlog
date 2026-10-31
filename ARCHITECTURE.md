@@ -353,3 +353,22 @@ Tek bilgi penceresi mevcut sunum yüzü/değerinden beslenir. Kapat/Escape ve
 dışarı dokunma geçici bilgiyi temizler; kilit ve kimlik kaybı eski bilgiyi
 bırakmaz. Kısa ekranda içerik içeride kayar, 44px Kapat sabit kalır.
 Masaüstünün mevcut hover/odak ve tekli seçim davranışı korunur.
+
+## Arayüz dilleri
+
+`src/i18n` tek reaktif dil seçimini ve mesaj kataloğunu tutar. İlk ziyaret
+İngilizcedir; `orlog-language` altında geçerli bir önceki seçim varsa o
+kullanılır. Tarayıcı dili kendiliğinden seçim yapmaz. Depolama kapalıysa
+İngilizce varsayımı ve oturum içi dil değişimi çalışır. `setLocale`, belge
+`lang` değerini de değiştirir. Menüde English, Türkçe, Français ve Deutsch
+adları kendi dillerinde kalır.
+
+Vue metinleri, erişilebilir adlar, rehber, güç açıklamaları ve hata/olay
+sunumu `t` üzerinden çizilir; DOM metinlerini sonradan değiştiren gözlemci
+yoktur. Türkçe kaynak mesajlar katalog anahtarıdır. Core/ağ tarafından
+üretilen sayılı mesajlar sunum sınırında eşlenir; yan yana parametreler
+kimlikleri belirsizleştirmemek için açık değer listeleriyle biçimlenir.
+Kullanıcı adları ve oda kodları çevrilmez. Hazırlıkta yalnız dokunulmamış
+varsayılan oyuncu adları dil değişimini izler; maç/ağ verisi yeniden yazılmaz.
+`Haznede` gibi mevcut konum değerleri, komutlar ve olay kimlikleri değişmez.
+Core'a Vue veya çeviri bağımlılığı eklenmez.

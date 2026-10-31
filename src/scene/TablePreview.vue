@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../i18n';
 import FavorPicker from "../ui/FavorPicker.vue";
 import GameMark from "../ui/GameMark.vue";
 import type { PresentationCue } from '../presentation/combatPresenter';
@@ -115,12 +116,14 @@ const diceSummary = computed(() =>
     id: player.id,
     text: player.dice
       .map((die, index) => {
-        if (!die.faceId) return `Zar ${index + 1}: henüz atılmadı`;
+        if (!die.faceId) return t('Zar {0}: henüz atılmadı', [index + 1]);
         const face = getDieFace(die.definitionId, die.faceId);
         const symbol = SYMBOL_GUIDE.find(
           (value) => value.id === face.symbol,
         )!.name;
-        return `Zar ${index + 1}: ${symbol}${face.grantsToken ? ", altın çerçeveli" : ""}${die.value > 1 ? `, etki ${die.value}` : ""}, ${die.removed ? "kaldırıldı" : collected.value.includes(die.id) ? 'kendi kenarında, kullanıldı' : die.kept ? "merkezde, kilitli" : die.selected ? "merkezde, seçili" : "haznede"}`;
+        return t('Zar {0}: {1}{2}{3}, {4}', [index + 1, t(symbol),
+          face.grantsToken ? t(', altın çerçeveli') : '', die.value > 1 ? t(', etki {0}', [die.value]) : '',
+          t(die.removed ? 'kaldırıldı' : collected.value.includes(die.id) ? 'kendi kenarında, kullanıldı' : die.kept ? 'merkezde, kilitli' : die.selected ? 'merkezde, seçili' : 'haznede')]);
       })
       .join("; "),
   })),
@@ -227,7 +230,7 @@ onErrorCaptured(() => {
       :dpr="renderDpr"
       :antialias="true"
       :tone-mapping-exposure="1"
-      aria-label="Üç boyutlu Orlog masası: iki ayrı ahşap hazne, ortada savaş zarları, solda can taşları ve sağda yatay tanrı levhaları. Zarları doğrudan masada seç. Klavyede Tab ile zarlara geç, Space veya Enter ile seç; yön tuşlarıyla gezin."
+      :aria-label="t('Üç boyutlu Orlog masası: iki ayrı ahşap hazne, ortada savaş zarları, solda can taşları ve sağda yatay tanrı levhaları. Zarları doğrudan masada seç. Klavyede Tab ile zarlara geç, Space veya Enter ile seç; yön tuşlarıyla gezin.')"
       role="img"
       @ready="ready"
       @render="rendered"
@@ -261,25 +264,25 @@ onErrorCaptured(() => {
     </TresCanvas>
     <SceneFavorControls v-if="status === 'ready' && !batch && !paused && !turningSeat" :targets="favors" :active-player="favorPlayer" :pinned-target="menuPinned ? menuFavor : null" @highlight="highlightFavor" @inspect="inspectFavor" />
     <section v-if="menuFavor && status === 'ready' && !batch && !paused" ref="favorMenu"
-      id="table-favor-menu" class="table-favor-menu" :class="{ 'is-preview': !menuPinned }" :role="menuPinned ? 'dialog' : 'region'" :aria-label="menuPinned ? 'Tanrı gücü seçimi' : 'Tanrı bilgileri'" tabindex="-1">
-      <p class="favor-menu-help">{{ menuPinned ? 'Seviyeni seç · Escape ile kapat' : menuFavor.playerId === favorPlayer ? 'Seçmek için tanrıya tıkla' : 'Tanrı bilgileri' }}</p>
+      id="table-favor-menu" class="table-favor-menu" :class="{ 'is-preview': !menuPinned }" :role="menuPinned ? 'dialog' : 'region'" :aria-label="t(menuPinned ? 'Tanrı gücü seçimi' : 'Tanrı bilgileri')" tabindex="-1">
+      <p class="favor-menu-help">{{ t(menuPinned ? 'Seviyeni seç · Escape ile kapat' : menuFavor.playerId === favorPlayer ? 'Seçmek için tanrıya tıkla' : 'Tanrı bilgileri') }}</p>
       <FavorPicker :key="`${menuFavor.playerId}/${menuFavor.favorId}`" :favor-id="menuFavor.favorId"
         :state="state" :player="state.players[menuFavor.playerId]" :disabled="false" :preview="!menuPinned"
         @choose="(id, level, input) => emit('choose', id, level, input)" />
     </section>
     <div v-if="turningSeat && !paused" class="seat-turn-cue" role="status" aria-live="polite" aria-atomic="true">
-      <div><h2>{{ turningSeat === 'player-1' ? '1. Oyuncu' : '2. Oyuncu' }}</h2><p>Sıra sende</p></div>
+      <div><h2>{{ t(turningSeat === 'player-1' ? '1. Oyuncu' : '2. Oyuncu') }}</h2><p>{{ t("Sıra sende") }}</p></div>
     </div>
     <div v-if="cue?.title && !turningSeat" class="resolution-cue is-title" role="status" aria-live="polite" aria-atomic="true">
-      <h2>{{ cue.title }}</h2>
+      <h2>{{ t(cue.title) }}</h2>
     </div>
     <section
       v-if="status === 'ready'"
       class="sr-only"
-      aria-label="İki oyuncunun masadaki zarları"
+      :aria-label="t('İki oyuncunun masadaki zarları')"
     >
       <p v-for="player in diceSummary" :key="player.id">
-        Oyuncu {{ player.id === "player-1" ? "I" : "II" }}: {{ player.text }}
+        {{ t("Oyuncu") }} {{ t(player.id === "player-1" ? "I" : "II") }}: {{ t(player.text) }}
       </p>
     </section>
     <SceneDiceControls
@@ -303,24 +306,22 @@ onErrorCaptured(() => {
     >
       <GameMark class="state-rune" />
       <template v-if="status === 'checking' || status === 'loading'"
-        ><h2>Masa hazırlanıyor</h2>
-        <p>Ahşap, kumaş ve kemik bir araya geliyor.</p></template
+        ><h2>{{ t("Masa hazırlanıyor") }}</h2>
+        <p>{{ t("Ahşap, kumaş ve kemik bir araya geliyor.") }}</p></template
       >
       <template v-else-if="status === 'unsupported'"
-        ><h2>Bu masa WebGL 2 gerektiriyor</h2>
+        ><h2>{{ t("Bu masa WebGL 2 gerektiriyor") }}</h2>
         <p>
-          Güncel bir tarayıcı kullanıp donanım hızlandırmasını açarak yeniden
-          deneyebilirsin.
+          {{ t("Güncel bir tarayıcı kullanıp donanım hızlandırmasını açarak yeniden deneyebilirsin.") }}
         </p>
-        <button @click="initialize">Yeniden dene</button></template
+        <button @click="initialize">{{ t("Yeniden dene") }}</button></template
       >
       <template v-else
-        ><h2>Sahne görüntülenemedi</h2>
+        ><h2>{{ t("Sahne görüntülenemedi") }}</h2>
         <p>
-          Grafik bağlantısı kesilmiş veya sahne hazırlanırken bir sorun oluşmuş
-          olabilir.
+          {{ t("Grafik bağlantısı kesilmiş veya sahne hazırlanırken bir sorun oluşmuş olabilir.") }}
         </p>
-        <button @click="initialize">Sahneyi yeniden yükle</button></template
+        <button @click="initialize">{{ t("Sahneyi yeniden yükle") }}</button></template
       >
     </div>
   </div>

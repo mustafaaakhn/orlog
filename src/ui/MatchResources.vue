@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../i18n';
 import { computed } from 'vue'
 import type { GameState, PlayerId } from '../core'
 import UiIcon from './UiIcon.vue'
@@ -23,13 +24,13 @@ const seats = computed(() => [
     <div class="mobile-resource-row" aria-hidden="true"
       :class="`is-${seat.side}`" :data-player-id="seat.id">
       <span class="mobile-resource-name" :title="names[seat.id]">{{ names[seat.id] }}</span>
-      <span class="mobile-resource-value resource-health" title="Can">
+      <span class="mobile-resource-value resource-health" :title="t('Can')">
         <UiIcon name="heart" />
-        <span>{{ state.players[seat.id].health }}</span>
+        <span>{{ t(state.players[seat.id].health) }}</span>
       </span>
-      <span class="mobile-resource-value resource-tokens" title="Tanrı jetonu">
+      <span class="mobile-resource-value resource-tokens" :title="t('Tanrı jetonu')">
         <TokenIcon />
-        <span>{{ state.players[seat.id].tokens }}</span>
+        <span>{{ t(state.players[seat.id].tokens) }}</span>
       </span>
     </div>
     <slot v-if="seat.side === 'self'" />

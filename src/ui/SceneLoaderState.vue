@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../i18n';
 import GameMark from "./GameMark.vue";
 defineProps<{ error?: Error }>();
 function reload() {
@@ -14,15 +15,13 @@ function reload() {
       aria-live="polite"
     >
       <GameMark class="state-rune" />
-      <h2>{{ error ? "Sahne yüklenemedi" : "Masa hazırlanıyor" }}</h2>
+      <h2>{{ t(error ? "Sahne yüklenemedi" : "Masa hazırlanıyor") }}</h2>
       <p>
-        {{
-          error
+        {{ t(error
             ? "Bağlantını kontrol edip yeniden deneyebilirsin."
-            : "Ahşap, kumaş ve kemik bir araya geliyor."
-        }}
+            : "Ahşap, kumaş ve kemik bir araya geliyor.") }}
       </p>
-      <button v-if="error" @click="reload">Yeniden yükle</button>
+      <button v-if="error" @click="reload">{{ t("Yeniden yükle") }}</button>
     </div>
   </div>
 </template>

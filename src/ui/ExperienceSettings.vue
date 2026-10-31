@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t } from '../i18n';
 import type { Preferences } from "../app/preferences";
 defineProps<{ settings: Preferences; audioFailed: boolean }>();
 defineEmits<{ retry: [] }>();
@@ -7,11 +8,11 @@ defineEmits<{ retry: [] }>();
   <div class="experience-settings">
     <div class="settings-grid">
       <fieldset>
-        <legend>Ses</legend>
+        <legend>{{ t("Ses") }}</legend>
         <div class="setting-row">
-          <label for="music-volume">Müzik seviyesi</label>
+          <label for="music-volume">{{ t("Müzik seviyesi") }}</label>
           <output for="music-volume"
-            >{{ Math.round(settings.music * 100) }}%</output
+            >{{ t(Math.round(settings.music * 100)) }}%</output
           ><input
             id="music-volume"
             v-model.number="settings.music"
@@ -22,9 +23,9 @@ defineEmits<{ retry: [] }>();
           />
         </div>
         <div class="setting-row">
-          <label for="effects-volume">Ses efekti seviyesi</label>
+          <label for="effects-volume">{{ t("Ses efekti seviyesi") }}</label>
           <output for="effects-volume"
-            >{{ Math.round(settings.effects * 100) }}%</output
+            >{{ t(Math.round(settings.effects * 100)) }}%</output
           ><input
             id="effects-volume"
             v-model.number="settings.effects"
@@ -34,11 +35,11 @@ defineEmits<{ retry: [] }>();
             step="0.05"
           />
         </div>
-        <p>Müzik girişte başlar; tarayıcı izin isterse ilk dokunuş veya tuşla açılır. Arka sekmede durur.</p>
+        <p>{{ t("Müzik girişte başlar; tarayıcı izin isterse ilk dokunuş veya tuşla açılır. Arka sekmede durur.") }}</p>
         <p v-if="audioFailed" role="status">
-          Ses açılamadı.
+          {{ t("Ses açılamadı.") }}
           <button class="restart-action" @click="$emit('retry')">
-            Sesi yeniden dene
+            {{ t("Sesi yeniden dene") }}
           </button>
         </p>
       </fieldset>

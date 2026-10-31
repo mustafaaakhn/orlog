@@ -208,3 +208,22 @@ içine sığar; köşe jeton işareti sembolün ucunu kapatmaz. Mipmap, doğrusa
 süzme, donanım sınırında 8× anizotropi ve renderer kenar yumuşatması birlikte
 kullanılır. Malzeme ışığı sembol maskesini izler; koyu mürekkebi tek renk
 emisyonla soldurmaz. Masaüstü yüz çizimi ve zarın gerçek sonucu değişmez.
+
+## Dil, bağlantı ve mobil giriş düzeni
+
+İlk giriş İngilizce açılır; seçilen dil sonraki ziyaret için saklanır.
+Dil menüsü English, Türkçe, Français, Deutsch adlarını kullanır. Metinler
+ve erişilebilir açıklamalar birlikte değişir. Kısa ekranda dil listesi
+kendi içinde kayar; büyük metinli Fransızca/Almanca eylemler de erişilebilir
+kalır. Kullanıcının yazdığı adlar ve oda kodları dil değişince değişmez.
+
+Hakkında panelindeki iki bağlantı yalnız GitHub ve İletişim etiketlerini
+gösterir; yeni sekme hedefi ve `noopener noreferrer` kullanır. İletişim
+adresi `contact@orlog.games` olarak güncellendi.
+
+Mobil rakip kartında simge kendi çerçevesinde ve metin bloğunun ortasında
+hizalanır. Kısa yatayda iki kart yan yanadır; çok kısa ekranda açıklamalar
+kaldırılarak rakip adı, simge ve eylem korunur. Masaüstü kemerli kartlar
+korunur. Ortam/su döngüsü çalmaz; iki müzik sessiz kuyrukları çıkarılmış
+kayıtlarla sırayla sürer. İlk dokunuşun tarayıcı ses iznini açma davranışı
+ve arka sekmede duraklatma korunur.

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { t, LANGUAGES, locale, setLocale } from './i18n';
 import {
   computed,
   defineAsyncComponent,
@@ -108,8 +109,8 @@ onUnmounted(() => {
   audio.dispose();
 });
 const names = ref<Record<PlayerId, string>>({
-  "player-1": "Oyuncu I",
-  "player-2": "Oyuncu II",
+  "player-1": t("Oyuncu I"),
+  "player-2": t("Oyuncu II"),
 });
 const opponent = ref<OpponentOptions>({
   mode: "computer",
@@ -422,13 +423,13 @@ function confirm() {
     :data-page-hidden="pageHidden"
   >
     <a v-if="!preparing" class="skip-link" href="#match-controls"
-      >Oyun kontrollerine geç</a
+      >{{ t("Oyun kontrollerine geç") }}</a
     >
     <header class="masthead" :inert="introActive" :aria-hidden="introActive || undefined">
       <a
         class="wordmark"
         href="./"
-        aria-label="Orlog ana sayfa"
+        :aria-label="t('Orlog ana sayfa')"
         @click="
           (event) => {
             if (!preparing) {
@@ -437,35 +438,37 @@ function confirm() {
             }
           }
         "
-        ><GameMark />ORLOG</a
+        ><GameMark />{{ t("ORLOG") }}</a
       >
-      <span class="edition">Kuzeyin zar oyunu</span>
-      <nav class="header-tools entry-tools" aria-label="Yardımcı alanlar">
-        <button class="icon-button entry-tool" aria-label="Dil seçimi" title="Dil seçimi" popovertarget="language-picker">
+      <span class="edition">{{ t("Kuzeyin zar oyunu") }}</span>
+      <nav class="header-tools entry-tools" :aria-label="t('Yardımcı alanlar')">
+        <button class="icon-button entry-tool" :aria-label="t('Dil seçimi')" :title="t('Dil seçimi')" popovertarget="language-picker">
           <UiIcon name="translate" />
         </button>
-        <button class="icon-button entry-tool" aria-label="Ayarlar" title="Ayarlar" @click="overlay = 'settings'">
+        <button class="icon-button entry-tool" :aria-label="t('Ayarlar')" :title="t('Ayarlar')" @click="overlay = 'settings'">
           <UiIcon name="settings" />
         </button>
-        <button class="icon-button entry-tool" aria-label="Oyun rehberi" title="Oyun rehberi" @click="overlay = 'rules'">
+        <button class="icon-button entry-tool" :aria-label="t('Oyun rehberi')" :title="t('Oyun rehberi')" @click="overlay = 'rules'">
           <UiIcon name="book" />
         </button>
-        <button class="icon-button entry-tool" aria-label="Proje hakkında" title="Proje hakkında" popovertarget="about-panel">
+        <button class="icon-button entry-tool" :aria-label="t('Proje hakkında')" :title="t('Proje hakkında')" popovertarget="about-panel">
           <UiIcon name="info" />
         </button>
         <section id="about-panel" ref="aboutPanel" class="about-panel" popover aria-labelledby="about-title">
-          <h2 id="about-title">Proje hakkında</h2>
-          <p>Bu oyun, Assassin’s Creed Valhalla’daki Orlog’dan esinlenen bağımsız bir fan yapımıdır. Resmî bir Ubisoft oyunu değildir; Ubisoft ile bağlantısı yoktur.</p>
-          <p class="about-contact"><a href="https://github.com/mustafaaakhn/orlog" target="_blank" rel="noopener noreferrer">GitHub</a></p>
-          <p class="about-contact"><a href="mailto:contact@orlog.games" target="_blank" rel="noopener noreferrer">İletişim</a></p>
+          <h2 id="about-title">{{ t("Proje hakkında") }}</h2>
+          <p>{{ t("Bu oyun, Assassin’s Creed Valhalla’daki Orlog’dan esinlenen bağımsız bir fan yapımıdır. Resmî bir Ubisoft oyunu değildir; Ubisoft ile bağlantısı yoktur.") }}</p>
+          <p class="about-contact"><a href="https://github.com/mustafaaakhn/orlog" target="_blank" rel="noopener noreferrer">{{ t("GitHub") }}</a></p>
+          <p class="about-contact"><a href="mailto:contact@orlog.games" target="_blank" rel="noopener noreferrer">{{ t("İletişim") }}</a></p>
         </section>
         <div id="language-picker" ref="languagePicker" class="language-picker" popover>
-          <h2>Dil seçimi</h2>
-          <button class="language-option" aria-pressed="true" lang="tr" popovertarget="language-picker" popovertargetaction="hide">
-            Türkçe <UiIcon name="check" />
+          <h2>{{ t("Dil seçimi") }}</h2>
+          <button v-for="language in LANGUAGES" :key="language.code" class="language-option"
+            :aria-pressed="locale === language.code" :lang="language.code" translate="no"
+            popovertarget="language-picker" popovertargetaction="hide" @click="setLocale(language.code)">
+            {{ language.name }} <UiIcon v-if="locale === language.code" name="check" />
           </button>
         </div>
-        <button v-if="!preparing" class="icon-button entry-tool" aria-label="Oyundan çık" title="Oyundan çık" @click="overlay = 'menu'">
+        <button v-if="!preparing" class="icon-button entry-tool" :aria-label="t('Oyundan çık')" :title="t('Oyundan çık')" @click="overlay = 'menu'">
           <UiIcon name="exit" />
         </button>
       </nav>
@@ -518,24 +521,24 @@ function confirm() {
       @screen="setupScreen = $event"
       @cinematic="introActive = $event"
     />
-    <section v-else class="match-screen" aria-label="Orlog oyun masası">
+    <section v-else class="match-screen" :aria-label="t('Orlog oyun masası')">
       <div class="sr-only" role="status" aria-live="polite" aria-atomic="true">
         <p v-for="player in state.players" :key="player.id">
-          {{ names[player.id] }}: {{ player.health }} can, {{ player.tokens }} jeton.
-          {{ player.id === viewerId ? 'Senin tarafın.' : 'Karşı taraf.' }}
+          {{ names[player.id] }}: {{ t(player.health) }} {{ t("can,") }} {{ t(player.tokens) }} {{ t("jeton.") }}
+          {{ t(player.id === viewerId ? 'Senin tarafın.' : 'Karşı taraf.') }}
         </p>
-        <p>{{ instruction }}</p>
+        <p>{{ t(instruction) }}</p>
       </div>
-      <p class="table-round" aria-label="Tur ve sıra">
-        Tur {{ state.round }}<span v-if="activePlayer"> · {{ names[activePlayer.id] }}</span>
+      <p class="table-round" :aria-label="t('Tur ve sıra')">
+        {{ t("Tur") }} {{ t(state.round) }}<span v-if="activePlayer"> · {{ names[activePlayer.id] }}</span>
       </p>
-      <p v-if="networkStatus" class="network-status" role="status">{{ networkStatus }}</p>
+      <p v-if="networkStatus" class="network-status" role="status">{{ t(networkStatus) }}</p>
       <MatchResources :state="state" :names="names" :viewer-id="viewerId">
         <section
           id="match-controls"
           tabindex="-1"
           class="match-actions"
-          aria-label="Oyun kontrolleri"
+          :aria-label="t('Oyun kontrolleri')"
         >
           <MobileFavorPanel
             :state="state" :viewer-id="viewerId" :names="names"
@@ -545,21 +548,21 @@ function confirm() {
           />
           <template v-if="humanTurn && phase.name === 'roll'">
             <button v-if="!busy && phase.step === 'awaiting-roll'" class="primary-action" @click="roll">
-              Zar at <UiIcon name="arrow" />
+              {{ t("Zar at") }} <UiIcon name="arrow" />
             </button>
             <button v-else-if="canConfirmSelection" class="primary-action" @click="confirm">
-              Seçimi onayla <UiIcon name="check" />
+              {{ t("Seçimi onayla") }} <UiIcon name="check" />
             </button>
           </template>
           <template v-if="!busy && humanTurn && phase.name === 'favor'">
-            <p class="favor-prompt desktop-favor-action">Bir tanrı seç veya devam et.</p>
-            <button class="primary-action desktop-favor-action" @click="skip">Devam et <UiIcon name="arrow" /></button>
+            <p class="favor-prompt desktop-favor-action">{{ t("Bir tanrı seç veya devam et.") }}</p>
+            <button class="primary-action desktop-favor-action" @click="skip">{{ t("Devam et") }} <UiIcon name="arrow" /></button>
           </template>
           <template v-if="resultAvailable">
-            <button v-if="!resultOpen" class="secondary-action" @click="resultOpen = true">Sonucu göster</button>
+            <button v-if="!resultOpen" class="secondary-action" @click="resultOpen = true">{{ t("Sonucu göster") }}</button>
           </template>
-          <p v-if="error" class="field-error" role="alert">{{ error }}</p>
-          <p v-if="onlineError" class="field-error" role="alert">{{ onlineError }}</p>
+          <p v-if="error" class="field-error" role="alert">{{ t(error) }}</p>
+          <p v-if="onlineError" class="field-error" role="alert">{{ t(onlineError) }}</p>
         </section>
       </MatchResources>
     </section>
@@ -582,40 +585,34 @@ function confirm() {
     >
       <div class="dialog-heading">
         <h2 id="utility-title">
-          {{
-            overlay === "rules"
+          {{ t(overlay === "rules"
               ? "Masaya ilk kez mi oturuyorsun?"
               : overlay === "settings"
                 ? "Ses ayarları"
-                : "Oyundan çık"
-          }}
+                : "Oyundan çık") }}
         </h2>
         <button
           class="icon-button"
-          aria-label="Pencereyi kapat"
+          :aria-label="t('Pencereyi kapat')"
           @click="overlay = null"
         >
           <UiIcon name="close" />
         </button>
       </div>
       <div v-if="overlay === 'rules'" class="rules-content">
-        <p>Altı zar, üç tanrı gücü. Rakibinin 15 canını sıfırlayan kazanır.</p>
+        <p>{{ t("Altı zar, üç tanrı gücü. Rakibinin 15 canını sıfırlayan kazanır.") }}</p>
         <ol>
           <li>
-            <strong>Zarlarını at ve sakla.</strong> Sırayla en fazla üç atış
-            yap. Saklamak istediğin zarları seçip onayla.
+            <strong>{{ t("Zarlarını at ve sakla.") }}</strong> {{ t("Sırayla en fazla üç atış yap. Saklamak istediğin zarları seçip onayla.") }}
           </li>
           <li>
-            <strong>Jetonlarını biriktir.</strong> Altın çerçeveli her zar bir
-            tanrı jetonu verir. El, rakibinden jeton çalar.
+            <strong>{{ t("Jetonlarını biriktir.") }}</strong> {{ t("Altın çerçeveli her zar bir tanrı jetonu verir. El, rakibinden jeton çalar.") }}
           </li>
           <li>
-            <strong>Tanrını çağır.</strong> Bir güç ve seviye seç ya da pas geç.
-            Jeton bedeli, güç çalıştığında ödenir.
+            <strong>{{ t("Tanrını çağır.") }}</strong> {{ t("Bir güç ve seviye seç ya da pas geç. Jeton bedeli, güç çalıştığında ödenir.") }}
           </li>
           <li>
-            <strong>Savaşı izle.</strong> Güçler, oklar, baltalar ve çalma
-            sırasıyla çözülür. Zarlar toplandıktan sonra yeni tur otomatik başlar; ilk oyuncu değişir.
+            <strong>{{ t("Savaşı izle.") }}</strong> {{ t("Güçler, oklar, baltalar ve çalma sırasıyla çözülür. Zarlar toplandıktan sonra yeni tur otomatik başlar; ilk oyuncu değişir.") }}
           </li>
         </ol>
         <div class="symbol-guide">
@@ -626,14 +623,13 @@ function confirm() {
           >
             <SymbolIcon :symbol="symbol.id" />
             <div>
-              <strong>{{ symbol.name }}</strong>
-              <p>{{ symbol.description }}</p>
+              <strong>{{ t(symbol.name) }}</strong>
+              <p>{{ t(symbol.description) }}</p>
             </div>
           </div>
         </div>
         <p>
-          Masadaki zarlara Tab ile geçebilirsin. Space/Enter merkeze alır veya
-          geri koyar; yön tuşları ve Home/End zarlar arasında dolaşır.
+          {{ t("Masadaki zarlara Tab ile geçebilirsin. Space/Enter merkeze alır veya geri koyar; yön tuşları ve Home/End zarlar arasında dolaşır.") }}
         </p>
       </div>
       <ExperienceSettings
@@ -644,17 +640,15 @@ function confirm() {
       />
       <div v-if="overlay === 'menu'" class="game-menu">
         <p>
-          Tur {{ state.round }} ·
-          {{
-            onlineRoom ? `Çevrim içi · ${onlineRoom.code}` : opponent.mode === "computer"
+          {{ t("Tur") }} {{ t(state.round) }} ·
+          {{ t(onlineRoom ? `Çevrim içi · ${onlineRoom.code}` : opponent.mode === "computer"
               ? "Robota karşı"
-              : "Aynı cihazda iki kişi"
-          }}
+              : "Aynı cihazda iki kişi") }}
         </p>
         <button class="primary-action" @click="overlay = null">
-          Oyuna dön <UiIcon name="arrow" /></button
+          {{ t("Oyuna dön") }} <UiIcon name="arrow" /></button
         ><button class="secondary-action" @click="restart">
-          Ana menüye dön
+          {{ t("Ana menüye dön") }}
         </button>
       </div>
     </dialog>

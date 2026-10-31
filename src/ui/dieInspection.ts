@@ -1,3 +1,4 @@
+import { t } from '../i18n'
 import { getDieFace } from "../core";
 import type { PlayerState, PlayerId, DieId } from "../core";
 import type { SceneDieTarget } from "../scene/dieTargets";
@@ -22,7 +23,9 @@ export function inspectableDice(
     return [{
       ...target, face, name: guide.name, description: guide.description,
       value: die.value, selected: die.selected, canSelect, owner, location,
-      label: `${owner}, zar ${index + 1}: ${guide.name}${face.grantsToken ? ", jeton getirir" : ""}${die.value > 1 ? `, etki ${die.value}` : ""}, ${location.toLocaleLowerCase("tr")}; ${canSelect ? die.selected ? "geri al" : "merkeze al" : "incele"}`,
+      label: t('{0}, zar {1}: {2}{3}{4}, {5}; {6}', [t(owner), index + 1, t(guide.name),
+        face.grantsToken ? t(', jeton getirir') : '', die.value > 1 ? t(', etki {0}', [die.value]) : '',
+        t(location.toLocaleLowerCase('tr')), t(canSelect ? die.selected ? 'geri al' : 'merkeze al' : 'incele')]),
     }];
   }));
 }
