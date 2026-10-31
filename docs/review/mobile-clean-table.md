@@ -23,6 +23,31 @@ Ekran görüntüleri açılarak incelendi; iki merkez hattı ayrık kaldı.
 Kanıtlar Git dışındaki `output/mobile-cleanup/framing.mjs`, `framing.json`,
 `six-*.png`, `nine-*.png`, `step3-check.log`, `step3-tests.log` içindedir.
 
+## Adım 4: kartsız savaş
+
+Merkez yüz kartları, merkez başlıkları ve aktif saldırı/savunmayı izleyen
+büyük yüzler kaldırıldı. Kendi haznesindeki kartlar alt bölgedeki kimlik
+yuvalarında kalır; merkezde yalnız saydam 44px hedef vardır. Sunum
+kilidinde merkez hedefi de kaldırılır. 3B `activity-marker` kaynak ve
+savunmayı işaretler; mevcut saldırı hareketi ve gerçek can taşı tepkisi
+korunur. Combat/core kaynak hesabına veya zaman çizgisine müdahale yok.
+
+`npm run check` ve `npm run test:ci` geçti (45 dosya, 554 test).
+Bileşen testleri merkezde simge/değer/onay kartı üretilmediğini, kilitte
+hedef kalmadığını, hazne yuvası/taslak davranışını ve masaüstü odağını
+korumayı doğrular. Eski sabit merkez kartı testleri yeni davranışa uyarlandı.
+
+Chromium WebGL'de 390×844 / 844×390, iki koltuk ve normal/azaltılmış
+hareketle core çözümlemesi oynatıldı. 19 olaylık kayıtta blok, çok değerli
+hasar, reaktif iyileşme, kazanım/ödeme/çalma incelendi. Her savaş örneğinde
+kart/hedef sayısı sıfır; aktif 3B halkalar yalnız olayın kimliklerindeydi.
+Normal harekette saldırganın gerçek konumu değişti. HUD her yayında sunum
+durumuyla eşleşti. Normal/azaltılmış kayıtlar ve nihai oyuncu durumları
+birebir aynıydı. Duraklatma/devam ve son toplama eski vurgu bırakmadı.
+`combat.mjs/json`, `active-*.png`, `finished-*.png`, `step4-*.log`
+Git dışındaki aynı kanıt klasöründedir. Aktif savaş ekranları açılarak
+incelendi; çalışma zamanı istisnası yoktu.
+
 ## Kabul sınırı
 
 Kullanıcı fiziksel cihaz testlerini kendisi yapacağını belirtti.

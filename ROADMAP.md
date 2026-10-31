@@ -41,11 +41,11 @@
 
 ## 4. Savaşı kartlar olmadan anlat
 
-- [ ] Saldıran veya savunan zarın üstünde hareket eden büyük yüz kartlarını
+- [x] Saldıran veya savunan zarın üstünde hareket eden büyük yüz kartlarını
   kaldır. Saldırı, blok ve hasarı gerçek 3B zarın hareketiyle göster.
-- [ ] Aktif zar ve temas hedefini kısa, ince bir vurguyla belirt;
+- [x] Aktif zar ve temas hedefini kısa, ince bir vurguyla belirt;
   diğer zarların üstünde kalıcı kart veya etiket bırakma.
-- [ ] Azaltılmış harekette kaynak, hedef ve temas anlaşılır kalsın.
+- [x] Azaltılmış harekette kaynak, hedef ve temas anlaşılır kalsın.
   Can/jeton güncellemeleri mevcut olay ve temas zamanlamasını izlesin.
 
 ## 5. Ayrıntıyı yalnız istendiğinde göster ve sonucu doğrula

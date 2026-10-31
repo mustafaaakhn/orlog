@@ -61,17 +61,20 @@ geçiş yumuşaktır; azaltılmış harekette kamera animasyonu yapılmaz. Masa�
 tam masa kadrajını korur. Koltuk yönü mevcut yerel/bot/çevrim içi davranışını
 izler; kamera oyun sonucu üretmez.
 
-Mobilde beş simge açık kemik zeminli, kameranın açısından etkilenmeyen 44px
-zar yüzlerinde de okunur. Yüzler kimliğe ait düzenli yuvalarda 8px aralıkla ayrılır. Rakibin merkez
-sırası üstte, kendi merkez sıran altta, haznedekiler ayrı alt gruptadır.
-Normal altı zarı ek zarların ikinci sırası izler. Kaldırılan kimliğin boşluğu
-korunur; seçim taslağı yüzü taşımaz. İncelenen/işaret edilen yüzü gerçek
-3B izdüşümüne ince çizgi bağlar. Jetonlu yüzün altın çerçevesine sağ üstte
-ayrı bir altın jeton simgesi eşlik eder. Seçili/kilitli durum açık camgöbeği
-çizgi ve sol alttaki onay imiyle gösterilir; jeton kazancı ile karışmaz.
-Dar alanda satırlar düzenli sarılır; kısa ekranda başlıklı gruplar aynı
-44px büyüklükte kaydırılır. Hazne–merkez geçişinde yalnız ilgili yüzün
-grubu değişir; diğer zarlar boşluk kapatmaz.
+Mobil okunur seçim kartları yalnız kendi haznendeki zarlarda bulunur.
+44px açık kemik yüzler kimliğe ait sabit yuvaları korur; jetonlu yüzün
+altın çerçevesi ve ayrı jeton simgesi, bekleyen seçimin camgöbeği onay
+iminden ayrılır. Kartlar haznenin alt bölgesindedir; dar alanda yalnız bu
+bölge kaydırılır. Merkezde başlık veya yüz kartı bulunmaz. Merkeze geçmiş
+zarın gerçek 3B izdüşümündeki saydam 44px hedef geri alma ve incelemeyi
+sağlar; hazneye dönünce aynı kart yuvası geri gelir.
+
+Savaşta mobil merkez hedefleri de kaldırılır. Saldırı ve blok gerçek 3B
+zarın hareketiyle, aktif kaynak/savunma kısa ince altın halkayla, hasar can
+taşının temas tepkisiyle gösterilir. Azaltılmış harekette yolculuk yerine
+aynı kaynak/hedef halkası ve temas bildirimi kalır. Kalıcı etiket veya
+hareketli yüz kartı üretilmez. Eski aşama kayıtlarındaki kart anlatımı bu
+güncel görünümün önceki tasarımıdır.
 
 Mobil kısa dokunma kendi uygun zarının bekleyen seçimini anında camgöbeği
 vurgu ve onay imiyle değiştirir; ikinci dokunuş geri alır. Yüzler ve 44px

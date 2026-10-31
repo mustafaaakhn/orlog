@@ -7,8 +7,8 @@ import type { SceneDieTarget } from "../scene/dieTargets";
 import { inspectableDice } from "./dieInspection";
 import SymbolIcon from "./SymbolIcon.vue";
 import TokenIcon from "./TokenIcon.vue";
-import { dieLayoutMetrics, DIE_LANES, LANE_LABELS, layoutDieTargets } from "./dieTargetLayout";
-import type { DieLane, DieTargetArea } from "./dieTargetLayout";
+import { dieLayoutMetrics, layoutDieTargets } from "./dieTargetLayout";
+import type { DieTargetArea } from "./dieTargetLayout";
 const props = defineProps<{
   players: readonly PlayerState[];
   selectablePlayer: PlayerId | null;
@@ -20,7 +20,7 @@ const props = defineProps<{
   draftSelectedIds?: readonly DieId[] | null;
 }>();
 const emit = defineEmits<{ select: [id: DieId]; highlight: [id: DieId | null] }>();
-// Mobile exposes the near bowl and both center rows; the far bowl has no touch targets.
+// Only the near bowl has face cards. Center dice retain transparent inspection/selection targets.
 const inspected = computed(() => inspectableDice(
   props.players, props.targets, props.selectablePlayer, props.collected,
 ).filter(target => (!mobile.value || !props.collected.includes(target.id)) && (!mobile.value || target.id.startsWith(`${props.viewerId}/`) || target.location !== "Haznede"))
@@ -39,39 +39,28 @@ const safeArea = computed(() => props.safeArea ?? {
 });
 const metrics = computed(() => dieLayoutMetrics(size.value.width, size.value.height, safeArea.value));
 const overflow = computed(() => mobile.value && metrics.value.overflow);
-type FaceControl = typeof inspected.value[number] & { sourceX: number; sourceY: number; lane?: DieLane; slot?: number };
+type FaceControl = typeof inspected.value[number] & { sourceX: number; sourceY: number; lane?: 'bowl'; slot?: number };
 const controls = computed<FaceControl[]>(() => {
-  const faces = mobile.value
-    ? layoutDieTargets(inspected.value, size.value.width, size.value.height, safeArea.value, props.viewerId)
-    : inspected.value.map(t => ({ ...t, sourceX: t.x, sourceY: t.y }));
-  return faces.map(target => {
-    if (!mobile.value || !props.disabled || !target.combatRole) return target;
-    const clamp = (v: number, min: number, max: number) => Math.max(min, Math.min(max, v));
-    return { ...target,
-      x: clamp(target.sourceX * size.value.width / 100, safeArea.value.left + 24, size.value.width - safeArea.value.right - 24) / size.value.width * 100,
-      y: clamp(target.sourceY * size.value.height / 100 + (target.combatRole === 'source' ? -36 : 36), safeArea.value.top + 24, size.value.height - safeArea.value.bottom - 24) / size.value.height * 100,
-    };
-  });
+  const visible = inspected.value.filter(t => !mobile.value || !props.disabled || t.location === 'Haznede');
+  return mobile.value
+    ? layoutDieTargets(visible, size.value.width, size.value.height, safeArea.value, props.viewerId)
+    : visible.map(t => ({ ...t, sourceX: t.x, sourceY: t.y }));
 });
 const renderGroups = computed(() => [
-  { id: 'slots', targets: controls.value.filter(t => !(mobile.value && props.disabled && t.combatRole)) },
-  { id: 'active', targets: controls.value.filter(t => mobile.value && props.disabled && t.combatRole) },
+  { id: 'slots', targets: controls.value.filter(t => !mobile.value || t.lane === 'bowl') },
+  { id: 'projected', targets: controls.value.filter(t => mobile.value && t.lane !== 'bowl') },
 ]);
 const listStyle = computed(() => overflow.value ? {
-  top: `${safeArea.value.top}px`, bottom: `${safeArea.value.bottom}px`,
+  top: `${metrics.value.top}px`, bottom: `${safeArea.value.bottom}px`,
   left: `${safeArea.value.left}px`, right: `${safeArea.value.right}px`,
 } : {});
 const surfaceStyle = computed(() => overflow.value ? { height: `${metrics.value.contentHeight}px` } : {});
 function position(target: typeof controls.value[number]) {
-  return overflow.value && !(props.disabled && target.combatRole) ? {
+  return overflow.value && target.lane === 'bowl' ? {
     left: `${target.x * size.value.width / 100 - safeArea.value.left}px`,
-    top: `${target.y * size.value.height / 100 - safeArea.value.top}px`,
+    top: `${target.y * size.value.height / 100 - metrics.value.top}px`,
   } : { left: `${target.x}%`, top: `${target.y}%` };
 }
-const laneLabels = computed(() => mobile.value ? DIE_LANES.filter(lane => controls.value.some(t => t.lane === lane && !(props.disabled && t.combatRole))).map(lane => ({
-  lane, label: LANE_LABELS[lane],
-  top: overflow.value ? `${DIE_LANES.indexOf(lane) * metrics.value.laneHeight}px` : `${safeArea.value.top + DIE_LANES.indexOf(lane) * metrics.value.laneHeight}px`,
-})) : []);
 const highlight = createDieHighlight(
   () => !props.disabled,
   () => controls.value.map(target => target.id),
@@ -82,8 +71,8 @@ watch([controls, overflow], async () => {
   await nextTick();
   const list = layer.value?.querySelector<HTMLElement>('.die-target-list.is-overflow');
   if (!list || !list.clientHeight || !controls.value.length) return;
-  const positions = controls.value.map(t => t.y * size.value.height / 100 - safeArea.value.top);
-  if (!positions.some(y => y - 22 >= list.scrollTop && y + 22 <= list.scrollTop + list.clientHeight))
+  const positions = controls.value.filter(t => t.lane === 'bowl').map(t => t.y * size.value.height / 100 - metrics.value.top);
+  if (positions.length && !positions.some(y => y - 22 >= list.scrollTop && y + 22 <= list.scrollTop + list.clientHeight))
     list.scrollTop = Math.max(0, Math.min(...positions) - 44);
 });
 const previewElement = ref<HTMLElement | null>(null);
@@ -260,19 +249,18 @@ function navigate(event: KeyboardEvent) {
     @pointerleave="aimed = null"
   >
     <svg v-if="mobile" class="die-target-links" aria-hidden="true">
-      <line v-for="target in controls.filter(t => (!overflow || (disabled && t.combatRole)) && (t.id === aimed || t.id === inspecting || !!t.eventRole || !!t.combatRole) && Math.hypot((t.x-t.sourceX)*size.width/100, (t.y-t.sourceY)*size.height/100) > 6)"
+      <line v-for="target in controls.filter(t => t.lane === 'bowl' && !overflow && (t.id === aimed || t.id === inspecting) && Math.hypot((t.x-t.sourceX)*size.width/100, (t.y-t.sourceY)*size.height/100) > 6)"
         :key="target.id" :x1="`${target.sourceX}%`" :y1="`${target.sourceY}%`"
         :x2="`${target.x}%`" :y2="`${target.y}%`" />
     </svg>
     <div v-for="group in renderGroups" :key="group.id" class="die-target-list" :class="{ 'is-overflow': overflow && group.id === 'slots', 'is-short': size.height - safeArea.top - safeArea.bottom < 100 }" :style="group.id === 'slots' ? listStyle : {}" :role="overflow ? 'group' : undefined" :aria-label="overflow ? 'Masadaki zarlar, kaydırarak incele ve seç' : undefined">
     <div class="die-slot-surface" :style="group.id === 'slots' ? surfaceStyle : {}">
-    <span v-for="label in group.id === 'slots' ? laneLabels : []" :key="label.lane" class="die-lane-label" :data-lane="label.lane" :style="{ top: label.top, left: overflow ? '50%' : `${safeArea.left + metrics.availableWidth / 2}px` }" aria-hidden="true">{{ label.label }}</span>
     <component
       :is="disabled && mobile ? 'span' : 'button'"
       v-for="target in group.targets"
       :key="target.id"
       class="scene-die-target"
-      :class="{ 'grants-token': target.face.grantsToken, 'is-selected': target.selected, 'is-kept': target.location === 'Kilitli', 'is-combat': !!target.combatRole, 'is-active-event': !!target.eventRole, 'is-muted': disabled && !target.eventRole && !target.combatRole }"
+      :class="{ 'grants-token': target.face.grantsToken, 'is-selected': target.selected, 'is-kept': target.location === 'Kilitli', 'is-projected': mobile && target.lane !== 'bowl' }"
       :style="{
         ...position(target),
         zIndex: target.combatRole ? 5 : aimed === target.id ? 3 : undefined,
@@ -298,7 +286,7 @@ function navigate(event: KeyboardEvent) {
       @blur="blur"
       @click="select($event, target.id)"
     >
-      <template v-if="mobile">
+      <template v-if="mobile && target.lane === 'bowl'">
         <SymbolIcon :symbol="target.face.symbol" />
         <span v-if="target.face.grantsToken" class="die-target-token"><TokenIcon /></span>
         <span v-if="target.selected || target.location === 'Kilitli'" class="die-target-check" aria-hidden="true">✓</span>
