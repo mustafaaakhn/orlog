@@ -191,3 +191,27 @@ listeye girmez. Değişiklik yoksa doğrudan `ConfirmRoll` döner.
 kullanır; yeni taslak/zamanlayıcı yoktur. Kabul edilen seçim tek revision ve
 `DiceSelectionChanged` olayı üretir, `dicePresenter` tek ortak zaman çizgisi
 oynatır. Sunum bitmeden sürücü yeni onay üretemez.
+
+## Saldıran zarın hareket sahipliği — Aşama 13
+
+Olay kuyruğu önce `dicePresenter.play` işlemini bekler, ardından aynı olayın
+`combatPresenter.play` işlemini çalıştırır. `AttackBlocked` kaynak ve savunma
+kimliğini; zar kaynaklı `DamageDealt` kaynak kimliği ve gerçek can miktarını
+sağlar. Kural hesabı değiştirilmez; sunum katmanında yeni eşleştirme yapılmaz.
+
+Saldırı tek GSAP zaman çizgisinde hazırlık, yaklaşma, temas/tepki ve kayıtlı
+konuma dönüşü yürütür. Blok savunma zarını kısa geri iter; hasar gerçek can
+taşını işaretleyip aynı temas callback'inde `progress` yayınlar. Çok değerli
+zar her gerçek hasar adımını aynı olay içinde gösterir. `lastContributions`
+son katkıyı belirler; geri dönüş ve nihai kenara toplama ayrı işlemlerdir.
+Fizik kaydı ve düzenleme bu sırada konuma yazmaz. İptal zaman çizgisini
+öldürür, geçici konum/malzeme/vurguyu eşzamanlı temizler; sonraki callback
+eski nesneye yazamaz. Mevcut sekme ve WebGL yeniden kurma yolu korunur.
+
+Geçici `combatRole`, yalnız aktif kaynak/savunma nesnesinin sunum bilgisidir.
+Animasyon invalidate çağrıları bunların güncel kamera izdüşümünü yayınlar.
+Mobilde ilgili okunur yüzler dekoratif `span` olur; odak/tıklama açılmaz.
+Yakın temasta yüzler dikey 24px ayrılır ve izdüşüme çizgiyle bağlanır.
+Azaltılmış harekette zar yolculuğu yapılmaz; kaynak/hedef işareti ve temas
+beklemesi korunur. Genel sabit mobil sıralar ve savaşın bütün olaylarındaki
+yüz/kadraj sürekliliği kapsam dışındaki Aşama 11–12'ye bağlıdır.

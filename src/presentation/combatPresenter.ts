@@ -35,6 +35,7 @@ export function createCombatPresenter(
   const collected = new Set<DieId>()
   const counts: Record<PlayerId, number> = { 'player-1': 0, 'player-2': 0 }
   let durationScale = 1
+  let clearAttack: (() => void) | undefined
   let clearStoneGroup: (() => void) | undefined
   function animate(build: (timeline: gsap.core.Timeline) => void, combat = true) {
     if (closed) return Promise.resolve()
@@ -82,6 +83,86 @@ export function createCombatPresenter(
     })
     orb.visible = false
     invalidate()
+  }
+  // The event queue awaits dice playback before handing these transforms to
+  // combat. Return to the saved pose; collection is a separate, last-use move.
+  async function attack(event: Extract<GameEvent, { type: 'AttackBlocked' | 'DamageDealt' }>) {
+    if (closed || !event.dieId) return
+    const attacker = board.dice.get(event.dieId)!
+    const defender = event.type === 'AttackBlocked' ? board.dice.get(event.defenderDieId)! : undefined
+    const home = attacker.position.clone()
+    const defenderHome = defender?.position.clone()
+    let restoreStone: (() => void) | undefined
+    let restored = false
+    const restore = () => {
+      if (restored) return
+      restored = true
+      attacker.position.copy(home)
+      delete attacker.userData.combatRole
+      if (defender && defenderHome) {
+        defender.position.copy(defenderHome)
+        delete defender.userData.combatRole
+      }
+      restoreStone?.()
+      invalidate()
+    }
+    clearAttack = restore
+    attacker.userData.combatRole = 'source'
+    if (defender) defender.userData.combatRole = 'target'
+    invalidate()
+    try {
+      const steps = event.type === 'AttackBlocked' ? 1 : event.amount
+      for (let step = 1; step <= steps && !closed; step++) {
+        const stone = event.type === 'DamageDealt'
+          ? board.lifeStone(event.targetId, event.health + event.amount - step) : undefined
+        const destination = event.type === 'AttackBlocked' ? defender!.position.clone()
+          : board.lifePosition(event.targetId, event.health + steps - step)
+        const direction = destination.clone().sub(home).setY(0).normalize()
+        const impact = destination.clone().addScaledVector(direction, -1.05)
+        impact.y = Math.max(home.y, destination.y) + 0.35
+        const original = stone?.material.emissive.clone()
+        const intensity = stone?.material.emissiveIntensity ?? 0
+        restoreStone = () => {
+          if (stone && original) {
+            stone.material.emissive.copy(original)
+            stone.material.emissiveIntensity = intensity
+          }
+        }
+        // Mark the actual target before impact; progress removes it at contact.
+        // Otherwise syncResources would hide the red reaction in the same frame.
+        if (stone) {
+          stone.material.emissive.set('#e52d46')
+          stone.material.emissiveIntensity = 1.7
+          invalidate()
+        }
+        await animate(t => {
+          if (reduced()) wait(t, 0.14)
+          else {
+            t.to(attacker.position, { x: home.x - direction.x * .35, y: home.y + .65, z: home.z - direction.z * .35, duration: .16, ease: 'power2.out' })
+            t.to(attacker.position, { x: impact.x, y: impact.y, z: impact.z, duration: .38, ease: 'power2.in' })
+          }
+          t.call(() => {
+            if (closed || paused) return
+            if (stone) {
+              stone.material.emissive.set('#e52d46')
+              stone.material.emissiveIntensity = 1.7
+              contact(event, step)
+            }
+            invalidate()
+          })
+          if (defender && defenderHome && !reduced()) {
+            t.to(defender.position, { x: defenderHome.x + direction.x * .3, y: defenderHome.y + .18, z: defenderHome.z + direction.z * .3, duration: .1, ease: 'power2.out' })
+            t.to(defender.position, { x: defenderHome.x, y: defenderHome.y, z: defenderHome.z, duration: .16, ease: 'power2.out' })
+          } else wait(t, reduced() ? .16 : .18)
+          if (!reduced()) t.to(attacker.position, { x: home.x, y: home.y, z: home.z, duration: .3, ease: 'power2.out' })
+        })
+        if (closed) return
+        restoreStone()
+      }
+    } finally {
+      restore()
+      if (clearAttack === restore) clearAttack = undefined
+    }
   }
   async function stealGold(event: Extract<GameEvent, { type: 'TokensStolen' }>) {
     if (closed || event.amount <= 0) return
@@ -303,9 +384,11 @@ export function createCombatPresenter(
       markers(ids, true)
       try {
         if (event.type === 'AttackBlocked') {
-          await flight(source(event), board.dice.get(event.defenderDieId)!.position.clone(), { symbol: event.symbol, blocked: true })
+          await attack(event)
         } else if (event.type === 'DamageDealt' && event.favorId) {
           await favorDamage(event)
+        } else if (event.type === 'DamageDealt' && event.dieId) {
+          await attack(event)
         } else if (event.type === 'DamageDealt' || event.type === 'HealthRestored' || event.type === 'HealthSacrificed') {
           const player = event.type === 'DamageDealt' ? event.targetId : event.playerId
           for (let step = 1; step <= event.amount && !closed; step++) {
@@ -368,6 +451,8 @@ export function createCombatPresenter(
       closed = true
       active?.kill()
       finish?.()
+      clearAttack?.()
+      clearAttack = undefined
       clearStoneGroup?.()
       clearStoneGroup = undefined
       feedback.cue?.(null)

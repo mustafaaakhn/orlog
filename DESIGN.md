@@ -136,3 +136,16 @@ boyutunu korur; geniş masaüstü ve karşılama başlığı bu düzeltmeden etk
 Bu belge güncel uygulama rehberidir; tarihsel teslimlerin açık görsel kabul
 maddelerini kendiliğinden tamamlanmış saymaz. Ayrıntılı eski tasarım belgeleri
 ve görsel incelemeler yerel arşivde korunur.
+
+## Saldırı ve savunma — Aşama 13
+
+Normal harekette saldırgan zar önce yükselip gerilir, sonra olayın savunma
+zarına veya gerçek can taşına yaklaşır. Blok savunma zarını kısa geri iter;
+hasarda can taşı temasla işaretlenir ve can o anda düşer. Zar kayıtlı yerine
+döner; son katkı tamamlandığında ayrı toplama hareketiyle kenara alınır.
+Mobilde yalnız aktif saldırgan/savunanın okunur yüzü hareketi takip eder;
+kimlik, simge, etki değeri ve jeton işareti mevcut sunum durumundan gelir.
+Bu yüzler seçim veya odak hedefi değildir. Azaltılmış harekette yolculuk
+ve geri itme yerine kısa kaynak/hedef işareti ve temas bildirimi vardır.
+Aşama 10–12 bu teslimin kapsamında değildir: genel oyuncu sıraları ve bütün
+savaş boyunca yüz/kadraj sürekliliğinin kabulü açık kalır.

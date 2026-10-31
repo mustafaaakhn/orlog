@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createApp, h, nextTick, shallowRef } from 'vue'
 import { Game } from '../../core'
 import type { FaceId, PlayerId } from '../../core'
+import type { SceneDieTarget } from '../../scene/dieTargets'
 import SceneDiceControls from '../SceneDiceControls.vue'
 
 const unmounts: (() => void)[] = []
@@ -17,7 +18,7 @@ async function mount(viewerId: PlayerId = 'player-1', width = 390, height = 844)
   const players = Object.values(initial.players).map(player => ({ ...player, dice: player.dice.map((die, index) => ({
     ...die, faceId: (['arrow', 'helmet', 'hand', 'shield', 'axe-1', 'axe-2'] as FaceId[])[index]!, kept: index === 1, selected: index === 2, value: index === 2 ? 3 : 1,
   })) }))
-  const targets = shallowRef(players.flatMap(player => player.dice.map((d, i) => ({ id: d.id, x: 40 + i * 3, y: player.id === 'player-1' ? 55 : 45 }))))
+  const targets = shallowRef<SceneDieTarget[]>(players.flatMap(player => player.dice.map((d, i) => ({ id: d.id, x: 40 + i * 3, y: player.id === 'player-1' ? 55 : 45 }))))
   const disabled = shallowRef(false), selectablePlayer = shallowRef<PlayerId | null>(viewerId), select = vi.fn()
   const root = document.createElement('div')
   document.body.append(root)
@@ -35,6 +36,26 @@ function pointer(button: HTMLElement, type: string, x = 160, y = 450) {
 function click(button: HTMLElement) { button.dispatchEvent(new MouseEvent('click', { bubbles: true, detail: 1, clientX: 380, clientY: 700 })) }
 
 describe('mobile projected dice interaction', () => {
+  it('tracks active combat faces as decorative spans without opening interaction or moving idle slots', async () => {
+    const m = await mount()
+    m.disabled.value = true
+    m.targets.value = m.targets.value.map(target => ({ ...target, combatRole: target.id === 'player-1/die-1' ? 'source' : undefined }))
+    await nextTick()
+    const face = m.button('player-1/die-1')
+    expect(face.tagName).toBe('SPAN')
+    expect(face.getAttribute('aria-hidden')).toBe('true')
+    expect(face.hasAttribute('tabindex')).toBe(false)
+    const before = face.style.top
+    m.targets.value = m.targets.value.map(target => ({ ...target, y: target.y + 10 }))
+    await nextTick()
+    expect(m.button('player-1/die-1')).toBe(face)
+    expect(face.style.top).not.toBe(before)
+    click(face)
+    expect(m.select).not.toHaveBeenCalled()
+    m.targets.value = []
+    await nextTick()
+    expect(m.root.querySelector('.is-combat')).toBeNull()
+  })
   it('selects the bound die rather than a nearby projected neighbour, and permits taking a selected die back', async () => {
     const m = await mount()
     pointer(m.button('player-1/die-1'), 'pointerdown')

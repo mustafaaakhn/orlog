@@ -38,7 +38,12 @@ const safeArea = computed(() => props.safeArea ?? {
   left: 12, right: size.value.height <= 500 ? 210 : 12,
 });
 const overflow = computed(() => mobile.value && dieTargetCapacity(size.value.width, size.value.height, safeArea.value) < inspected.value.length);
-const controls = computed(() => mobile.value && !overflow.value
+const controls = computed(() => mobile.value && props.disabled
+  ? inspected.value.filter(target => target.combatRole).map(target => ({
+    ...target, sourceX: target.x, sourceY: target.y,
+    y: target.y + (target.combatRole === 'source' ? -24 : 24) * 100 / size.value.height,
+  }))
+  : mobile.value && !overflow.value
   ? layoutDieTargets(inspected.value, size.value.width, size.value.height, safeArea.value)
   : inspected.value.map(target => ({ ...target, sourceX: target.x, sourceY: target.y })));
 const listStyle = computed(() => overflow.value ? {
@@ -224,26 +229,28 @@ function navigate(event: KeyboardEvent) {
     @pointermove="aim"
     @pointerleave="aimed = null"
   >
-    <svg v-if="mobile && !overflow && !disabled" class="die-target-links" aria-hidden="true">
+    <svg v-if="mobile && !overflow" class="die-target-links" aria-hidden="true">
       <line v-for="target in controls.filter(t => Math.hypot((t.x-t.sourceX)*size.width/100, (t.y-t.sourceY)*size.height/100) > 6)"
         :key="target.id" :x1="`${target.sourceX}%`" :y1="`${target.sourceY}%`"
         :x2="`${target.x}%`" :y2="`${target.y}%`" />
     </svg>
     <div class="die-target-list" :class="{ 'is-overflow': overflow, 'is-short': size.height - safeArea.top - safeArea.bottom < 100 }" :style="listStyle" :role="overflow ? 'group' : undefined" :aria-label="overflow ? 'Masadaki zarlar, kaydırarak incele ve seç' : undefined">
-    <button
+    <component
+      :is="disabled ? 'span' : 'button'"
       v-for="target in controls"
       :key="target.id"
       class="scene-die-target"
-      :class="{ 'grants-token': target.face.grantsToken, 'is-selected': target.selected, 'is-kept': target.location === 'Kilitli' }"
+      :class="{ 'grants-token': target.face.grantsToken, 'is-selected': target.selected, 'is-kept': target.location === 'Kilitli', 'is-combat': !!target.combatRole }"
       :style="{
         left: `${target.x}%`,
         top: `${target.y}%`,
         zIndex: aimed === target.id ? 3 : undefined,
       }"
-      :aria-label="target.label"
+      :aria-hidden="disabled ? true : undefined"
+      :aria-label="disabled ? undefined : target.label"
       :aria-pressed="target.canSelect ? target.selected : undefined"
       :aria-disabled="disabled"
-      :tabindex="disabled ? -1 : 0"
+      :tabindex="disabled ? undefined : 0"
       :aria-describedby="preview?.id === target.id ? 'die-face-preview' : undefined"
       :data-die-id="target.id"
       :data-selectable="target.canSelect"
@@ -264,7 +271,7 @@ function navigate(event: KeyboardEvent) {
         <span v-if="target.value !== 1" class="die-target-value" aria-hidden="true">×{{ target.value }}</span>
       </template>
       <span class="sr-only">{{ target.label }}</span>
-    </button>
+    </component>
     </div>
     <div v-if="preview" ref="previewElement" id="die-face-preview" class="die-face-preview" :role="mobile ? 'region' : 'tooltip'" :aria-label="mobile ? 'Zar bilgisi' : undefined" :style="previewStyle">
       <div class="die-preview-face" :class="{ 'grants-token': preview.face.grantsToken }">

@@ -528,26 +528,26 @@ oyun olaylarının sırası korunur.
 
 Bağımlılık: Aşama 12. Kadraj ve yüz sürekliliğinin üstüne hareket eklenir.
 
-- [ ] Her saldırıyı mevcut `AttackBlocked` veya `DamageDealt` olayındaki
+- [x] Her saldırıyı mevcut `AttackBlocked` veya `DamageDealt` olayındaki
   kaynak/hedef kimliklerinden sun. Saldıran 3B zar ve ona bağlı okunur yüz,
   blokta savunma zarına; doğrudan hasarda ilgili can taşı temasına belirgin
   hareket etsin. Küçük bir efekt uçuşu tek başına saldırı anlatımı olmasın.
-- [ ] Hazırlık → hareket → temas/tepki → geri dönüş veya toplama adımlarını
+- [x] Hazırlık → hareket → temas/tepki → geri dönüş veya toplama adımlarını
   aynı olayın zaman çizgisinde kur. Saldıran ve savunan yüzün kimliği hareket
   boyunca korunsun; aktif zar hareket ederken diğer slotlar yeniden akmasın.
-- [ ] Blokta savunma tepkisini, hasarda etkilenen can taşını açıkça göster.
+- [x] Blokta savunma tepkisini, hasarda etkilenen can taşını açıkça göster.
   Çok değerli veya birden çok katkılı zarın son katkısı bitmeden zarı toplama;
   geçici hareketin dönüş konumu ile nihai toplama konumunu ayır.
-- [ ] Fizik kaydı, mevcut düzenleme animasyonu ve savaş hareketi aynı
+- [x] Fizik kaydı, mevcut düzenleme animasyonu ve savaş hareketi aynı
   nesnenin konumunu eşzamanlı yazmasın. Sahiplik geçişi, iptal ve toparlanma
   sınırlarını açık kur; eski callback yeni sahneye veya maça yazmasın.
-- [ ] Hasar/iyileşme ve jeton değişimini mevcut `progress`/temas olayında
+- [x] Hasar/iyileşme ve jeton değişimini mevcut `progress`/temas olayında
   uygula. Animasyon yeni saldırı eşleştirmesi, hasar hesabı veya çalma sonucu
   üretmesin. Güç önceliği, ölüm kontrolü ve olay sırası aynen korunsun.
-- [ ] Azaltılmış harekette yolculuk yerine kısa, anlaşılır kaynak/hedef ve
+- [x] Azaltılmış harekette yolculuk yerine kısa, anlaşılır kaynak/hedef ve
   temas bildirimi kullan. Hız/kalite seçenekleri, duraklama, sekmeden dönüş
   ve WebGL toparlanması aynı nihai sunum durumuna ulaşsın.
-- [ ] Aynı olay kayıtlarını normal ve azaltılmış harekette karşılaştır;
+- [x] Aynı olay kayıtlarını normal ve azaltılmış harekette karşılaştır;
   çoklu blok/hasar, çok değerli zar, ölümde kesilme ve son katkıda toplama
   senaryolarını test et. Mobilde gerçek hareketi tarayıcıda izle; zorunlu
   komutları çalıştır, belgeleri/kanıtları güncelle ve commit et.
@@ -555,6 +555,13 @@ Bağımlılık: Aşama 12. Kadraj ve yüz sürekliliğinin üstüne hareket ekle
 **Kabul:** Oyuncu hangi zarın neye saldırdığını, engellenip engellenmediğini
 ve canın hangi temasta düştüğünü takip edebilir. Hareket ve yüz aynı zara
 aittir; kural sonucu önceki olay kaydıyla aynıdır.
+
+**Aşama 13 — Uygulandı; Aşama 12 bağımlılığı açık — 31 Ekim 2026.**
+Kaynak zar hareketi, savunma tepkisi, gerçek can taşı teması, geri dönüş,
+son katkıda toplama ve mobil aktif yüz takibi eklendi. Kullanıcının kapsam
+kararıyla Aşama 10–12 uygulanmadı. Bu yüzden genel sabit sıralar, bütün savaş
+olaylarında yüz sürekliliği ve olay odaklı yakın kadraj tamamlanmış sayılmaz.
+Doğrulama ve sınırlar: [Aşama 13 kaydı](docs/review/combat-dice-motion.md).
 
 ## Aşama 14 — Lobide hazırlığı geri al ve tanrıları yeniden düzenle
 

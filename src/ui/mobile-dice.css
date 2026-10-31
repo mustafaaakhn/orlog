@@ -58,3 +58,10 @@
 .mobile-die-controls .die-target-list.is-overflow.is-short { scroll-padding-top: 0; }
 
 .die-target-value { position: absolute; right: -3px; bottom: -3px; padding: 1px 3px; border-radius: 3px; background: #172a21; color: #fff5df; font: 12px/1.3 sans-serif; }
+
+.mobile-die-controls .scene-die-target.is-combat[aria-disabled="true"] {
+  visibility: visible;
+  pointer-events: none;
+  outline: 2px solid #f4d899;
+  outline-offset: 2px;
+}

@@ -70,7 +70,7 @@ function createPlayback() {
   let running = Promise.resolve();
   let playing = false;
   const recorder = createRollRecorder();
-  const combat = createCombatPresenter(board, invalidate, () => props.speed, () => props.reduced, {
+  const combat = createCombatPresenter(board, () => { invalidate(); publishTargets(); }, () => props.speed, () => props.reduced, {
     cue: value => { if (!retired) emit('cue', value); },
     progress: (event, step) => {
       if (retired || sceneClosed || !props.batch || props.paused) return;
@@ -270,14 +270,14 @@ const seatTurn = createSeatTurn(props.viewerId, {
   },
 });
 function publishTargets() {
-  if (sceneClosed || seatTurning || props.batch || !sizes.width.value || !sizes.height.value)
+  if (sceneClosed || seatTurning || !sizes.width.value || !sizes.height.value)
     return;
-  board.setDiceReadability(true, sizes.width.value <= 600 || (sizes.height.value <= 500 && sizes.width.value > sizes.height.value));
+  board.setDiceReadability(!props.batch, sizes.width.value <= 600 || (sizes.height.value <= 500 && sizes.width.value > sizes.height.value));
   board.object.updateMatrixWorld(true);
   camera.updateMatrixWorld(true);
   const targets: SceneDieTarget[] = [];
   for (const [id, die] of board.dice) {
-    if (!die.visible) continue;
+    if (!die.visible || (props.batch && !die.userData.combatRole)) continue;
     const point = die.position
       .clone()
       .add(new Vector3(0, 0.18, 0))
@@ -288,7 +288,7 @@ function publishTargets() {
     const underHud = isMobileTableView(sizes.width.value, sizes.height.value) &&
       (screenX < edge.left || screenX > sizes.width.value - edge.right || screenY < edge.top || screenY > sizes.height.value - edge.bottom);
     if (!underHud && Math.abs(point.x) < 1.1 && Math.abs(point.y) < 1.1 && point.z < 1)
-      targets.push({ id, x: (point.x + 1) * 50, y: (1 - point.y) * 50 });
+      targets.push({ id, combatRole: die.userData.combatRole, x: (point.x + 1) * 50, y: (1 - point.y) * 50 });
   }
   emit("targets", targets);
   emit('favors', board.favorTargets().map(totem => {
