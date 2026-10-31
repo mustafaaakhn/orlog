@@ -97,7 +97,10 @@ kaydırılabilir bir listede korunur. Kaldırılan zar için hedef üretilmez.
 Mobil kısa dokunma tıklanan hedefin sabit zar kimliğini kullanır; komşu zarı
 mesafeden tekrar seçmez. Uzun basma incelemeyi açar ve ardından gelen tıklamayı
 tüketir; sürükleme/iptal seçim üretmez. Sunum ve koltuk kilidi bekleyen hareketi
-iptal eder. Mobil inceleme, kısa dokunma sonrasında geri gelen odaktan ayrı
+iptal eder. İptal edilen dokunmanın tüketilmiş işareti kilit açılınca da
+korunur: bırakma tıklaması yerleşimde kaymış komşu zara aktarılsa bile seçim
+üretmez. Yeni pointerdown yeni bir hareket başlatır. Mobil inceleme, kısa
+dokunma sonrasında geri gelen odaktan ayrı
 tutulur; yeni zar seçimini örten bir pencere kendiliğinden açılmaz. Masaüstü
 izdüşüm hedefleri ve klavye dolaşımı korunur. Dinlenen mobil 3B üst yüzün açık,
 yüksek kontrastlı dokusu aynı core yüzünü gösterir; atış kaydı değiştirilmez.

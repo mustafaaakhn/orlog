@@ -29,14 +29,16 @@ işaretleri korunur. Önceki fiziksel cihaz kabulünün açık maddeleri açık 
 Bu hedef, önceki planın rakip hazne özetini zorunlu tutan maddelerinin ve her
 dokunuşta anında taşıma davranışının yerini alır. Aşama 6 ile özet kaldırıldı;
 Aşama 7 ile iki saniyelik toplu seçim ve tek taşıma, Aşama 8 ile erken onay,
-ağ kabulü ve kesinti yaşam döngüsü uygulandı. `DESIGN.md` ve
+ağ kabulü ve kesinti yaşam döngüsü uygulandı. Aşama 9'un yazılım/tarayıcı
+doğrulaması tamamlandı; fiziksel cihaz kabulü açık. `DESIGN.md` ve
 `ARCHITECTURE.md` güncel uygulamayı anlatır; ilgili aşama uygulanırken
 yeniden güncellenir.
 
 ## İlerleme biçimi
 
 - Her istekte yalnızca belirtilen aşama uygulanır. Sonraki aşamaya otomatik
-  geçilmez. Sıradaki iş: **“ROADMAP.md içindeki Aşama 9'u uygula.”**
+  geçilmez. Yazılım/tarayıcı aşamaları tamamlandı; sıradaki açık iş
+  **Aşama 9 ve önceki Aşama 4–5 için fiziksel iPhone/Android kabulüdür.**
 - Aşamalar sırayla ilerler. Her biri ayrı kısa ömürlü branch, doğrulama ve
   commit ile teslim edilir; doğrulanan iş yerel `main` branch'ine birleştirilir.
 - Yalnız gerçekten uygulanıp doğrulanan maddeler aynı işin commit'inde `[x]`
@@ -329,26 +331,49 @@ ve kesintilerde eski taslak/callback yeni tur, koltuk veya maça taşınmaz.
 
 Bağımlılık: Aşama 6–8. Yeni özellik eklenmez; kapsam içi sorunlar düzeltilir.
 
-- [ ] 360×800, 390×844, 430×932 ve 844×390 boyutlarında hazne özetinin
+- [x] 360×800, 390×844, 430×932 ve 844×390 boyutlarında hazne özetinin
   yokluğunu, yüzlerin okunurluğunu, beş zarı hızlı seçmeyi, iki saniyelik
   beklemeyi, geri almayı ve beklerken onaylamayı tarayıcıda doğrula.
-- [ ] Normal/azaltılmış harekette botla maç, yerel iki oyuncuda koltuk
+- [x] Normal/azaltılmış harekette botla maç, yerel iki oyuncuda koltuk
   değişimi ve iki çevrim içi koltukta atış–seçim–onay–güç–sonuç–yeniden
   maç akışını kontrol et. Ekstra/kaldırılan zarlar, dar alan kaydırması,
   yön değişimi ve sekmeden dönme de kapsansın.
-- [ ] Tablet ve masaüstünde mevcut tekli seçim, klavye/odak ve kamera
+- [x] Tablet ve masaüstünde mevcut tekli seçim, klavye/odak ve kamera
   davranışının korunduğunu doğrula; kaynakların olay zamanlaması değişmesin.
 - [ ] Fiziksel iPhone/Safari ve Android/Chrome üzerinde hızlı çoklu dokunma,
   uzun basma, kaydırma ve yön değişimini test et. Donanım yoksa madde açık
   kalsın; önceki Aşama 4–5 fiziksel kabul maddelerini benzetimle kapatma.
   [Cihaz yönergesini](docs/MOBILE_DEVICE_CHECKLIST.md) yeni akışa göre güncelle.
-- [ ] `npm run check` ve `npm run test:ci` çalıştır; kullanılan cihaz/tarayıcı,
+- [x] `npm run check` ve `npm run test:ci` çalıştır; kullanılan cihaz/tarayıcı,
   ekran boyutu, kanıt konumları ve açık sorunları kaydet. Gerçekten doğrulanan
   maddeleri işaretle, güncel belgelerle birlikte commit et.
 
 **Kabul:** Rakip hazne özeti olmadan merkez zarları okunur; çoklu seçim
 her dokunuşta kesilmez. 2 saniye yalnız toplu taşıma içindir; atış ve sıra
 ilerletme açık kullanıcı eylemine ve mevcut oyun kurallarına bağlıdır.
+
+**Aşama 9 — Yazılım/tarayıcı doğrulaması tamamlandı, fiziksel kabul açık —
+31 Ekim 2026.** Yeni özellik eklenmedi. Uzun basma sürerken toplu taşımanın
+kilidi açılırsa bırakmanın komşuyu seçmesi sorunu düzeltildi. İptal edilmiş
+hareket, bırakma tıklaması tüketilene kadar korunur; yeni dokunma çalışır.
+
+- Node 24.22.1 ile `npm run check` ve `npm run test:ci` geçti: **40 dosya,
+  503 test**. Yeni regresyon testi düzeltmeden önce hatayı gösterdi,
+  sonrasında geçti. CDP sınır senaryosu normal/azaltılmış harekette de geçti.
+- Chromium 143: dört mobil boyutta hızlı beşli seçim, sabit 44px yüzler,
+  tek toplu taşıma/geri alma ve erken onay; bot, yerel ve iki gerçek ağ
+  istemcisinde normal/azaltılmış tam maç–sonuç–yeniden maç doğrulandı.
+  Düzeltmeden sonra CDP zar dokunmasıyla bir tam yerel maç da tamamlandı.
+- Aynı seed ile azaltılmış/normal/CDP yerel maçların 140 olaylık kayıtları
+  eşleşti. Tablet/masaüstünde klavye, tekli seçim, odak ve tur 2; gerçek core
+  olaylarından ek/kaldırılan zar ara durumları ve 18 hedefin dar alanda
+  kaydırılması kontrol edildi. HUD karşılaştırmalarında uyuşmazlık yoktu.
+- Mobil yön değişiminde taslak/kalan süre korundu. Google Chrome 156'da
+  gerçek sekme geçişi/dönüş kontrol edildi. Kanıtlar ve sınırlar:
+  [Aşama 9 doğrulaması](docs/review/mobile-batch-acceptance.md).
+- Fiziksel iPhone/Safari ve Android/Chrome testi yapılmadı. Cihaz maddesi
+  ve Aşama 4–5'in fiziksel maddeleri açık kaldı; [güncel yönerge ve kayıt
+  tablosu](docs/MOBILE_DEVICE_CHECKLIST.md) iki cihazın sonucunu bekler.
 
 ## Doğrulama ve devam notları — Önceki Aşama 1–5
 

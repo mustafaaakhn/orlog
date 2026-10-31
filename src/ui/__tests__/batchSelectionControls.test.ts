@@ -26,7 +26,7 @@ async function mount() {
   const root = document.createElement('div'); document.body.append(root)
   const app = createApp({ render: () => h(SceneDiceControls, {
     players: Object.values(session.state.value.players), targets, disabled: !!session.pending.value,
-    collected: [], viewerId: 'player-1', selectablePlayer: 'player-1',
+    collected: [], viewerId: 'player-1', selectablePlayer: session.pending.value ? null : 'player-1',
     draftSelectedIds: draft.selectedIds.value, onSelect: draft.toggle,
   }) })
   app.mount(root)
@@ -76,6 +76,26 @@ describe('mobile selection draft face controls', () => {
     await vi.advanceTimersByTimeAsync(2000)
     expect(m.session.state.value.players['player-1'].dice[0]!.faceId).toBe(face)
     expect(m.dispatch).not.toHaveBeenCalled()
+  })
+  it('consumes a long press released over a neighbour after the idle batch locks and unlocks input', async () => {
+    const m = await mount()
+    click(m.button(1))
+    await vi.advanceTimersByTimeAsync(1350)
+    pointer(m.button(2), 'pointerdown')
+    await vi.advanceTimersByTimeAsync(450)
+    expect(m.root.querySelector('.die-face-preview')).not.toBeNull()
+    await vi.advanceTimersByTimeAsync(200)
+    expect(m.session.pending.value!.events[0]!.type).toBe('DiceSelectionChanged')
+    m.session.settle(m.session.pending.value!.id)
+    await nextTick()
+    pointer(m.button(2), 'pointerup')
+    click(m.button(3)) // Native touch can retarget its click after the controls rearrange.
+    await nextTick()
+    expect(m.draft.selectedIds.value).toBeNull()
+    expect(m.session.state.value.players['player-1'].dice.filter(die => die.selected).map(die => die.id)).toEqual(['player-1/die-1'])
+    expect(m.dispatch).toHaveBeenCalledTimes(1)
+    pointer(m.button(3), 'pointerdown'); pointer(m.button(3), 'pointerup'); click(m.button(3))
+    expect(m.draft.selectedIds.value).toEqual(['player-1/die-1', 'player-1/die-3'])
   })
   it('uses keyboard activation for the same draft and keeps navigation from restarting its timer', async () => {
     const m = await mount()

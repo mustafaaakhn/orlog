@@ -88,8 +88,10 @@ let hold: ReturnType<typeof setTimeout> | undefined;
 let gesture: { id: DieId; pointerId: number; x: number; y: number; consumed: boolean; released: boolean; held: boolean } | null = null;
 function cancelHold() { clearTimeout(hold); hold = undefined; }
 function resetGesture() { cancelHold(); gesture = null; }
-watch(() => props.disabled, disabled => { resetGesture(); if (disabled) inspecting.value = null; });
-watch(() => props.selectablePlayer, resetGesture);
+// Keep the consumed touch through a lock: its release may click a different
+// face after layout changes. A fresh pointerdown starts a new gesture normally.
+watch(() => props.disabled, disabled => { cancelTouch(); if (disabled) inspecting.value = null; });
+watch(() => props.selectablePlayer, cancelTouch);
 function touchStart(event: PointerEvent, id: DieId) {
   resetGesture();
   if (props.disabled || event.pointerType !== "touch" || !event.isPrimary) return;
