@@ -61,11 +61,16 @@ tam masa kadrajını korur. Koltuk yönü mevcut yerel/bot/çevrim içi davranı
 izler; kamera oyun sonucu üretmez.
 
 Mobilde beş simge açık kemik zeminli, kameranın açısından etkilenmeyen 44px
-zar yüzlerinde de okunur. Yakın hedefler 4px aralıkla ayrılır; gerçek zardan
-uzaklaşan hedefi ince çizgi bağlar. Jetonlu yüzün altın çerçevesine sağ üstte
+zar yüzlerinde de okunur. Yüzler kimliğe ait düzenli yuvalarda 8px aralıkla ayrılır. Rakibin merkez
+sırası üstte, kendi merkez sıran altta, haznedekiler ayrı alt gruptadır.
+Normal altı zarı ek zarların ikinci sırası izler. Kaldırılan kimliğin boşluğu
+korunur; seçim taslağı yüzü taşımaz. İncelenen/işaret edilen yüzü gerçek
+3B izdüşümüne ince çizgi bağlar. Jetonlu yüzün altın çerçevesine sağ üstte
 ayrı bir altın jeton simgesi eşlik eder. Seçili/kilitli durum açık camgöbeği
 çizgi ve sol alttaki onay imiyle gösterilir; jeton kazancı ile karışmaz.
-Çok kısa ekranda bütün zarlar sığmazsa hedefler aynı büyüklükte kayar.
+Dar alanda satırlar düzenli sarılır; kısa ekranda başlıklı gruplar aynı
+44px büyüklükte kaydırılır. Hazne–merkez geçişinde yalnız ilgili yüzün
+grubu değişir; diğer zarlar boşluk kapatmaz.
 
 Mobil kısa dokunma kendi uygun zarının bekleyen seçimini anında camgöbeği
 vurgu ve onay imiyle değiştirir; ikinci dokunuş geri alır. Yüzler ve 44px

@@ -109,8 +109,8 @@ yüksek kontrastlı dokusu aynı core yüzünü gösterir; atış kaydı değiş
 
 `src/app/diceSelectionDraft.ts` tek 2000 ms zamanlayıcıyla yalnız zar
 kimliklerinden oluşan yerel seçim niyetini tutar. `App`, mobil alan eşiğinde
-insan seçimini bu taslağa yönlendirir; masaüstü ve bot `SetDieSelection`
-kullanmaya devam eder. Her geçerli değişiklik süreyi yeniler; geçersiz kimlik,
+insan seçimini bu taslağa yönlendirir; masaüstündeki insan `SetDieSelection`,
+bot Aşama 10 ile `SetDiceSelection` kullanır. Her geçerli değişiklik süreyi yeniler; geçersiz kimlik,
 inceleme ve uzun basma yenilemez. `SceneDiceControls`, taslak kimliklerini
 yalnız onay imi/vurgu ve erişilebilir seçim açıklamasına uygular. Geometri,
 fizik, yüzler ve core durumu bekleme boyunca değiştirilmez.
@@ -239,3 +239,17 @@ boşaltıp klavye odağını kaybettiriyordu. `publishTargets` saldırı dışı
 sunumlarda eski hedefleri korur; canlı savaş izdüşümü yalnız aktif roller
 varken yayınlanır ve son karesi bir kez temizlenir. Dekoratif `span` yalnız
 mobil aktif savaş yüzüne uygulanır; masaüstü düğmesi kilitte korunur.
+
+## Kararlı mobil yüz sıraları — Aşama 11
+
+`dieTargetLayout` izdüşümden bağımsız, `viewerId` ve zar kimliğine ait yuvalar
+ayırır: rakip merkez, kendi merkez, kendi hazne. Normal altı zar aynı sırayı,
+bonus kimlikleri sonraki sırayı kullanır; dar alanda düzenli sarılır. Boş
+kimlik yuvaları korunur. Taslak seçimi yalnız vurguyu değiştirir; yetkili
+sunumda hazne/merkez değişince yalnız ilgili yüz kendi aynı sütununa geçer.
+`sourceX/sourceY` güncel 3B bağını korur; inceleme/işaret etmede çizgi görünür.
+
+Kısa alanda aynı yuvalar, grup başlıkları ve 44px yüzler kaydırılan yüzeyde
+kalır; bir grubun zarı diğer grubun boşluğunu kullanmaz. Ekranda hiçbir yüz
+kalmamışsa liste ilk görünür sıraya kayar. Bu ekran yerleşimi core, fizik
+ve GSAP konumlarını değiştirmez; kişisel/aktif koltuk mevcut `viewerId`'dır.

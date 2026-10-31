@@ -7,8 +7,8 @@ import type { SceneDieTarget } from "../scene/dieTargets";
 import { inspectableDice } from "./dieInspection";
 import SymbolIcon from "./SymbolIcon.vue";
 import TokenIcon from "./TokenIcon.vue";
-import { dieTargetCapacity, layoutDieTargets } from "./dieTargetLayout";
-import type { DieTargetArea } from "./dieTargetLayout";
+import { dieLayoutMetrics, DIE_LANES, LANE_LABELS, layoutDieTargets } from "./dieTargetLayout";
+import type { DieLane, DieTargetArea } from "./dieTargetLayout";
 const props = defineProps<{
   players: readonly PlayerState[];
   selectablePlayer: PlayerId | null;
@@ -37,25 +37,46 @@ const safeArea = computed(() => props.safeArea ?? {
   bottom: size.value.height <= 500 ? 70 : 160,
   left: 12, right: size.value.height <= 500 ? 210 : 12,
 });
-const overflow = computed(() => mobile.value && dieTargetCapacity(size.value.width, size.value.height, safeArea.value) < inspected.value.length);
-const controls = computed(() => mobile.value && props.disabled
+const metrics = computed(() => dieLayoutMetrics(size.value.width, size.value.height, safeArea.value));
+const overflow = computed(() => mobile.value && metrics.value.overflow);
+type FaceControl = typeof inspected.value[number] & { sourceX: number; sourceY: number; lane?: DieLane; slot?: number };
+const controls = computed<FaceControl[]>(() => mobile.value && props.disabled
   ? inspected.value.filter(target => target.combatRole).map(target => ({
-    ...target, sourceX: target.x, sourceY: target.y,
+    ...target, sourceX: target.x, sourceY: target.y, lane: undefined, slot: undefined,
     y: target.y + (target.combatRole === 'source' ? -24 : 24) * 100 / size.value.height,
   }))
-  : mobile.value && !overflow.value
-  ? layoutDieTargets(inspected.value, size.value.width, size.value.height, safeArea.value)
-  : inspected.value.map(target => ({ ...target, sourceX: target.x, sourceY: target.y })));
+  : mobile.value
+  ? layoutDieTargets(inspected.value, size.value.width, size.value.height, safeArea.value, props.viewerId)
+  : inspected.value.map(target => ({ ...target, sourceX: target.x, sourceY: target.y, lane: undefined, slot: undefined })));
 const listStyle = computed(() => overflow.value ? {
   top: `${safeArea.value.top}px`, bottom: `${safeArea.value.bottom}px`,
   left: `${safeArea.value.left}px`, right: `${safeArea.value.right}px`,
 } : {});
+const surfaceStyle = computed(() => overflow.value ? { height: `${metrics.value.contentHeight}px` } : {});
+function position(target: typeof controls.value[number]) {
+  return overflow.value ? {
+    left: `${target.x * size.value.width / 100 - safeArea.value.left}px`,
+    top: `${target.y * size.value.height / 100 - safeArea.value.top}px`,
+  } : { left: `${target.x}%`, top: `${target.y}%` };
+}
+const laneLabels = computed(() => mobile.value ? DIE_LANES.filter(lane => controls.value.some(t => t.lane === lane)).map(lane => ({
+  lane, label: LANE_LABELS[lane],
+  top: overflow.value ? `${DIE_LANES.indexOf(lane) * metrics.value.laneHeight}px` : `${safeArea.value.top + DIE_LANES.indexOf(lane) * metrics.value.laneHeight}px`,
+})) : []);
 const highlight = createDieHighlight(
   () => !props.disabled,
   () => controls.value.map(target => target.id),
 );
 const { aimed } = highlight;
 const layer = ref<HTMLElement | null>(null);
+watch([controls, overflow], async () => {
+  await nextTick();
+  const list = layer.value?.querySelector<HTMLElement>('.die-target-list.is-overflow');
+  if (!list || !list.clientHeight || !controls.value.length) return;
+  const positions = controls.value.map(t => t.y * size.value.height / 100 - safeArea.value.top);
+  if (!positions.some(y => y - 22 >= list.scrollTop && y + 22 <= list.scrollTop + list.clientHeight))
+    list.scrollTop = Math.max(0, Math.min(...positions) - 44);
+});
 const previewElement = ref<HTMLElement | null>(null);
 const previewHeight = ref(164);
 let resize: ResizeObserver | undefined;
@@ -230,11 +251,13 @@ function navigate(event: KeyboardEvent) {
     @pointerleave="aimed = null"
   >
     <svg v-if="mobile && !overflow" class="die-target-links" aria-hidden="true">
-      <line v-for="target in controls.filter(t => Math.hypot((t.x-t.sourceX)*size.width/100, (t.y-t.sourceY)*size.height/100) > 6)"
+      <line v-for="target in controls.filter(t => (t.id === aimed || t.id === inspecting || !!t.combatRole) && Math.hypot((t.x-t.sourceX)*size.width/100, (t.y-t.sourceY)*size.height/100) > 6)"
         :key="target.id" :x1="`${target.sourceX}%`" :y1="`${target.sourceY}%`"
         :x2="`${target.x}%`" :y2="`${target.y}%`" />
     </svg>
     <div class="die-target-list" :class="{ 'is-overflow': overflow, 'is-short': size.height - safeArea.top - safeArea.bottom < 100 }" :style="listStyle" :role="overflow ? 'group' : undefined" :aria-label="overflow ? 'Masadaki zarlar, kaydırarak incele ve seç' : undefined">
+    <div class="die-slot-surface" :style="surfaceStyle">
+    <span v-for="label in laneLabels" :key="label.lane" class="die-lane-label" :data-lane="label.lane" :style="{ top: label.top, left: overflow ? '50%' : `${safeArea.left + metrics.availableWidth / 2}px` }" aria-hidden="true">{{ label.label }}</span>
     <component
       :is="disabled && mobile && target.combatRole ? 'span' : 'button'"
       v-for="target in controls"
@@ -242,8 +265,7 @@ function navigate(event: KeyboardEvent) {
       class="scene-die-target"
       :class="{ 'grants-token': target.face.grantsToken, 'is-selected': target.selected, 'is-kept': target.location === 'Kilitli', 'is-combat': !!target.combatRole }"
       :style="{
-        left: `${target.x}%`,
-        top: `${target.y}%`,
+        ...position(target),
         zIndex: aimed === target.id ? 3 : undefined,
       }"
       :aria-hidden="disabled ? true : undefined"
@@ -254,6 +276,8 @@ function navigate(event: KeyboardEvent) {
       :aria-describedby="preview?.id === target.id ? 'die-face-preview' : undefined"
       :data-die-id="target.id"
       :data-selectable="target.canSelect"
+      :data-lane="target.lane"
+      :data-slot="target.slot"
       @pointerdown="touchStart($event, target.id)"
       @pointermove="moveTouch"
       @pointerup="endTouch"
@@ -272,6 +296,7 @@ function navigate(event: KeyboardEvent) {
       </template>
       <span class="sr-only">{{ target.label }}</span>
     </component>
+    </div>
     </div>
     <div v-if="preview" ref="previewElement" id="die-face-preview" class="die-face-preview" :role="mobile ? 'region' : 'tooltip'" :aria-label="mobile ? 'Zar bilgisi' : undefined" :style="previewStyle">
       <div class="die-preview-face" :class="{ 'grants-token': preview.face.grantsToken }">

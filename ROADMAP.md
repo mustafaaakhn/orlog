@@ -464,34 +464,38 @@ ve masaüstündeki insanın tekli seçimi korunur.
 
 Bağımlılık: Aşama 10. Savaş hareketleri Aşama 12–13'te ele alınır.
 
-- [ ] Ortak en yakın boş hücre yerleşimini, oyuncu ve zar kimliğine bağlı
+- [x] Ortak en yakın boş hücre yerleşimini, oyuncu ve zar kimliğine bağlı
   slotlarla değiştir. Merkezde rakibin grubu üstte, oyuncunun grubu altta
   olsun; bir oyuncunun ikonu diğerinin sırasındaki boşluğu doldurmasın.
-- [ ] Normal altı zarı her oyuncunun kendi düzenli sırasında tut. Üçe kadar
+- [x] Normal altı zarı her oyuncunun kendi düzenli sırasında tut. Üçe kadar
   ek zar için o oyuncuya ait ikinci sıra ayır; dar/kısa yatay alanda düzenli
   sarma veya grup içi kaydırma kullan. Etkileşimli yüzler en az 44×44px
   kalsın; sığdırmak için üst üste bindirme veya küçültme yapma.
-- [ ] Aynı grup içindeki zarların slotlarını seçim/geri alma ve başka zarın
+- [x] Aynı grup içindeki zarların slotlarını seçim/geri alma ve başka zarın
   kaldırılması sırasında koru. Hazne–merkez geçişini açıkça göster; kalan
   ikonlar boşluk kapatmak için rastgele yeniden dizilmesin. İptal edilen
   dokunmanın bırakılması yer değiştirmiş komşu zarın seçimine dönüşmesin.
-- [ ] Yüz, jeton işareti, etki değeri ve seçili/kilitli bilgisi aynı sunum
+- [x] Yüz, jeton işareti, etki değeri ve seçili/kilitli bilgisi aynı sunum
   durumundan gelsin. 2B yüz ile gerçek 3B zarın bağı konum ve gerektiğinde
   kısa bağlantı çizgisiyle anlaşılır kalsın; ikinci bir zar sonucu üretme.
-- [ ] Rakibin hazne özetini geri getirme. Kendi hazne hedeflerini, merkezde
+- [x] Rakibin hazne özetini geri getirme. Kendi hazne hedeflerini, merkezde
   iki tarafın incelemesini, uzun basmayı, klavyeyi ve güç panelinin geçerli
   hedeflerini koru. Botta/ağda kişisel koltuk, yerelde aktif koltuk yönünü izle.
-- [ ] 0–6 ve ek zarlarla 9'ar hedef, kaldırılan/kullanılan zarlar, iki
+- [x] 0–6 ve ek zarlarla 9'ar hedef, kaldırılan/kullanılan zarlar, iki
   koltuk, yön değişimi, HUD ve kısa yatay alan için slot/grup/kimlik
   davranışlarını test et. Fotoğraflardaki 12 zarlık kümeyi tarayıcıda yeniden
   kur; 18 zar ve masaüstü gerileme kontrollerini de yap.
-- [ ] Zorunlu komutları çalıştır, tasarım/mimari ve görsel kanıt kaydını
+- [x] Zorunlu komutları çalıştır, tasarım/mimari ve görsel kanıt kaydını
   güncelle; doğrulanan kapsamı commit et. Yalnız çakışmama testiyle görsel
   sıraların okunur olduğunu kabul etme.
 
 **Kabul:** İki tarafın zarları tek bir basamaklı kümeye karışmaz. Hangi yüzün
 kime ve hangi 3B zara ait olduğu anlaşılır; bir ikon ayrılınca diğerleri
 yer değiştirmez. Mevcut hızlı çoklu seçim kullanılabilir kalır.
+
+**Aşama 11 tamamlandı — 31 Ekim 2026.** Oyuncu/kimlik yuvaları, ayrı
+merkez/hazne grupları, ek zar sırası ve kısa alan kaydırması doğrulandı.
+Kayıt: [kararlı mobil sıralar](docs/review/mobile-stable-rows.md).
 
 ## Aşama 12 — Savaşta yüz okunurluğunu ve olay kadrajını koru
 
