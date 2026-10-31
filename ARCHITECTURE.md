@@ -297,3 +297,12 @@ yalnız seçimi vurgular. Süre dolumu, geri alma ve erken onay mevcut
 olay sınırları değişmez. Masaüstü mevcut izdüşüm hedeflerini korur.
 Geçici `combatRole` yüzleri, ayrı savaş sadeleştirme adımının kapsamındadır.
 Bu karar önceki Aşama 11–12’nin kalıcı merkez kartı düzeninin yerini alır.
+
+## Sade mobil masa — kadraj
+
+Mobil kamera dokuzlu merkez sırasının zarfını ve yakın haznenin daha dar
+zarfını ayrı ölçer. Dikey görünüm daha tepeden üst yüzü açar; kısa yatayda
+hazne derinliğinin ekran yüksekliğini tüketmesini azaltan açı kullanılır.
+Rakip hazne kadraj girdisi değildir. Atış yüksekliği ve olayın gerçek
+kaynak/hedef payı korunur. Kamera yine yalnız `frameCamera` ile yazılır;
+zarların ölçeği, fizik kaydı ve merkez yuvaları değiştirilmez.

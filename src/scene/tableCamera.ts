@@ -16,21 +16,26 @@ function frameMobile(camera: PerspectiveCamera, width: number, height: number, a
   const centerY = edge.top + areaHeight / 2
   const rotation = new Vector3(0, 1, 0)
   let target = new Vector3(0, .35, 4 - 3 * combat).applyAxisAngle(rotation, angle)
-  const direction = new Vector3(0, 1, .85).normalize().applyAxisAngle(rotation, angle)
+  const direction = new Vector3(0, 1, landscape ? 1.15 : .5).normalize().applyAxisAngle(rotation, angle)
   const right = new Vector3(1, 0, 0).applyAxisAngle(rotation, angle)
   const up = new Vector3().crossVectors(direction, right)
   const tangent = Math.tan(camera.fov * Math.PI / 360)
   let distance = 0
-  // Nine-die battle lines, the full near bowl, and the initial roll's height.
-  // Resolution temporarily includes both seats' resource/god contact anchors.
+  // Fit the actual play envelopes, not a rectangle as wide as the nine-die
+  // line all the way to the front rim. The far bowl reserves no space.
   const points: Vector3[] = []
-  for (const x of [-5.65 - 1.35 * combat, 5.65 + 1.35 * combat])
-    for (const z of [-1.8 - 6.2 * combat, 10.1]) for (const y of [0, 1.85 + .15 * combat]) points.push(new Vector3(x, y, z))
+  const envelope = (halfWidth: number, back: number, front: number, top: number) => {
+    for (const x of [-halfWidth, halfWidth]) for (const z of [back, front])
+      for (const y of [0, top]) points.push(new Vector3(x, y, z))
+  }
+  envelope(5.65, -1.65, 1.65, 1.2)
+  envelope(3.4, 3.3, 10.1, 1.85)
   // High roll poses only occur over the near bowl, never over the battle lines.
   for (const x of [-2.5, 2.5]) for (const z of [4.8, 8.6]) points.push(new Vector3(x, 4.1, z))
+  if (combat) envelope(7, -8, 10.1, 2)
   if (focus?.length && focusBlend > 0) {
     // Pad the current source/target envelope for the full die, attack recoil,
-    // lifted gold arc and a decorative face beside the contact. Fit, never crop.
+    // lifted gold arc and the contact marker. Fit, never crop.
     const min = new Vector3(Infinity, Infinity, Infinity), max = min.clone().negate()
     for (const point of focus) { min.min(point); max.max(point) }
     min.addScalar(-1.3); max.addScalar(1.3); max.y += 1.1

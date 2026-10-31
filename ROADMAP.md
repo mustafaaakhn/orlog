@@ -32,11 +32,11 @@
 
 ## 3. Merkez zarlarını daha büyük ve rahat izlenir göster
 
-- [ ] Mobil kadrajı kendi haznemize ve iki merkez sırasına yaklaştır;
+- [x] Mobil kadrajı kendi haznemize ve iki merkez sırasına yaklaştır;
   rakibin haznesini kadraja sığdırmak için alan ayırma.
-- [ ] Merkez zarlarının ekran üzerindeki boyutunu artır; kamera açısını
+- [x] Merkez zarlarının ekran üzerindeki boyutunu artır; kamera açısını
   üst yüzlerin rahat okunacağı şekilde düzenle.
-- [ ] Altışar zar ve ek zarlarla dokuzar zar durumunda sıralar birbirine
+- [x] Altışar zar ve ek zarlarla dokuzar zar durumunda sıralar birbirine
   girmesin; can/jeton göstergeleri ve ana eylemler zarları örtmesin.
 
 ## 4. Savaşı kartlar olmadan anlat
