@@ -27,6 +27,7 @@ import type { FavorInspection } from '../ui/favorInspection';
 import type { SceneFavorTarget } from "./dieTargets";
 import SceneDiceControls from "../ui/SceneDiceControls.vue";
 import { useTableInsets } from './useTableInsets';
+import { isMobileTableView } from './tableCamera';
 import type { SceneDieTarget } from "./dieTargets";
 const props = defineProps<{
   audio: AudioPort;
@@ -46,6 +47,13 @@ const props = defineProps<{
 }>();
 const viewport = ref<HTMLElement | null>(null);
 const frameInsets = useTableInsets(viewport);
+const viewportSize = ref({ width: 0, height: 0 });
+const mobileRendering = computed(() => viewportSize.value.width > 0 &&
+  isMobileTableView(viewportSize.value.width, viewportSize.value.height));
+const renderDpr = computed<number | [number, number]>(() => props.quality === 'low' ? 1
+  : props.quality === 'high' ? mobileRendering.value ? [1, 2] : 1.75
+  : mobileRendering.value ? [1, 1.75] : [1, 1.25]);
+let qualityObserver: ResizeObserver | undefined;
 const emit = defineEmits<{
   availability: [ready: boolean];
   settled: [batchId: number];
@@ -182,10 +190,17 @@ function rendered() {
   }
 }
 
-onMounted(initialize);
+onMounted(() => {
+  initialize();
+  qualityObserver = new ResizeObserver(([entry]) => {
+    if (entry) viewportSize.value = { width: entry.contentRect.width, height: entry.contentRect.height };
+  });
+  if (viewport.value) qualityObserver.observe(viewport.value);
+});
 // Tres owns a separate render tree; release its board before renderer disposal.
 onBeforeUnmount(() => sceneComponent.value?.dispose());
 onUnmounted(() => {
+  qualityObserver?.disconnect();
   clearLoadingTimeout();
   detachCanvas();
 });
@@ -209,7 +224,8 @@ onErrorCaptured(() => {
       alpha
       render-mode="on-demand"
       :clear-alpha="0"
-      :dpr="quality === 'high' ? 1.75 : quality === 'low' ? 1 : [1, 1.25]"
+      :dpr="renderDpr"
+      :antialias="true"
       :tone-mapping-exposure="1"
       aria-label="Üç boyutlu Orlog masası: iki ayrı ahşap hazne, ortada savaş zarları, solda can taşları ve sağda yatay tanrı levhaları. Zarları doğrudan masada seç. Klavyede Tab ile zarlara geç, Space veya Enter ile seç; yön tuşlarıyla gezin."
       role="img"

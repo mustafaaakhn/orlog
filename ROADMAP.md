@@ -23,11 +23,11 @@
 
 ## 2. 3B zarların netliğini artır
 
-- [ ] Mobil otomatik çizim çözünürlüğünü iyileştir; 1,75–2× aralığını
+- [x] Mobil otomatik çizim çözünürlüğünü iyileştir; 1,75–2× aralığını
   görüntü netliği ve akıcılık açısından karşılaştır.
-- [ ] Üst yüz sembollerini daha büyük, koyu ve belirgin yap. Açık yüz
+- [x] Üst yüz sembollerini daha büyük, koyu ve belirgin yap. Açık yüz
   zemini, altın jeton çerçevesi ve semboller kolay ayırt edilsin.
-- [ ] Doku ve kenar yumuşatma ayarlarını birlikte değerlendir; yalnız
+- [x] Doku ve kenar yumuşatma ayarlarını birlikte değerlendir; yalnız
   çözünürlüğü artırmayı yeterli kabul etme.
 
 ## 3. Merkez zarlarını daha büyük ve rahat izlenir göster
