@@ -27,7 +27,7 @@ export function createRollSession(options: GameOptions = {}) {
   const pending = shallowRef<PresentationBatch | null>(null)
   const error = shallowRef('')
   let background = false
-  let remote: { dispatch(command: GameCommand, revision: number): boolean; settled(revision: number): void } | null = null
+  let remote: { dispatch(command: GameCommand, revision: number): boolean; dispatchAsync?(command: GameCommand, revision: number): Promise<boolean>; settled(revision: number): void } | null = null
   let remoteState: GameState | null = null
   const currentState = () => remoteState ?? game.state
   function flushBackground() {
@@ -140,6 +140,11 @@ export function createRollSession(options: GameOptions = {}) {
       }
     },
     dispatch,
+    dispatchAsync(command: GameCommand): boolean | Promise<boolean> {
+      if (pending.value) return false
+      if (remote?.dispatchAsync) return remote.dispatchAsync(command, state.value.revision)
+      return dispatch(command)
+    },
     settle,
     resume() {
       const current = currentState()

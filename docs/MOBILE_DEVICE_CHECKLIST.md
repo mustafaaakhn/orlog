@@ -31,9 +31,11 @@ API anahtarı gerekmez. Test sonunda geliştirme sunucusunu Ctrl+C ile kapat.
    Zar atma, saklama, güç seçimi, savaş ve sonuçtan sonra Yeni oyun'u dene.
    Yeni maçta can 15, jeton 0 olmalı; ilk başlayan, önceki maçın ilk
    başlayanının karşısı olmalı. Son turun ilk oyuncusuyla karşılaştırma.
-2. **Zar seçimi:** Kendi altı zarına sırayla kısa dokun; istenen zar merkeze
-   geçmeli. Merkezden geri al; komşu zar seçilmemeli. Simge, altın jeton
-   işareti ve seçili/kilitli onay imi birbirinden ayırt edilmeli.
+2. **Zar seçimi:** Kendi zarlarına hızlıca kısa dokun; onay imleri anında
+   görünmeli, yüzler yerinde kalmalı. Son değişiklikten 2 saniye sonra
+   birlikte merkeze geçmeli; sıra değişmemeli. Süre dolmadan Seçimi onayla
+   ile de son seçim bir kez uygulanıp onaylanmalı. Merkezden geri al;
+   kilitli/komşu zar seçilmemeli. Simge, jeton ve onay imi ayırt edilmeli.
 3. **Uzun basma ve iptal:** En az yarım saniye bas; yalnız bilgi açılmalı.
    Parmağı kaldırıp Kapat'a dokun; zar seçilmemeli. Sonraki kısa dokunma
    seçmeli. Parmağı sürükleyip hareketi iptal etmek seçim üretmemeli.

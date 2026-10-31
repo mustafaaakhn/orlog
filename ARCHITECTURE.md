@@ -121,11 +121,35 @@ kullanır. Değişmeyen seçim taslakta komut üretmez; core'a doğrudan gönder
 revision/olay üretmez ve oturumlar boş sunum grubu oluşturmaz. Seçim olayı
 `ConfirmRoll`, atış veya sıra değişimi üretmez; eski kilitler korunur.
 
-Taslak durum veya kullanılabilirlik değişiminde ve kaldırılmada iptal edilir;
-geç callback'ler nesil numarası ve kaynak durum kimliğiyle reddedilir.
-Bu temel koruma, Aşama 8'in erken onay, ağ kabulü/ret uzlaşması ve bütün
-kesinti senaryolarının tamamlandığı anlamına gelmez. Aşama 7'de erken onay
-mevcut uygulanmış seçimi kullanır. Yeni dış varlık veya bağımlılık eklenmedi.
+`createDiceSelectionDraft.confirm`, 2000 ms dolmadan son taslağı uygular.
+Tek işlem kaydı seçim isteği → seçim sunumu → onay isteği sırasını korur.
+`rollSession.dispatchAsync`, yerelde aynı core sonucunu, ağda sunucunun kabul
+cevabını döndürür. Onay için hem kabul cevabı hem beklenen revision/seçimle
+sunumun bitmesi ve iki koltuğun hazır olması gerekir. Cevap ve sunum hangi
+sırada gelirse gelsin tek onay üretilir. Süre dolarken yapılan onay mevcut
+seçim işlemine katılır; değişmeyen taslak seçim olayı oluşturmadan onaylanır.
+
+`applying` yalnız bu seçimin sürmekte olduğunu, `confirming` aynı onayın
+tekrar gönderilemeyeceğini bildirir. Onay düğmesi toplu seçim sunumu sürerken
+kullanılabilir; yeni zar seçimi mevcut sunum kilidini izler. Geç kabul
+cevapları işlem kimliğiyle, zamanlayıcılar nesil numarasıyla reddedilir.
+Maç/tur/faz/koltuk, atış sayısı ve zar kimliği/yüzü/kilitleri değişirse eski
+işlem devam edemez. Core'a zamanlayıcı veya UI bağımlılığı eklenmez.
+
+`App.selectionInterrupted`; hazırlık/çıkış, insan sırası, sahne hazır oluşu,
+sekme/odak, yardımcı pencere, mobil güç paneli, mobil alan eşiği ve ağ
+bağlantısını birlikte izler. Güç paneli açılışını senkron `openChange` olayıyla
+bildirir. Kesinti taslağı ve bekleyen onayı temizler; zaten yetkili olarak
+kabul edilmiş seçim geri alınmaz. Yeniden maç ve WebGL toparlanması eski
+callback'leri yeni oturuma taşımaz. Mobil içindeki yön değişiminde bu
+bağlam değişmediği için aynı zamanlayıcı ve kalan süre korunur.
+
+Ağ istemcisi reddedilen komuttan sonra `room:resume` ile yetkili snapshot alır;
+red cevabını kabul saymaz ve kuyruğa alınmış onayı göndermez. Kopma nesli
+ilerletir: eski ACK yeni isteğin kilidini açamaz. Cihazın `offline` olayı
+Socket.IO kalp atışını beklemeden bağlantıyı kapatır; `online` olayı mevcut
+koltuğu snapshot ile geri alır. Belirsiz/kayıp ACK komutu tekrar göndermez.
+Yeni dış varlık veya bağımlılık eklenmedi.
 
 ## Ağ ve çalıştırma
 

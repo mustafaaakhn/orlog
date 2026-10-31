@@ -14,10 +14,12 @@ const props = defineProps<{
 const emit = defineEmits<{
   choose: [id: FavorId, level: FavorLevel, input?: FavorInput]
   skip: []
+  openChange: [opened: boolean]
 }>()
 const trigger = ref<HTMLButtonElement | null>(null)
 const panel = ref<HTMLDialogElement | null>(null)
 const opened = ref(false)
+watch(opened, value => emit('openChange', value), { flush: 'sync' })
 const ownerId = ref<PlayerId>(props.viewerId)
 const selectedId = ref<FavorId | null>(null)
 const owner = computed(() => props.state.players[ownerId.value])
@@ -76,6 +78,7 @@ onMounted(() => {
   media.addEventListener('change', resized)
 })
 onUnmounted(() => {
+  emit('openChange', false)
   media?.removeEventListener('change', resized)
   panel.value?.close()
 })

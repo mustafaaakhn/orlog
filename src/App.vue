@@ -178,6 +178,7 @@ const online = createOnlineClient({
     const newMatch = preparing.value || state.value.gameId !== match.state.gameId;
     session.startRemote(match.state, {
       dispatch: (command, revision) => online.command(command, revision, match.state.gameId),
+      dispatchAsync: (command, revision) => online.commandAsync(command, revision, match.state.gameId),
       settled: (revision) => online.presented(revision, match.state.gameId),
     });
     for (const player of online.room.value?.players ?? []) names.value[player.id] = player.name;
@@ -268,17 +269,26 @@ const mobileMedia = window.matchMedia('(max-width: 600px), (max-height: 500px) a
 const mobileSelection = ref(mobileMedia.matches);
 const updateMobileSelection = () => { mobileSelection.value = mobileMedia.matches; };
 mobileMedia.addEventListener('change', updateMobileSelection);
+const favorPanelOpen = ref(false);
+const selectionInterrupted = computed(() => !mobileSelection.value || preparing.value || paused.value ||
+  pageHidden.value || !!overlay.value || favorPanelOpen.value || !sceneReady.value || !humanTurn.value ||
+  (!!onlineRoom.value && !online.bothConnected.value));
 const selectionDraft = createDiceSelectionDraft(() => ({
   state: state.value,
-  enabled: mobileSelection.value && !busy.value && humanTurn.value && !preparing.value && !paused.value && !overlay.value,
-}), command => session.dispatch(command));
+  enabled: !selectionInterrupted.value && !busy.value,
+  interrupted: selectionInterrupted.value,
+}), command => session.dispatchAsync(command));
 const draftSelectedIds = selectionDraft.selectedIds;
+const canConfirmSelection = computed(() => humanTurn.value && !preparing.value && !paused.value &&
+  !overlay.value && !favorPanelOpen.value && sceneReady.value && phase.value.name === 'roll' &&
+  phase.value.step === 'selecting-dice' && (activePlayer.value?.rollsUsed ?? 3) < 3 &&
+  !selectionDraft.confirming.value && (!busy.value || (mobileSelection.value && selectionDraft.applying.value)));
 onUnmounted(() => {
   mobileMedia.removeEventListener('change', updateMobileSelection);
   selectionDraft.dispose();
 });
 function selectDie(dieId: Parameters<typeof session.select>[0]) {
-  if (busy.value || !humanTurn.value || preparing.value) return;
+  if (busy.value || !humanTurn.value || preparing.value || paused.value || overlay.value || favorPanelOpen.value) return;
   if (mobileSelection.value) selectionDraft.toggle(dieId);
   else session.select(dieId);
 }
@@ -384,18 +394,17 @@ watch([state, pending, sceneReady, paused, preparing, overlay, turningSeat], () 
   }
 });
 function roll() {
-  if (!busy.value && humanTurn.value && phase.value.name === "roll")
+  if (!busy.value && humanTurn.value && !paused.value && !overlay.value && !favorPanelOpen.value &&
+    phase.value.name === "roll" && phase.value.step === "awaiting-roll")
     session.dispatch({
       type: "RollDice",
       playerId: phase.value.activePlayerId,
     });
 }
 function confirm() {
-  if (!busy.value && humanTurn.value && phase.value.name === "roll")
-    session.dispatch({
-      type: "ConfirmRoll",
-      playerId: phase.value.activePlayerId,
-    });
+  if (!canConfirmSelection.value || phase.value.name !== 'roll') return;
+  if (mobileSelection.value) void selectionDraft.confirm();
+  else session.dispatch({ type: 'ConfirmRoll', playerId: phase.value.activePlayerId });
 }
 </script>
 
@@ -478,7 +487,7 @@ function confirm() {
         :state="state"
         :draft-selected-ids="draftSelectedIds"
         :batch="pending"
-        :blocked="busy"
+        :blocked="busy || favorPanelOpen"
         :viewer-id="viewerId"
         :control-player="
           !preparing && humanTurn && phase.name === 'roll'
@@ -532,13 +541,13 @@ function confirm() {
             :state="state" :viewer-id="viewerId" :names="names"
             :blocked="busy || paused || !!overlay"
             :can-choose="!busy && humanTurn && phase.name === 'favor' && phase.activePlayerId === viewerId"
-            @choose="choose" @skip="skip"
+            @choose="choose" @skip="skip" @open-change="favorPanelOpen = $event"
           />
-          <template v-if="!busy && humanTurn && phase.name === 'roll'">
-            <button v-if="phase.step === 'awaiting-roll'" class="primary-action" @click="roll">
+          <template v-if="humanTurn && phase.name === 'roll'">
+            <button v-if="!busy && phase.step === 'awaiting-roll'" class="primary-action" @click="roll">
               Zar at <UiIcon name="arrow" />
             </button>
-            <button v-else-if="activePlayer && activePlayer.rollsUsed < 3" class="primary-action" @click="confirm">
+            <button v-else-if="canConfirmSelection" class="primary-action" @click="confirm">
               Seçimi onayla <UiIcon name="check" />
             </button>
           </template>

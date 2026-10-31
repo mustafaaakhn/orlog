@@ -70,7 +70,12 @@ taşınır. Saklamak için seçilenler merkezde, yeniden atılacaklar haznede ka
 Süre dolması onay/kilit, atış hakkı tüketimi, rastgele sonuç veya sıra geçişi
 değildir. Merkezdeki kilitsiz seçim geri alınabilir; önceki onaylarda kilitlenen
 zarlar açılamaz. Bu bir sunum tercihidir; yukarıdaki atış kuralları değişmez.
-Erken onaya bekleyen taslağın aktarılması Aşama 8 kapsamındadır.
+**Seçimi onayla** süreyi beklemeden son taslağı uygular; kabul ve toplu
+sunum tamamlanınca mevcut `ConfirmRoll` yalnız bir kez yürür. Reddedilen
+seçim sıra geçirmez. Panel/sekme/bağlantı/maç kesintileri bekleyen yerel
+niyeti temizler; kabul edilmiş kural sonucu korunur. Mobil yön değişimi
+kalan süreyi değiştirmez. Bunlar uygulama etkileşimidir; atış, saklama ve
+sıra kuralları değişmez.
 
 **Motor akışı tercihi:** Bütün zarlarını erken saklayan oyuncu kalan atış sıralarından çıkarılır.
 Rakip kalan atışlarını ardışık tamamlayabilir. Boş atış yapılmaz, kullanılmamış haklar yapay olarak üçe yükseltilmez.

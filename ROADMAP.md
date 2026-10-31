@@ -28,14 +28,15 @@ işaretleri korunur. Önceki fiziksel cihaz kabulünün açık maddeleri açık 
 
 Bu hedef, önceki planın rakip hazne özetini zorunlu tutan maddelerinin ve her
 dokunuşta anında taşıma davranışının yerini alır. Aşama 6 ile özet kaldırıldı;
-Aşama 7 ile iki saniyelik toplu seçim ve tek taşıma uygulandı. `DESIGN.md` ve
+Aşama 7 ile iki saniyelik toplu seçim ve tek taşıma, Aşama 8 ile erken onay,
+ağ kabulü ve kesinti yaşam döngüsü uygulandı. `DESIGN.md` ve
 `ARCHITECTURE.md` güncel uygulamayı anlatır; ilgili aşama uygulanırken
 yeniden güncellenir.
 
 ## İlerleme biçimi
 
 - Her istekte yalnızca belirtilen aşama uygulanır. Sonraki aşamaya otomatik
-  geçilmez. Sıradaki iş: **“ROADMAP.md içindeki Aşama 8'i uygula.”**
+  geçilmez. Sıradaki iş: **“ROADMAP.md içindeki Aşama 9'u uygula.”**
 - Aşamalar sırayla ilerler. Her biri ayrı kısa ömürlü branch, doğrulama ve
   commit ile teslim edilir; doğrulanan iş yerel `main` branch'ine birleştirilir.
 - Yalnız gerçekten uygulanıp doğrulanan maddeler aynı işin commit'inde `[x]`
@@ -283,29 +284,46 @@ taşıma/geri alma uygulandı. Aşama 6'nın tamamlanmış `main` sürümüyle b
 
 Bağımlılık: Aşama 7. Taslak ile yetkili durumun yaşam döngüsü tamamlanır.
 
-- [ ] İki saniye dolmadan **Seçimi onayla** basılırsa bekleyen son seçimi
+- [x] İki saniye dolmadan **Seçimi onayla** basılırsa bekleyen son seçimi
   süreyi beklemeden uygula ve mevcut onay akışını yalnız bir kez yürüt.
   Sıra önceki taslakla ilerlemesin; ek onay penceresi açma.
-- [ ] **Zar at** mevcut uygun fazda tek dokunuşla çalışsın. Seçim süresinin
+- [x] **Zar at** mevcut uygun fazda tek dokunuşla çalışsın. Seçim süresinin
   dolması atış, `ConfirmRoll` veya sıra/faz değişimi başlatmasın; üçüncü
   atışın mevcut otomatik saklama ve ilerleme kurallarını değiştirme.
-- [ ] Çevrim içi oyunda toplu seçimi sunucuda koltuk, faz ve revision ile
+- [x] Çevrim içi oyunda toplu seçimi sunucuda koltuk, faz ve revision ile
   doğrula. Kabul edilmeden sonraki onayı gönderme; reddedilen veya eski
   istekte taslağı güncel yetkili durumla uzlaştır. Tekrar mesajı çift taşıma
   ya da çift onay üretmesin; rakibin seçimlerini yerel taslak değiştirmesin.
-- [ ] Koltuk/faz/maç değişimi, çıkış, yeniden maç, bağlantı kopması veya
+- [x] Koltuk/faz/maç değişimi, çıkış, yeniden maç, bağlantı kopması veya
   WebGL toparlanmasında eski taslak ve callback'leri temizle. Yeni oyuna,
   başka oyuncuya veya artık olmayan zara gecikmiş seçim uygulama.
-- [ ] Tanrı/yardım/ayar penceresi açıldığında, sekme gizlendiğinde veya mobil
+- [x] Tanrı/yardım/ayar penceresi açıldığında, sekme gizlendiğinde veya mobil
   düzenden çıkıldığında taslağı iptal edip uygulanmış seçime dön; zamanlayıcı
   kapalı görünümde komut göndermesin. Yalnız mobil içinde yön değişiminde
   taslağı ve kalan süreyi koru; yinelenen zamanlayıcı oluşturma.
-- [ ] Hızlı tekrar onayı, süre dolmasıyla aynı anda onay, uzun basma,
+- [x] Hızlı tekrar onayı, süre dolmasıyla aynı anda onay, uzun basma,
   kaydırma, klavye, kesinti ve iki gerçek ağ istemcisi senaryolarını doğrula;
   zorunlu komutları çalıştır, belgeleri güncelle ve commit et.
 
 **Kabul:** Onay bekleyen seçimi kaybetmez veya iki kez işlemez. Eski
 zamanlayıcı yeni koltukta/maçta çalışmaz; çevrim içi sonuç sunucuyla tutarlıdır.
+
+**Aşama 8 tamamlandı — 31 Ekim 2026.** Erken onay son taslağı uygular;
+seçim kabulü ve sunumu tamamlanınca onay bir kez gönderilir. Red/kayıp ACK
+ve kesintilerde eski taslak/callback yeni tur, koltuk veya maça taşınmaz.
+
+- Node 24.22.1: `npm run check` ve `npm run test:ci` geçti; **40 dosyada
+  502 test**. Süreyle yarışan onay, ACK/sunum sırası, sunucu koltuk/faz/
+  revision kontrolü, tekrar mesajları, üçüncü atış, klavye ve kesintiler kapsandı.
+- Chromium 143: 390×844, 844×390, 568×320 ve mobil düzenden çıkış için
+  1440×900. Normal/azaltılmış hareket, erken/tekrar onayı, CDP uzun basma/
+  sürükleme/kaydırma, panel iptali, yön değişimi, WebGL toparlanması ve
+  çıkış/yeni maç doğrulandı. İki gerçek Socket.IO istemcisiyle erken/süre
+  sonrası onay, eski revision reddi ve offline/online dönüşü geçti.
+- Google Chrome 156'da gerçek sekme geçişi taslağı iptal etti; gizliyken
+  komut gönderilmedi, dönüşte aynı canvas ve revision korundu.
+- Ayrıntı ve kanıtlar: [Aşama 8 doğrulaması](docs/review/mobile-selection-lifecycle.md).
+  Fiziksel cihaz maddeleri ve Aşama 9'un birleşik tam maç kabulü açık kalır.
 
 ## Aşama 9 — Birleşik mobil doğrulama ve cihaz kabulü
 

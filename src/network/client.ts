@@ -50,7 +50,7 @@ export function createOnlineClient(callbacks: {
       socket.once('connect', ok); socket.once('connect_error', fail); socket.connect()
     })
   }
-  async function request<T>(send: () => Promise<Reply<T>>) {
+  async function request<T>(send: () => Promise<Reply<T>>, recoverRejected = false) {
     if (busy.value) return
     const current = generation
     busy.value = true
@@ -58,7 +58,12 @@ export function createOnlineClient(callbacks: {
     try {
       const reply = await send()
       if (current !== generation) return
-      if (!reply.ok) { error.value = reply.error; return }
+      if (!reply.ok) {
+        // A stale/rejected selection must reconcile before any queued confirm.
+        if (recoverRejected && identity.value) await resume()
+        if (current === generation) error.value = reply.error
+        return
+      }
       return reply.data
     } catch (reason) {
       if (current === generation) error.value = reason instanceof Error && reason.message.includes('sunucusuna') ? reason.message : 'Yanıt alınamadı. Bağlantı yenileniyor…'
@@ -80,7 +85,7 @@ export function createOnlineClient(callbacks: {
     finally { if (current === generation) busy.value = false }
   }
   socket.on('connect', () => { connected.value = true; if (identity.value && !joining) void resume() })
-  socket.on('disconnect', () => { connected.value = false })
+  socket.on('disconnect', () => { generation++; connected.value = false; busy.value = false })
   socket.on('connect_error', () => { connected.value = false; if (identity.value) error.value = 'Odaya yeniden bağlanılıyor…' })
   socket.on('room:update', update => {
     if (update.code === identity.value?.code) room.value = update
@@ -107,6 +112,24 @@ export function createOnlineClient(callbacks: {
       if (joined) accept(joined)
     } finally { joining = false }
   }
+  // Browser offline events precede Socket.IO's heartbeat timeout. Do not keep
+  // a selection timer alive or buffer its command while the device is offline.
+  const offline = () => { if (identity.value) socket.disconnect() }
+  const online = () => { if (identity.value) socket.connect() }
+  const networkEvents = typeof window === 'undefined' ? null : window
+  networkEvents?.addEventListener('offline', offline)
+  networkEvents?.addEventListener('online', online)
+  function canCommand() {
+    return bothConnected.value && !busy.value && !room.value?.waiting
+  }
+  async function commandAsync(command: GameCommand, revision: number, gameId: string): Promise<boolean> {
+    if (!canCommand()) return false
+    const accepted = await request(async () => {
+      const reply = await socket.timeout(8000).emitWithAck('game:command', { command, revision, gameId })
+      return reply.ok ? { ok: true as const, data: true } : reply
+    }, true)
+    return accepted === true
+  }
   return {
     room, identity, connected, bothConnected, busy, error,
     create: () => enter(), join: (code: string) => enter(code),
@@ -116,10 +139,11 @@ export function createOnlineClient(callbacks: {
     play: () => request(() => socket.timeout(8000).emitWithAck('room:play')),
     rematch: (gameId: string) => request(() => socket.timeout(8000).emitWithAck('game:rematch', gameId)),
     command(command: GameCommand, revision: number, gameId: string) {
-      if (!bothConnected.value || busy.value || room.value?.waiting) return false
-      void request(() => socket.timeout(8000).emitWithAck('game:command', { command, revision, gameId }))
+      if (!canCommand()) return false
+      void commandAsync(command, revision, gameId)
       return true
     },
+    commandAsync,
     presented(revision: number, gameId: string) { if (socket.connected && identity.value) socket.emit('game:presented', revision, gameId) },
     visibility(value: boolean) {
       visible = value
@@ -141,7 +165,12 @@ export function createOnlineClient(callbacks: {
         }
       } catch { save(null) }
     },
-    dispose() { generation++; socket.removeAllListeners(); socket.disconnect() },
+    dispose() {
+      generation++
+      networkEvents?.removeEventListener('offline', offline)
+      networkEvents?.removeEventListener('online', online)
+      socket.removeAllListeners(); socket.disconnect()
+    },
   }
 }
 export type OnlineClient = ReturnType<typeof createOnlineClient>

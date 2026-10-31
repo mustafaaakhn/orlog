@@ -26,6 +26,22 @@ Kurallar ve zar sonuçları sunucudadır. Her oyuncu yalnız kendi koltuğuna ai
 komutları gönderebilir. Maç sonunda Yeni oyun odayı koruyup son tanrılar seçili
 olarak hazırlığı açar; iki oyuncunun onayı gerekir.
 
+## Mobil seçim ve onay
+
+Son seçim değişikliğinden 2000 ms sonra seçim tek toplu komutla sunucuya
+gider. Seçimi onayla daha erken basılırsa süre beklenmez. Mevcut onay komutu,
+seçim sunucuda kabul edildikten ve iki masanın sunumu tamamlandıktan sonra
+bir kez gönderilir. Sadece sürenin dolması zar atmaz veya sıra geçirmez.
+
+Sunucu koltuk, faz, maç kimliği ve revision denetimini korur. Eski/reddedilen
+istekte istemci yetkili durumu yeniden alır; önceki taslakla onay göndermez.
+Tekrar mesajı ikinci taşıma/onay oluşturmaz. Rakibin seçimi kendi yerel
+taslağından değiştirilmez.
+
+Cihaz çevrim dışı olduğunda bekleyen taslak iptal edilir ve Socket.IO
+bağlantısı kapatılır; çevrim içi dönüşte aynı koltuk güncel snapshot ile
+açılır. Kaybolmuş kabul cevabı komutun tekrar gönderilmesine yol açmaz.
+
 ## Bağlantı ve sınırlar
 
 - Kısa kopmada koltuk iki dakika korunur; yenilemede aynı sekme geri dönebilir.

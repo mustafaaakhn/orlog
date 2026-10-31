@@ -93,6 +93,46 @@ describe('two-player Socket.IO rooms', () => {
     expect(h.matches.get(h.host)!.events).toHaveLength(1)
     expect(h.matches.get(h.host)!.state.players[first].dice.every(d => !d.selected && !d.kept)).toBe(true)
   })
+  it('validates batch ownership/phase/revision and never repeats a selection or confirmation packet', async () => {
+    const h = await setup()
+    await h.play()
+    const first = h.matches.get(h.host)!.state.firstPlayerId
+    const actor = first === 'player-1' ? h.host : h.guest, other = first === 'player-1' ? h.guest : h.host
+    await h.command({ type: 'RollDice', playerId: first })
+    const before = h.matches.get(h.host)!.state
+    const selection = { type: 'SetDiceSelection' as const, playerId: first, dieIds: before.players[first].dice.slice(0, 5).map(d => d.id) }
+    const request = { command: selection, revision: before.revision, gameId: before.gameId }
+    expect((await other.emitWithAck('game:command', request)).ok).toBe(false)
+    expect((await actor.emitWithAck('game:command', { ...request, gameId: 'old-match' })).ok).toBe(false)
+    expect((await actor.emitWithAck('game:command', { ...request, revision: before.revision - 1 })).ok).toBe(false)
+    const selections: MatchUpdate[] = [], confirmations: MatchUpdate[] = []
+    h.host.on('game:batch', match => {
+      if (match.events.some(event => event.type === 'DiceSelectionChanged')) selections.push(match)
+      if (match.events.some(event => event.type === 'DiceKept')) confirmations.push(match)
+    })
+    const replies = await Promise.all([actor.emitWithAck('game:command', request), actor.emitWithAck('game:command', request)])
+    expect(replies.filter(reply => reply.ok)).toHaveLength(1)
+    // A confirm cannot overtake the accepted selection's presentation.
+    expect((await actor.emitWithAck('game:command', { ...request, revision: before.revision + 1,
+      command: { type: 'ConfirmRoll', playerId: first } })).ok).toBe(false)
+    await h.settle()
+    expect((await actor.emitWithAck('game:command', request)).ok).toBe(false)
+    const confirm = { gameId: before.gameId, revision: before.revision + 1, command: { type: 'ConfirmRoll' as const, playerId: first } }
+    const confirmed = await Promise.all([actor.emitWithAck('game:command', confirm), actor.emitWithAck('game:command', confirm)])
+    expect(confirmed.filter(reply => reply.ok)).toHaveLength(1)
+    await h.settle()
+    expect((await actor.emitWithAck('game:command', confirm)).ok).toBe(false)
+    expect(selections).toHaveLength(1)
+    expect(confirmations).toHaveLength(1)
+    const after = h.matches.get(h.host)!.state
+    expect(after.revision).toBe(before.revision + 2)
+    expect(after.players[first].dice.filter(die => die.kept).map(die => die.id)).toEqual(selection.dieIds)
+    expect(h.matches.get(h.guest)!.state).toEqual(after)
+    const next = after.phase
+    if (next.name !== 'roll') throw new Error('Expected second seat roll')
+    expect((await other.emitWithAck('game:command', { gameId: after.gameId, revision: after.revision,
+      command: { type: 'SetDiceSelection', playerId: next.activePlayerId, dieIds: [] } })).ok).toBe(false)
+  })
   it('starts exactly one fresh match in the same room, preserving seats and rejecting packets from the previous match', async () => {
     fixedDice.value = true
     const h = await setup()

@@ -84,10 +84,20 @@ Rakibin haznesindeki zarlar için mobil dokunma hedefi üretilmez; merkezdeki
 her zarın tek hedefi vardır. Masaüstünde mevcut 3B yüzler, hover bilgisi ve
 klavye hedefleri korunur.
 
-Aşama 7 yalnız bekleme ve toplu taşımayı kapsar. Süre dolmadan **Seçimi
-onayla** eylemine taslağın aktarılması, ağ reddiyle uzlaşma ve kesintilerin
-birleşik kabulü Aşama 8'de tamamlanacaktır. Mevcut onay, uygulanmış seçimi
-kullanır; bekleyen taslak henüz bu erken onaya eklenmez.
+**Seçimi onayla**, süre dolmadan son bekleyen seçimi uygular ve taşıma
+bitince mevcut onayı bir kez yürütür. Toplu taşıma zaten başlamışsa aynı
+onay bu işlemin bitmesini bekler. Ek pencere açılmaz. Ağ oyununda sunucu
+seçimi kabul etmeden ve iki masanın sunumu bitmeden onay gönderilmez;
+reddedilen seçim güncel yetkili durumla uzlaştırılır. **Zar at**, uygun
+fazda tek eylemdir; 2000 ms yalnız seçimi uygular. Üçüncü atışın otomatik
+saklama/ilerleme davranışı korunur.
+
+Tanrı gücü, yardım veya ayar penceresi açmak; sekmeden/oyundan çıkmak,
+bağlantıyı kaybetmek, sahneyi yeniden kurmak veya mobil düzenden çıkmak
+bekleyen taslağı ve onayı temizler. Kabul edilmiş seçim korunur; yeni
+oyuna/koltuğa gecikmiş seçim gönderilmez. Mobil içinde dikey/yatay geçiş
+ise taslağı ve kalan süreyi korur. Klavye seçimi de mobilde aynı niyeti
+kullanır; inceleme, uzun basma ve kaydırma süreyi yenilemez.
 
 Mobil maçta **Tanrı gücü** düğmesi alttan açılan bir panel sunar. Oyuncunun
 üç kuşanılmış tanrısı portre, öncelik, zamanlama ve üç seviyenin bedel/etki

@@ -7,7 +7,7 @@ import type { RematchSetup } from '../../app/rematchSetup'
 import type { FavorId } from '../../core'
 
 beforeEach(() => {
-  vi.stubGlobal('window', { matchMedia: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }) })
+  vi.stubGlobal('window', { addEventListener() {}, removeEventListener() {}, matchMedia: () => ({ matches: true, addEventListener() {}, removeEventListener() {} }) })
   vi.stubGlobal('document', { querySelector: () => null })
 })
 afterEach(() => vi.unstubAllGlobals())

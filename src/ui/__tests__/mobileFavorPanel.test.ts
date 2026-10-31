@@ -13,17 +13,17 @@ function mount(canChoose = true, favors: FavorId[] = ['thors-strike', 'friggs-si
     players: { ...initial.players, 'player-1': { ...initial.players['player-1'],
       dice: initial.players['player-1'].dice.map(d => ({ ...d, faceId: 'axe-1', kept: true })) },
       'player-2': { ...initial.players['player-2'], dice: initial.players['player-2'].dice.map(d => ({ ...d, faceId: 'arrow', kept: true })) } } })
-  const blocked = shallowRef(false), allowed = shallowRef(canChoose), choose = vi.fn(), skip = vi.fn()
+  const blocked = shallowRef(false), allowed = shallowRef(canChoose), choose = vi.fn(), skip = vi.fn(), openChange = vi.fn()
   const root = document.createElement('div')
   document.body.append(root)
   const app = createApp({ render: () => h(MobileFavorPanel, { state: state.value, viewerId: 'player-1',
     names: { 'player-1': 'Eivor', 'player-2': 'Sigurd' }, blocked: blocked.value, canChoose: allowed.value,
-    onChoose: choose, onSkip: skip }) })
+    onChoose: choose, onSkip: skip, onOpenChange: openChange }) })
   app.mount(root)
   unmounts.push(() => app.unmount())
   const button = (text: string) => [...root.querySelectorAll('button')].find(n => n.textContent!.includes(text))!
   const panel = root.querySelector('dialog')!
-  return { root, state, blocked, allowed, choose, skip, button, panel,
+  return { root, state, blocked, allowed, choose, skip, openChange, button, panel,
     tiers: () => [...root.querySelectorAll<HTMLButtonElement>('button.favor-tier')] }
 }
 
@@ -42,6 +42,7 @@ describe('mobile favor panel commands and drafts', () => {
     await nextTick()
     expect(m.panel.open).toBe(false)
     expect(document.activeElement).toBe(trigger)
+    expect(m.openChange.mock.calls).toEqual([[true], [false]])
     expect(m.choose).not.toHaveBeenCalled()
     expect(m.skip).not.toHaveBeenCalled()
   })
