@@ -179,7 +179,7 @@ etkilemez. Birleşik kabul ve açık bağımlılıklar
 ## Savaş boyunca okunur yüzler — Aşama 12
 
 Bu tarihsel aşamanın kalıcı merkez kartları, yeni mobil roadmap’in 1.
-adımıyla kaldırıldı; geçici saldırı/savunma yüzleri halen korunur.
+adımıyla kaldırıldı; 4. adım geçici saldırı/savunma kartlarını da kaldırdı.
 
 Savaşa girince mevcut okunur yüzler görünür kalır. Kilitli yüzler dekoratiftir;
 tıklama ve odak hedefi oluşturmaz. O anki olayın kaynak/hedef kimlikleri
@@ -193,3 +193,18 @@ Kadraj mevcut olayın temas alanına yumuşak geçer; azaltılmış harekette uz
 kamera geçişi uygulanmaz. Başlık/kaynak/eylem alanı her kadrajda korunur.
 Sekme dönüşü veya WebGL yeniden kurma eski yüz/vurgu bırakmaz. Masaüstü
 aynı düğme/odak kimliğiyle tam masa görünümünü sürdürür.
+
+## Mobil 3B zar netliği — yeni roadmap, adım 2
+
+Mobil otomatik kalite ekran yoğunluğunu en çok 1,75×, yüksek kalite 2×
+kullanır; düşük kalite 1× kalır. Yoğunluğu daha düşük ekranlarda otomatik
+ve yüksek kalite gerçek cihaz yoğunluğunu aşmaz. Geniş masaüstünde önceki
+1,25× otomatik / 1,75× yüksek değerler korunur. Dikey/yatay geçiş ve kalite
+seçimi mevcut sahnenin çizim tamponunu günceller.
+
+Dinlenen mobil zarın üst yüzü 512px doku, açık kemik zemin ve büyütülmüş
+koyu yeşil/siyah sembol kullanır. Jetonlu yüzün simgesi altın çerçevenin
+içine sığar; köşe jeton işareti sembolün ucunu kapatmaz. Mipmap, doğrusal
+süzme, donanım sınırında 8× anizotropi ve renderer kenar yumuşatması birlikte
+kullanılır. Malzeme ışığı sembol maskesini izler; koyu mürekkebi tek renk
+emisyonla soldurmaz. Masaüstü yüz çizimi ve zarın gerçek sonucu değişmez.

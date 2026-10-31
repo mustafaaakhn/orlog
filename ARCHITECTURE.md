@@ -295,7 +295,8 @@ Kart/izdüşüm ayrımı `location` sunum değerini izler; `draftSelectedIds`
 yalnız seçimi vurgular. Süre dolumu, geri alma ve erken onay mevcut
 `diceSelectionDraft`/oturum komutlarını kullanır. Fizik, GSAP, core ve
 olay sınırları değişmez. Masaüstü mevcut izdüşüm hedeflerini korur.
-Geçici `combatRole` yüzleri, ayrı savaş sadeleştirme adımının kapsamındadır.
+Bu adımın tesliminde korunan geçici `combatRole` yüzleri, aşağıda açıklanan
+4. adımla kaldırıldı.
 Bu karar önceki Aşama 11–12’nin kalıcı merkez kartı düzeninin yerini alır.
 
 ## Sade mobil masa — kadraj
@@ -306,6 +307,21 @@ hazne derinliğinin ekran yüksekliğini tüketmesini azaltan açı kullanılır
 Rakip hazne kadraj girdisi değildir. Atış yüksekliği ve olayın gerçek
 kaynak/hedef payı korunur. Kamera yine yalnız `frameCamera` ile yazılır;
 zarların ölçeği, fizik kaydı ve merkez yuvaları değiştirilmez.
+
+## Mobil çizim kalitesi — yeni roadmap, adım 2
+
+`TablePreview`, viewport’u `ResizeObserver` ile ölçerek mevcut
+`isMobileTableView` eşiğini kalite seçimine uygular. Otomatik DPR aralığı
+mobilde `[1, 1.75]`, yüksek kalite `[1, 2]`; düşük kalite `1` olur.
+Masaüstünün eski DPR değerleri korunur. Observer bileşen kapanışında
+bırakılır; yön/kalite değişiminde oturum veya fizik yeniden kurulmaz.
+
+`createFaceTexture` mobil üst yüzleri 512px üretir; masaüstü 256px kalır.
+Sembol ve jeton sınırları 256 birimlik aynı çizim alanında hesaplanır.
+Doğrusal büyütme ve mipmap’li küçültme korunur; mobil yüz 8× anizotropi
+ister, `createBoard` bütün istekleri gerçek renderer donanım sınırına kısar.
+`mobileUpper` emisyon haritası aynı yüz dokusudur. Varsayılan renderer AA
+artık açıkça belirtilir; ek ekran son işlemi veya sürekli çizim eklenmez.
 
 ## Sade mobil masa — kartsız savaş
 

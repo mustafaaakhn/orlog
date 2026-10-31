@@ -56,7 +56,7 @@ import {
   createSymbolTexture,
 } from "./textures";
 
-export function createBoard(invalidate: () => void = () => {}) {
+export function createBoard(invalidate: () => void = () => {}, maxAnisotropy = 4) {
   const root = new Group();
   root.name = "Orlog table";
   let disposed = false;
@@ -64,6 +64,7 @@ export function createBoard(invalidate: () => void = () => {}) {
   const geometries = new Set<BufferGeometry>();
   const materials = new Set<MeshStandardMaterial>();
   function keepTexture<T extends Texture>(value: T) {
+    value.anisotropy = Math.min(value.anisotropy, maxAnisotropy);
     textures.add(value);
     return value;
   }
@@ -254,10 +255,11 @@ export function createBoard(invalidate: () => void = () => {}) {
             faceMaterials.set(cacheKey, surface);
             // Share the same map. The pale emission still respects the ink;
             // only the actual upper face gets it, once the dice stop moving.
+            const mobileMap = keepTexture(createFaceTexture(face, true));
             restingFaceMaterials.set(surface, {
               upper: material({ map: surface.map, roughness: 0.7,
                 emissiveMap: surface.map, emissive: "#eadfc4", emissiveIntensity: 0.12 }),
-              mobileUpper: material({ map: keepTexture(createFaceTexture(face, true)), roughness: 0.8,
+              mobileUpper: material({ map: mobileMap, roughness: 0.85, emissiveMap: mobileMap,
                 emissive: "#eadfc4", emissiveIntensity: 0.06 }),
               side: material({ map: surface.map, roughness: 0.7, color: "#bfb49f" }),
             });

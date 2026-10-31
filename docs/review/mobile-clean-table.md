@@ -83,6 +83,22 @@ başlığı yoktu. Ekranlar açılarak incelendi. Kanıtlar `interaction.mjs/jso
 `framing.mjs/json` ve `step5-*.log` içindedir. Son başarılı koşularda çalışma
 zamanı istisnası yoktu.
 
+## Birleşik son doğrulama
+
+1–2. adımlar başka çalışma branch'inden `main`e geldiği için gelişen
+`main` korundu; 3–5 ile birleştirilerek yeniden doğrulandı. Nihai kodda
+`npm run check`, `npm run test:ci` (45 dosya, 558 test) ve
+`git diff --check` başarılıdır. `combined-check.log` ve
+`combined-tests.log` son birleşik kodun kayıtlarıdır.
+
+Üç mobil boyuttaki seçim/inceleme/geri alma/erken onay akışı, kısa bilgi
+kaydırması, iki masaüstü boyutundaki klavye/güç/savaş/tur 2 akışı ve
+10 adet 12/18 zar kadrajı birleşik kodda yeniden geçti. İki koltukta
+normal/azaltılmış savaşın 19'ar olay kaydı ve son oyuncu durumları eşleşti
+(`combined-comparison.json`). Merkezde kalıcı kart veya başlık, savaş
+sonunda eski vurgu ve başarılı koşularda çalışma zamanı istisnası yoktu.
+Son merkez, savaş ve kısa inceleme ekranları açılarak incelendi.
+
 ## Kabul sınırı
 
 Kullanıcı fiziksel cihaz testlerini kendisi yapacağını belirtti.

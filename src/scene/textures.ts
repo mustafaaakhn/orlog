@@ -1,4 +1,4 @@
-import { CanvasTexture, SRGBColorSpace } from "three";
+import { CanvasTexture, LinearFilter, LinearMipmapLinearFilter, SRGBColorSpace } from "three";
 import type { DieFace, DieSymbol } from "../core";
 import { SYMBOL_PATHS } from "./symbols";
 
@@ -9,10 +9,13 @@ function canvas(size: number) {
   if (!context) throw new Error("2D texture canvas is unavailable");
   return { element, context };
 }
-function texture(element: HTMLCanvasElement) {
+function texture(element: HTMLCanvasElement, anisotropy = 4) {
   const result = new CanvasTexture(element);
   result.colorSpace = SRGBColorSpace;
-  result.anisotropy = 4;
+  result.anisotropy = anisotropy;
+  result.minFilter = LinearMipmapLinearFilter;
+  result.magFilter = LinearFilter;
+  result.generateMipmaps = true;
   return result;
 }
 export function createSymbolTexture(symbol: DieSymbol) {
@@ -146,7 +149,9 @@ export function createSurfaceTexture(kind: "bone" | "stone" | "metal") {
   return texture(element);
 }
 export function createFaceTexture(face: DieFace, mobile = false) {
-  const { element, context: ctx } = canvas(256);
+  const { element, context: ctx } = canvas(mobile ? 512 : 256);
+  // Keep a 256-unit artboard: extra texels smooth the ink at oblique angles.
+  if (mobile) ctx.scale(2, 2);
   const base = ctx.createRadialGradient(120, 105, 30, 128, 128, 180);
   base.addColorStop(0, "#eee4cd");
   base.addColorStop(0.8, "#e0d1b0");
@@ -180,8 +185,10 @@ export function createFaceTexture(face: DieFace, mobile = false) {
     }
   }
   ctx.save();
-  ctx.translate(mobile && face.grantsToken ? 18 : 13, mobile && face.grantsToken ? 36 : 13);
-  const scale = mobile && face.grantsToken ? 2.05 : 2.3;
+  const scale = mobile ? face.grantsToken ? 2.44 : 2.72 : 2.3;
+  // Center the enlarged ink inside the gold frame, leaving the corner mark clear.
+  ctx.translate(mobile ? (256 - 100 * scale) / 2 : 13,
+    mobile ? (256 - 100 * scale) / 2 : 13);
   ctx.scale(scale, scale);
   ctx.lineWidth = 5;
   ctx.lineCap = "round";
@@ -191,11 +198,11 @@ export function createFaceTexture(face: DieFace, mobile = false) {
   ctx.fillStyle = "#fff1d4";
   ctx.fill(new Path2D(SYMBOL_PATHS[face.symbol]), "evenodd");
   ctx.translate(0, -0.65);
-  ctx.fillStyle = "#241e17";
+  ctx.fillStyle = mobile ? "#141b17" : "#241e17";
   const symbol = new Path2D(SYMBOL_PATHS[face.symbol]);
   ctx.fill(symbol, "evenodd");
-  ctx.strokeStyle = "#241e17";
-  ctx.lineWidth = 1.1;
+  ctx.strokeStyle = mobile ? "#141b17" : "#241e17";
+  ctx.lineWidth = mobile ? 1.65 : 1.1;
   ctx.stroke(symbol);
   ctx.restore();
   if (mobile && face.grantsToken) {
@@ -205,17 +212,17 @@ export function createFaceTexture(face: DieFace, mobile = false) {
     ctx.strokeStyle = "#543516";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.roundRect(198, 10, 46, 46, 5);
+    ctx.roundRect(218, 8, 28, 28, 3);
     ctx.fill();
     ctx.stroke();
     ctx.save();
-    ctx.translate(200, 12);
-    ctx.scale(1.35, 1.35);
+    ctx.translate(218, 8);
+    ctx.scale(0.875, 0.875);
     ctx.lineWidth = 2;
     ctx.stroke(new Path2D("M11 11V8a3 3 0 1 0-3 3h16a3 3 0 1 0-3-3v16a3 3 0 1 0 3-3H8a3 3 0 1 0 3 3Z"));
     ctx.restore();
   }
-  return texture(element);
+  return texture(element, mobile ? 8 : 4);
 }
 export function createInscriptionTexture(text: string, color = "#d9bd7d") {
   const { element, context: ctx } = canvas(256);

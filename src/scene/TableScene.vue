@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onBeforeUnmount, watch, computed, nextTick } from "vue";
 import { gsap } from 'gsap';
-import { useTres } from "@tresjs/core";
+import { isWebGLRenderer, useTres } from "@tresjs/core";
 import {
   DirectionalLight,
   PerspectiveCamera,
@@ -57,7 +57,7 @@ const emit = defineEmits<{
   seatTurn: [player: PlayerId | null];
 }>();
 const { sizes, invalidate, renderer, scene } = useTres();
-const board = createBoard(invalidate);
+const board = createBoard(invalidate, isWebGLRenderer(renderer) ? renderer.capabilities.getMaxAnisotropy() : 4);
 board.syncDice(props.state);
 board.syncResources(props.state);
 let sceneClosed = false;
