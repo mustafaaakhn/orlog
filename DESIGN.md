@@ -176,7 +176,7 @@ etkilemez. Birleşik kabul ve açık bağımlılıklar
 ## Savaş boyunca okunur yüzler — Aşama 12
 
 Bu tarihsel aşamanın kalıcı merkez kartları, yeni mobil roadmap’in 1.
-adımıyla kaldırıldı; geçici saldırı/savunma yüzleri halen korunur.
+adımıyla kaldırıldı; 4. adım geçici saldırı/savunma kartlarını da kaldırdı.
 
 Savaşa girince mevcut okunur yüzler görünür kalır. Kilitli yüzler dekoratiftir;
 tıklama ve odak hedefi oluşturmaz. O anki olayın kaynak/hedef kimlikleri

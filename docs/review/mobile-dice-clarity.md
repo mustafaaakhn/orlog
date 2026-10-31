@@ -41,3 +41,8 @@ Kanıtlar Git dışında `output/mobile-steps/`: `clarity.mjs/json/log`, altı
 
 Fiziksel iPhone/Safari ve Android/Chrome netlik/akıcılık kabulü açık kalır;
 bu rapor roadmap’in fiziksel cihaz kabulü olan 5. adımını tamamlamaz.
+
+Diğer işin `main` üzerindeki tamamlanmış kartsız savaş değişiklikleriyle
+birleşik durumda `npm run check` ve 556 test de geçti. 390×844 / 844×390
+dokunmayla seçim–geri alma ve 768×1024 / 1440×900 klavye odağı yeniden
+kontrol edildi; istisna yoktu (`combined-*.log`, güncel `step1-extra.json`).

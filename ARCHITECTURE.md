@@ -295,7 +295,8 @@ Kart/izdüşüm ayrımı `location` sunum değerini izler; `draftSelectedIds`
 yalnız seçimi vurgular. Süre dolumu, geri alma ve erken onay mevcut
 `diceSelectionDraft`/oturum komutlarını kullanır. Fizik, GSAP, core ve
 olay sınırları değişmez. Masaüstü mevcut izdüşüm hedeflerini korur.
-Geçici `combatRole` yüzleri, ayrı savaş sadeleştirme adımının kapsamındadır.
+Bu adımın tesliminde korunan geçici `combatRole` yüzleri, aşağıda açıklanan
+4. adımla kaldırıldı.
 Bu karar önceki Aşama 11–12’nin kalıcı merkez kartı düzeninin yerini alır.
 
 ## Sade mobil masa — kadraj
