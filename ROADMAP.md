@@ -1,12 +1,64 @@
 # Mobil oynanabilirlik yol haritası
 
-Tarih: 30 Ekim 2026
+İlk plan: 30 Ekim 2026 · Son güncelleme: 31 Ekim 2026
 
 Amaç, telefonda zarları, kaynakları ve tanrı güçlerini rahatça okuyup
 seçebilmek. Masaüstünün mevcut görünümü ve oyun kuralları korunur.
 Bu dosya planı gösterir; geliştirmelerin tamamlandığı anlamına gelmez.
 
-## Güncel hedef — Hazne özetini kaldırma ve toplu zar seçimi
+## Güncel hedef — Bot seçimi, düzenli zar sıraları, savaş ve lobi
+
+31 Ekim 2026 yayın sonrası kullanıcı testi ve incelemesiyle yeni çalışma
+**Aşama 10–15** olarak belirlendi. Bu güncelleme yalnız plandır; aşağıdaki
+yeni aşamalar uygulanmadı ve geliştirmeye başlama yetkisi vermez.
+
+| Sıra | Aşama | Hedef | Bağımlılık |
+| --- | --- | --- | --- |
+| 1 | 10 | Botun zar seçimlerini tek grupta taşı | Mevcut Aşama 7–9 uygulaması |
+| 2 | 11 | Mobil yüzleri oyunculara ait sabit sıralara yerleştir | 10 |
+| 3 | 12 | Savaşta okunur yüzleri ve olay odaklı kadrajı koru | 11 |
+| 4 | 13 | Saldırı, blok ve hasar hareketlerini belirginleştir | 12 |
+| 5 | 14 | Lobide hazır durumunu geri al ve tanrıları değiştir | Mevcut oda/hazırlık akışı; teslim sırası 13 sonrası |
+| 6 | 15 | Bütün değişiklikleri birlikte ve fiziksel cihazlarda doğrula | 10–14 |
+
+**Kesin karar:** Tanrı güçlerinin öncelikleri, savaş öncesi/sonrası ödeme ve
+etki sıraları korunur. Bütün güçler savaş sonuna taşınmaz. Örneğin 5 mevcut
+jeton + 1 çerçeve kazanımı + 2 çalma, başka kayıp yoksa savaş sonrası güce
+8 jeton sağlayabilir; savaş öncesi güç bu gelecek geliri kullanamaz. Bu plan
+güç kataloğunu, mevcut jeton yetmese de seviye seçilebilmesini veya kural
+sonuçlarını değiştirmez.
+
+Önceki Aşama 1–9'un teslim ve doğrulama kayıtları korunur. Aşama 7–9'da
+toplu seçim insanın mobil etkileşimine uygulanmış, botun tekli seçimi açıkça
+korunmuştu; Aşama 10 bu kapsamı genişletir. Önceki tarayıcı kontrolleri,
+aşağıdaki yayın sonrası sorunların çözüldüğü veya fiziksel cihaz kabulünün
+tamamlandığı anlamına gelmez. Aşama 4–5 ve 9'un açık cihaz maddeleri açık kalır.
+
+### Yayın sonrası doğrulanan bulgular — 31 Ekim 2026
+
+- **Bot:** `src/ai/computer.ts` seçim değişikliğinde yalnız bir zar için
+  `SetDieSelection` döndürüyor; `computerDriver` her komutun sunumunu ve yeni
+  düşünme süresini bekliyor. Kontrollü senaryoda atış → üç ayrı tekli seçim
+  → onay izlendi. İnsan için eklenen 2000 ms toplu taslak bota uygulanmıyor.
+- **Yüz yerleşimi:** Kullanıcının `IMG_1965.png`–`IMG_1971.png` görüntüleri
+  ve canlı sitenin 430px mobil görünümünde düzensiz kümelenme görüldü.
+  `layoutDieTargets` ortak ızgaradaki en yakın boş hücreyi seçiyor; oyuncu
+  gruplarını ve iki ayrı merkez sırasını korumuyor. Çakışmama tek başına
+  okunur veya kararlı bir dizilim sağlamıyor.
+- **Savaş görünürlüğü:** `SceneDiceControls` sunum kilidinde yüzleri
+  gizliyor; çözümleme kadrajı genişleyince küçük 3B zarlar kalıyor.
+  `combatPresenter` saldırıda çoğunlukla küçük ok/balta efektini uçuruyor;
+  zarın kendisi saldırı hareketi yapmıyor, katkıları bitince kenara toplanıyor.
+  Canlı sitede seçimden çözümlemeye geçişte yüzlerin kaybolması doğrulandı.
+- **Lobi:** Canlı sunucuda iki test istemcisiyle biri hazır, diğeri hazır
+  değilken ilk oyuncunun tanrı değiştirmesi denendi; sunucu
+  “Tanrı seçimi şu an değiştirilemez.” yanıtını verdi. `room:ready` hazır
+  koltuğu yeniden kabul etmiyor; protokolde hazırlığı geri alma işlemi yok.
+
+Kullanıcının iPhone ekran görüntüleri cihaz geri bildirimidir. Bu incelemede
+fiziksel iPhone/Safari veya Android/Chrome testi yapılmış sayılmaz.
+
+## Önceki hedef — Hazne özetini kaldırma ve toplu zar seçimi
 
 30 Ekim 2026 kullanıcı geri bildirimiyle sıradaki çalışma **Aşama 6–9** olarak
 belirlendi. Aşama 1–5 önceki uygulamanın ve doğrulamanın kaydıdır; tamamlanan
@@ -37,8 +89,9 @@ yeniden güncellenir.
 ## İlerleme biçimi
 
 - Her istekte yalnızca belirtilen aşama uygulanır. Sonraki aşamaya otomatik
-  geçilmez. Yazılım/tarayıcı aşamaları tamamlandı; sıradaki açık iş
-  **Aşama 9 ve önceki Aşama 4–5 için fiziksel iPhone/Android kabulüdür.**
+  geçilmez. Yeni uygulama sırası **Aşama 10** ile başlar; Aşama 4–5 ve 9'un
+  fiziksel iPhone/Android kabulü ayrıca açıktır. Bu cihaz maddeleri yeni
+  yazılım aşamalarına başlamayı engellemez; benzetimle kapatılamaz.
 - Aşamalar sırayla ilerler. Her biri ayrı kısa ömürlü branch, doğrulama ve
   commit ile teslim edilir; doğrulanan iş yerel `main` branch'ine birleştirilir.
 - Yalnız gerçekten uygulanıp doğrulanan maddeler aynı işin commit'inde `[x]`
@@ -375,6 +428,205 @@ hareket, bırakma tıklaması tüketilene kadar korunur; yeni dokunma çalışı
   ve Aşama 4–5'in fiziksel maddeleri açık kaldı; [güncel yönerge ve kayıt
   tablosu](docs/MOBILE_DEVICE_CHECKLIST.md) iki cihazın sonucunu bekler.
 
+## Aşama 10 — Botun seçimini tek grupta uygula
+
+Bağımlılık: Mevcut Aşama 7–9 uygulaması. İnsan seçimi ve yüz yerleşimi bu
+aşamada yeniden tasarlanmaz. Botun toplu seçimi mobil ve geniş ekranda aynıdır.
+
+- [ ] Botun aynı atışta saklamak veya geri almak istediği bütün kilitsiz
+  zarların son seçimini tek kararda üret; mevcut `SetDiceSelection` komutunu
+  ve `DiceSelectionChanged` olayını kullan. Zar başına komut döndürme.
+- [ ] Mevcut zorluk profillerinin değerlendirmesini, görünür bilgi sınırını,
+  rastgele kaynağı ve önceki atışların kilitli zarlarını koru. Toplu seçim
+  yeni atış veya daha güçlü bir bot profili oluşturmasın.
+- [ ] Mevcut kısa düşünme süresinden sonra tek toplu taşıma oynat; bota
+  insanın 2000 ms taslak zamanlayıcısını veya zar başına bekleme ekleme.
+  Seçim değişmiyorsa boş taşıma oluşturmadan mevcut onay yoluna geç.
+- [ ] `ConfirmRoll` yalnız seçim kabulü ve toplu sunum bitince bir kez
+  gönderilsin. Sekme/odak kaybı, sahne kaybı, çıkış ve yeniden maç eski bot
+  kararını yeni bağlama taşımasın; üçüncü atışın otomatik akışı korunsun.
+- [ ] Çoklu seçim/geri alma, değişmeyen seçim, kilitli zar ve kesintileri
+  anlamlı AI/sürücü/sunum testleriyle doğrula. Aynı atış durumunda eski
+  değerlendirmeyle seçilen nihai zar kümesini karşılaştır; tek seçim
+  revision/olayı, tek ortak taşıma ve sunum sonrası tek onayı denetle.
+- [ ] Normal/azaltılmış harekette mobil ve masaüstü bot sırasını tarayıcıda
+  izle. Zorunlu komutları çalıştır; `ARCHITECTURE.md`, `DESIGN.md` ve ilgili
+  doğrulama kaydını güncelle, doğrulanan maddeleri aynı commit'te işaretle.
+
+**Kabul:** Bot üç zar saklayacaksa üç ayrı gizlenme–taşıma–yeniden görünme
+döngüsü oluşmaz; üçü birlikte gider. İnsan mobil seçiminin 2000 ms davranışı
+ve masaüstündeki insanın tekli seçimi korunur.
+
+## Aşama 11 — Mobil yüzleri oyunculara ait kararlı sıralara yerleştir
+
+Bağımlılık: Aşama 10. Savaş hareketleri Aşama 12–13'te ele alınır.
+
+- [ ] Ortak en yakın boş hücre yerleşimini, oyuncu ve zar kimliğine bağlı
+  slotlarla değiştir. Merkezde rakibin grubu üstte, oyuncunun grubu altta
+  olsun; bir oyuncunun ikonu diğerinin sırasındaki boşluğu doldurmasın.
+- [ ] Normal altı zarı her oyuncunun kendi düzenli sırasında tut. Üçe kadar
+  ek zar için o oyuncuya ait ikinci sıra ayır; dar/kısa yatay alanda düzenli
+  sarma veya grup içi kaydırma kullan. Etkileşimli yüzler en az 44×44px
+  kalsın; sığdırmak için üst üste bindirme veya küçültme yapma.
+- [ ] Aynı grup içindeki zarların slotlarını seçim/geri alma ve başka zarın
+  kaldırılması sırasında koru. Hazne–merkez geçişini açıkça göster; kalan
+  ikonlar boşluk kapatmak için rastgele yeniden dizilmesin. İptal edilen
+  dokunmanın bırakılması yer değiştirmiş komşu zarın seçimine dönüşmesin.
+- [ ] Yüz, jeton işareti, etki değeri ve seçili/kilitli bilgisi aynı sunum
+  durumundan gelsin. 2B yüz ile gerçek 3B zarın bağı konum ve gerektiğinde
+  kısa bağlantı çizgisiyle anlaşılır kalsın; ikinci bir zar sonucu üretme.
+- [ ] Rakibin hazne özetini geri getirme. Kendi hazne hedeflerini, merkezde
+  iki tarafın incelemesini, uzun basmayı, klavyeyi ve güç panelinin geçerli
+  hedeflerini koru. Botta/ağda kişisel koltuk, yerelde aktif koltuk yönünü izle.
+- [ ] 0–6 ve ek zarlarla 9'ar hedef, kaldırılan/kullanılan zarlar, iki
+  koltuk, yön değişimi, HUD ve kısa yatay alan için slot/grup/kimlik
+  davranışlarını test et. Fotoğraflardaki 12 zarlık kümeyi tarayıcıda yeniden
+  kur; 18 zar ve masaüstü gerileme kontrollerini de yap.
+- [ ] Zorunlu komutları çalıştır, tasarım/mimari ve görsel kanıt kaydını
+  güncelle; doğrulanan kapsamı commit et. Yalnız çakışmama testiyle görsel
+  sıraların okunur olduğunu kabul etme.
+
+**Kabul:** İki tarafın zarları tek bir basamaklı kümeye karışmaz. Hangi yüzün
+kime ve hangi 3B zara ait olduğu anlaşılır; bir ikon ayrılınca diğerleri
+yer değiştirmez. Mevcut hızlı çoklu seçim kullanılabilir kalır.
+
+## Aşama 12 — Savaşta yüz okunurluğunu ve olay kadrajını koru
+
+Bağımlılık: Aşama 11. Önce okunurluk sürekliliği sağlanır; saldıran zarın
+hareketi Aşama 13'tedir.
+
+- [ ] Etkileşim kilidi ile yüzün görünürlüğünü ayır. Çözümleme sırasında
+  seçim kapalı kalsın; görünen bütün yüzler yalnız `disabled` olduğu için
+  kaybolmasın. Dekoratif yüzler tıklama/odak hedefi oluşturmasın.
+- [ ] Sunum grubu sürerken de yüzün konumunu güncel 3B parça/kamera
+  izdüşümünden okuyabil. `publishTargets` içindeki sunum kilidi nedeniyle
+  eski koordinatlarda donma oluşmasın; bu salt okunur görsel takip seçim
+  kilidini açmasın veya bekleyen grubun nihai yüz/sonucunu erkenden göstermesin.
+- [ ] O anki olayın kaynak ve hedef zarlarını mevcut olay kimliklerinden
+  vurgula. Diğer yüzlerin vurgusunu azalt; sıradaki zarları veya nihai can/
+  jeton değerlerini erkenden gösterme. Kaldırılan/kullanılan zarın yüzünü
+  mevcut olay ve toplama sınırında temizle.
+- [ ] Kameranın tek yazım yolunu koruyarak kadrajı olayın kaynak, hedef ve
+  hareket alanına göre ayarla. Her çözümlemede bütün masayı uzaktan
+  göstermek yerine okunur aktif parçaları ve temas noktasını birlikte kapsa.
+  Can/jeton/tanrı etkilerinde hedef HUD altında veya ekran dışında kalmasın.
+- [ ] Olay geçişlerinde yüzleri ve kadrajı kararlı tut; yüz katmanı 3B
+  parçanın üstünü anlamsız biçimde kapatmasın. Azaltılmış harekette uzun
+  kamera hareketi olmadan kaynak, hedef ve sonuç anlaşılır kalsın.
+- [ ] Saldırı/blok, doğrudan hasar, kazanım/çalma/ödeme, tanrı etkisi ve
+  toplamada iki koltuğun kadrajını ve olay–yüz bağını doğrula. Sekme dönüşü,
+  WebGL toparlanması ve yeniden maç eski vurgu veya hayalet yüz bırakmasın.
+- [ ] Dikey/kısa yatay mobilde seçim → güç → savaş → sonraki tur geçişlerini
+  normal/azaltılmış harekette tarayıcıda izle; tablet/masaüstünü kontrol et.
+  Zorunlu komutlar, güncel belgeler ve görsel kanıtla aşamayı commit et.
+
+**Kabul:** Savaşa girildiğinde okunur yüzlerden bir anda küçük, anlaşılması
+güç zarlara geçilmez. Aktif kaynak ve hedef görülebilir; etkileşim kilidi ve
+oyun olaylarının sırası korunur.
+
+## Aşama 13 — Saldırı, blok ve hasarı görünür zar hareketiyle anlat
+
+Bağımlılık: Aşama 12. Kadraj ve yüz sürekliliğinin üstüne hareket eklenir.
+
+- [ ] Her saldırıyı mevcut `AttackBlocked` veya `DamageDealt` olayındaki
+  kaynak/hedef kimliklerinden sun. Saldıran 3B zar ve ona bağlı okunur yüz,
+  blokta savunma zarına; doğrudan hasarda ilgili can taşı temasına belirgin
+  hareket etsin. Küçük bir efekt uçuşu tek başına saldırı anlatımı olmasın.
+- [ ] Hazırlık → hareket → temas/tepki → geri dönüş veya toplama adımlarını
+  aynı olayın zaman çizgisinde kur. Saldıran ve savunan yüzün kimliği hareket
+  boyunca korunsun; aktif zar hareket ederken diğer slotlar yeniden akmasın.
+- [ ] Blokta savunma tepkisini, hasarda etkilenen can taşını açıkça göster.
+  Çok değerli veya birden çok katkılı zarın son katkısı bitmeden zarı toplama;
+  geçici hareketin dönüş konumu ile nihai toplama konumunu ayır.
+- [ ] Fizik kaydı, mevcut düzenleme animasyonu ve savaş hareketi aynı
+  nesnenin konumunu eşzamanlı yazmasın. Sahiplik geçişi, iptal ve toparlanma
+  sınırlarını açık kur; eski callback yeni sahneye veya maça yazmasın.
+- [ ] Hasar/iyileşme ve jeton değişimini mevcut `progress`/temas olayında
+  uygula. Animasyon yeni saldırı eşleştirmesi, hasar hesabı veya çalma sonucu
+  üretmesin. Güç önceliği, ölüm kontrolü ve olay sırası aynen korunsun.
+- [ ] Azaltılmış harekette yolculuk yerine kısa, anlaşılır kaynak/hedef ve
+  temas bildirimi kullan. Hız/kalite seçenekleri, duraklama, sekmeden dönüş
+  ve WebGL toparlanması aynı nihai sunum durumuna ulaşsın.
+- [ ] Aynı olay kayıtlarını normal ve azaltılmış harekette karşılaştır;
+  çoklu blok/hasar, çok değerli zar, ölümde kesilme ve son katkıda toplama
+  senaryolarını test et. Mobilde gerçek hareketi tarayıcıda izle; zorunlu
+  komutları çalıştır, belgeleri/kanıtları güncelle ve commit et.
+
+**Kabul:** Oyuncu hangi zarın neye saldırdığını, engellenip engellenmediğini
+ve canın hangi temasta düştüğünü takip edebilir. Hareket ve yüz aynı zara
+aittir; kural sonucu önceki olay kaydıyla aynıdır.
+
+## Aşama 14 — Lobide hazırlığı geri al ve tanrıları yeniden düzenle
+
+Bağımlılık: Mevcut oda/hazırlık akışı. Zar/savaş aşamalarından teknik olarak
+bağımsızdır; uygulama teslim sırası Aşama 13 sonrasıdır. Mobil ve masaüstünü
+ve aynı odada yeniden maç hazırlığını kapsar.
+
+- [ ] Diğer oyuncu henüz hazır değilken **Hazırım** eylemi hazır durumunu
+  versin; aynı kontrol **Hazır değilim** olarak etkin kalsın ve hazırlığı geri
+  alabilsin. Geri alınca kendi adını/tanrılarını düzenleme kilidi açılsın;
+  seçimler silinmesin ve karşı taraf güncel hazır durumunu görsün.
+- [ ] Hazırlığı kaldırma işlemini ağ protokolü, istemci ve oda sunucusunda
+  birlikte tanımla. Sunucu yalnız isteyen koltuğun durumunu, uygun `gods`
+  aşamasında değiştirsin; arayüz kabul edilmemiş hazır durumunu kesinleşmiş
+  olarak göstermesin.
+- [ ] İki tarafın hazır olmasının kabulü ile hazırlığın geri alınması
+  yarışını sunucuda sırala. Geri alma önce kabul edilirse sonraki aşamaya
+  geçme; iki hazır kabul edilip yazı tura/maç aşamasına geçildiyse gecikmiş
+  geri almayı reddet ve istemciyi güncel durumla uzlaştır.
+- [ ] Bekleyen istekte tekrar tıklamayı sınırla; red/kayıp ACK, kopma/dönüş
+  ve eski oda/maç mesajları yanlış hazır etiketi veya tanrı kilidi bırakmasın.
+  Tekrar istek hazır durumunu istemeden tersine çevirmesin; hedef hazır
+  durumu açıkça belirtilsin. Rakibin seçimine müdahale yolu açılmasın.
+- [ ] İki gerçek ağ istemcisinde kurucu ve misafir için hazır → hazır değil
+  → tanrı değiştir → tekrar hazır akışını; eşzamanlı hazır/geri alma,
+  geçersiz koltuk/faz, kopma/dönüş ve yeniden maçı doğrula. Yerel iki kişi
+  ve bot hazırlığının mevcut başlama akışını bozma.
+- [ ] Sunucu/istemci ve UI davranışı için anlamlı testler ekle; iki tarayıcı
+  koltuğunda mobil/masaüstü düğme, kilit ve karşı taraf bilgisini kontrol et.
+  Zorunlu komutları çalıştır; `docs/ONLINE_PLAY.md`, mimari/tasarım ve
+  doğrulama kaydını güncelle, aşamayı commit et.
+
+**Kabul:** Tek başına hazır vermiş oyuncu odadan çıkmadan hazırlığını geri
+alıp tanrılarını değiştirebilir. Her iki istemci sunucuyla aynı hazır
+durumundadır; başlamış maç eski bir istekle hazırlığa dönmez.
+
+## Aşama 15 — Yayın sonrası sorunlar için birleşik ve fiziksel kabul
+
+Bağımlılık: Aşama 10–14. Yeni özellik eklenmez; bu aşamalardaki kapsam içi
+hatalar düzeltilir. Önceki açık cihaz kabulüyle birlikte kayıt tutulur.
+
+- [ ] 360×800, 390×844, 430×932, 844×390 ve dar alan için 568×320'de botun
+  toplu seçimini, insanın 2000 ms seçimini, 12/18 zar yerleşimini ve olay
+  boyunca yüz/kadraj/hareket sürekliliğini doğrula. Aynı durumları kullanıcının
+  yayın sonrası görüntülerindeki düzensiz kümelerle karşılaştır.
+- [ ] Botla tam maç, yerel iki koltukta sıra değişimi ve iki gerçek çevrim
+  içi koltukta hazırlığı geri alma → tanrı değiştirme → maç → sonuç → yeniden
+  maç akışını normal/azaltılmış harekette tamamla. Tablet/masaüstünde mevcut
+  insan tekli seçimi, klavye, odak ve kamera davranışını ayrıca kontrol et.
+- [ ] Savaş öncesi/sonrası güçlerin aynı olay sırasını ve ödeme anını
+  koruduğunu doğrula. 5 + 1 kazanım + 2 çalma örneğinde 8 bedelli savaş
+  öncesi gücün başarısızlığını ve savaş sonrası gücün, başka kayıp yoksa,
+  çalışmasını kontrol et; bu farkı hata olarak kapatma.
+- [ ] Uzun basma/iptal, hızlı tekrar onayı, yön değişimi, sekmeden çıkıp
+  dönme, bağlantı kaybı ve WebGL toparlanmasında yüz kimliklerini, sunum
+  kilitlerini, kaynak temaslarını ve lobi durumunu birlikte denetle.
+- [ ] Fiziksel iPhone/Safari ve Android/Chrome üzerinde hızlı seçim, botun
+  tek taşıması, 12/18 yüzün okunurluğu, savaş hareketleri, lobi hazır geri
+  alma, yön değişimi ve tarayıcı çubuklarını test et. Cihaz akıcılığı/ısınması
+  gözlemlerini kaydet; donanım yoksa bu maddeyi açık bırak.
+- [ ] Son değişikliklerden sonra `npm run check` ve `npm run test:ci`
+  çalıştır. Tarayıcı/cihaz, test akışları, ekran görüntüsü ve hareket kanıtı
+  konumlarını, açık sorunları `docs/review/` altında kaydet;
+  `docs/MOBILE_DEVICE_CHECKLIST.md` yönergesini yeni akışlarla güncelle.
+  Önceki Aşama 4–5/9 cihaz maddelerini yalnız karşılıkları gerçekten
+  doğrulandıysa aynı commit'te işaretle; kalanı açıkça belirt.
+
+**Kabul:** Dört kullanıcı sorunu birlikte giderilmiş ve sonuçlar olay
+kayıtlarıyla tutarlıdır. Statik ekran görüntüsü hareket kabulünün; tarayıcı
+benzetimi fiziksel cihaz kabulünün yerine geçmez. Donanım doğrulaması eksikse
+yalnız yazılım/tarayıcı kapsamının tamamlandığı bildirilir.
+
 ## Doğrulama ve devam notları — Önceki Aşama 1–5
 
 **Aşama 1 tamamlandı — 30 Ekim 2026.** Mobil kaynak göstergeleri mevcut sunum
@@ -462,7 +714,9 @@ kalan alanda ayrılır; sığmazsa kaydırılır. Rakip özeti dokunarak incelen
 
 ## Bu planın dışında
 
-Yeni oyun kuralı, yeni tanrı, masaüstü yeniden tasarımı, maç öncesi tanrı
-kataloğu yenilemesi ve bağımsız bir performans projesi bu plana dahil değildir.
+Yeni oyun kuralı, tanrı önceliklerini veya ödeme sırasını kaldırma/değiştirme,
+yeni tanrı, masaüstü yeniden tasarımı, maç öncesi tanrı kataloğu yenilemesi ve
+bağımsız bir performans projesi bu plana dahil değildir. Aşama 14 yalnız
+mevcut tanrı hazırlığındaki hazır durumunu geri alma akışını genişletir.
 GitHub yayın kopyasına aktarım, push ve canlıya alma ayrıca istendiğinde
 yapılır; bu yol haritası yayın yetkisi vermez. Mevcut Git geçmişi korunur.
