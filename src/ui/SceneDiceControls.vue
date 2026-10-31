@@ -80,14 +80,14 @@ const previewHeight = ref(164);
 let resize: ResizeObserver | undefined;
 const dismissed = ref(false);
 const inspecting = ref<DieId | null>(null);
-let keyboardMode = true;
 const preview = computed(() => dismissed.value || props.disabled ? null : controls.value.find(target => target.id === (mobile.value ? inspecting.value : highlight.id.value)));
 const previewStyle = computed(() => {
   if (!preview.value) return {};
-  const x = overflow.value
+  const scrolledBowl = overflow.value && preview.value.lane === 'bowl';
+  const x = scrolledBowl
     ? (safeArea.value.left + size.value.width - safeArea.value.right) / 2
     : preview.value.x * size.value.width / 100;
-  const y = overflow.value ? safeArea.value.top : preview.value.y * size.value.height / 100;
+  const y = scrolledBowl ? metrics.value.top : preview.value.y * size.value.height / 100;
   // Prefer above the die. At the far edge, flip below so the header cannot
   // cover the face. Clamp both axes inside the viewport, also in landscape.
   const safeTop = mobile.value ? safeArea.value.top : 80;
@@ -182,14 +182,14 @@ function aim(event: PointerEvent) {
 function focusDie(id: DieId) {
   highlight.focus(id);
   dismissed.value = false;
-  if (mobile.value && keyboardMode) inspecting.value = id;
+  if (mobile.value && inspecting.value !== id) inspecting.value = null;
 }
 function blur(event: FocusEvent) {
   if (!(event.relatedTarget instanceof Element) || !event.relatedTarget.closest(".die-face-preview")) highlight.focus(null);
 }
 function select(event: MouseEvent, fallback: DieId) {
   if (props.disabled) return;
-  const bound = controls.value.find(target => target.id === (gesture?.id ?? fallback));
+  const bound = controls.value.find(target => target.id === ((event.detail ? gesture?.id : null) ?? fallback));
   const target = event.detail && !mobile.value ? nearest(event)
     : event.detail && mobile.value && !gesture && bound?.lane !== 'bowl' ? nearest(event, true) : bound;
   if (!target) return;
@@ -202,10 +202,27 @@ function select(event: MouseEvent, fallback: DieId) {
   if (target.canSelect) {
     inspecting.value = null;
     emit("select", target.id);
-  } else inspecting.value = target.id;
+  } else if (!mobile.value || event.detail === 0 || target.lane === 'bowl') inspect(target.id);
+  else inspecting.value = null;
+}
+function inspect(id: DieId) {
+  if (props.disabled || !controls.value.some(t => t.id === id)) return;
+  inspecting.value = id;
+  highlight.focus(id);
+  dismissed.value = false;
+}
+function inspectKey(event: KeyboardEvent, id: DieId) {
+  if (!mobile.value) return;
+  event.preventDefault();
+  event.stopPropagation();
+  inspect(id);
+}
+function closePreview() {
+  dismissed.value = true;
+  inspecting.value = null;
+  if (mobile.value) highlight.clear();
 }
 function navigate(event: KeyboardEvent) {
-  keyboardMode = true;
   if (
     ![
       "ArrowLeft",
@@ -246,8 +263,7 @@ function navigate(event: KeyboardEvent) {
     role="group"
     aria-label="Masadaki zarları incele ve seç"
     @keydown="navigate"
-    @keydown.esc.stop="dismissed = true"
-    @pointerdown="keyboardMode = false"
+    @keydown.esc.stop="closePreview"
     @contextmenu.prevent
     @pointermove="aim"
     @pointerleave="aimed = null"
@@ -271,7 +287,8 @@ function navigate(event: KeyboardEvent) {
         zIndex: target.combatRole ? 5 : aimed === target.id ? 3 : undefined,
       }"
       :aria-hidden="disabled ? true : undefined"
-      :aria-label="disabled ? undefined : target.label"
+      :aria-label="disabled ? undefined : mobile ? `${target.label}; basılı tutarak veya F1 ile incele` : target.label"
+      :aria-keyshortcuts="mobile && !disabled ? 'F1' : undefined"
       :aria-pressed="target.canSelect ? target.selected : undefined"
       :aria-disabled="disabled"
       :tabindex="disabled ? mobile ? undefined : -1 : 0"
@@ -290,6 +307,7 @@ function navigate(event: KeyboardEvent) {
       @focus="focusDie(target.id)"
       @blur="blur"
       @click="select($event, target.id)"
+      @keydown.f1="inspectKey($event, target.id)"
     >
       <template v-if="mobile && target.lane === 'bowl'">
         <SymbolIcon :symbol="target.face.symbol" />
@@ -302,6 +320,7 @@ function navigate(event: KeyboardEvent) {
     </div>
     </div>
     <div v-if="preview" ref="previewElement" id="die-face-preview" class="die-face-preview" :role="mobile ? 'region' : 'tooltip'" :aria-label="mobile ? 'Zar bilgisi' : undefined" :style="previewStyle">
+      <div class="die-preview-content">
       <div class="die-preview-face" :class="{ 'grants-token': preview.face.grantsToken }">
         <SymbolIcon :symbol="preview.face.symbol" />
         <TokenIcon v-if="mobile && preview.face.grantsToken" class="die-preview-coin" />
@@ -310,7 +329,8 @@ function navigate(event: KeyboardEvent) {
       <span class="die-preview-effect">{{ preview.description }}</span>
       <span v-if="preview.face.grantsToken" class="die-preview-token">Jeton getirir</span>
       <span class="die-preview-owner">{{ preview.owner }} · {{ preview.location }}</span>
-      <button v-if="mobile" type="button" class="die-preview-close" @click="dismissed = true; inspecting = null; highlight.clear()">Kapat</button>
+      </div>
+      <button v-if="mobile" type="button" class="die-preview-close" @click="closePreview">Kapat</button>
     </div>
   </div>
 </template>

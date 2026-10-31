@@ -321,3 +321,17 @@ Kaynak ve savunma vurgusu mevcut `combatPresenter` olayının 3B
 `activity-marker` halkasıdır. Gerçek zar hareketi, can taşı tepkisi ve
 azaltılmış hareketin temas beklemesi aynı olay/`progress` yolunda kalır.
 Kart kaldırılması yeni hasar, jeton, zamanlayıcı veya konum sahibi eklemez.
+
+## İsteğe bağlı zar incelemesi
+
+Mobil merkezde yalnız 400 ms uzun basma veya açık klavye isteği (F1;
+salt okunur zarda Enter/Space) büyük yüzü açar. Odak, hover ve salt okunur
+merkez zarına kısa dokunma bilgi penceresi açmaz. Uzun basma pointerdown'da
+çözülen kimliği tutar; üst üste binen 44px hedeflerin DOM sırası kimliği
+bırakmada değiştirmez. Sonradan klavye ile seçim eski dokunmanın kimliğini
+kullanmaz. İnceleme olay yaymaz, seçim taslağını veya zamanlayıcısını yenilemez.
+
+Tek bilgi penceresi mevcut sunum yüzü/değerinden beslenir. Kapat/Escape ve
+dışarı dokunma geçici bilgiyi temizler; kilit ve kimlik kaybı eski bilgiyi
+bırakmaz. Kısa ekranda içerik içeride kayar, 44px Kapat sabit kalır.
+Masaüstünün mevcut hover/odak ve tekli seçim davranışı korunur.

@@ -125,3 +125,23 @@ Düzeltmeden sonra aynı cihazda ilgili senaryoyu yeniden dene.
 İki telefonun sonuçları gelmeden ROADMAP Aşama 15 ve 9'un fiziksel cihaz maddeleri,
 Aşama 5'in fiziksel kabulü ve Aşama 4'ün fiziksel dokunması `[x]` yapılmaz.
 Bu maddeler, eksik cihaz veya açık sorun varken açık kalır.
+
+## Güncel sade masa kabulü — ROADMAP 3–5
+
+Yukarıdaki eski aşama kayıtlarının hareketli/sabit merkez yüz kartı
+beklentileri güncel sade masa için geçerli değildir. Kullanıcı bu fiziksel
+kontrolleri kendisi yapacaktır; iki cihaz sütunu sonuç gelene kadar açıktır.
+
+- Dikey ve kısa yatayda merkezde altışar, ek zarla dokuzar gerçek 3B zarın
+  üst yüzünü, sıra ayrımını ve HUD'un zarları örtmediğini kontrol et.
+- Kendi haznen dışında kalıcı yüz kartı veya merkez başlığı bulunmamalı.
+  Savaşta saldırı/blok gerçek 3B hareket ve ince halkayla anlatılmalı;
+  normal ve azaltılmış harekette can/jeton temasları aynı sonucu vermeli.
+- Merkez zara uzun bas: yalnız o zarın yüzü/bilgisi açılmalı. Kapat her
+  boyutta erişilebilir olmalı; dar görünümde içerik kaydırılabilmeli.
+  İnceleme seçim üretmemeli. Kendi kilitsiz merkez zarını kısa dokunmayla
+  geri al; iki saniyelik toplu seçim ve erken onay çalışmalı.
+- Bir tam maçta netlik/akıcılık, dokunma gecikmesi ve ısınmayı iPhone/Safari
+  ve Android/Chrome için ayrı kaydet. Tarayıcı benzetimi cihaz kabulü değildir.
+- IMG_1972–IMG_1975 bulunursa sahnelerle karşılaştır; bulunmadıkça fotoğraf
+  karşılaştırmasını tamamlandı olarak kaydetme.

@@ -50,15 +50,20 @@
 
 ## 5. Ayrıntıyı yalnız istendiğinde göster ve sonucu doğrula
 
-- [ ] Merkezdeki zara uzun basıldığında yalnız o zarın büyük yüzünü ve
+- [x] Merkezdeki zara uzun basıldığında yalnız o zarın büyük yüzünü ve
   bilgisini geçici olarak aç; kapatıldığında masa yeniden boş kalsın.
-- [ ] İnceleme seçim veya oyun komutu üretmesin; kendi haznemizdeki
+- [x] İnceleme seçim veya oyun komutu üretmesin; kendi haznemizdeki
   kısa dokunma, uzun basma ve toplu seçim davranışı korunsun.
 - [ ] Kullanıcının IMG_1972–IMG_1975 görüntülerindeki durumları yeniden
   kur; kendi haznemiz dışında kalıcı yüz kartı bulunmadığını doğrula.
-- [ ] Dikey/kısa yatay mobilde seçim, geri alma ve savaş akışını kontrol et.
-  Netlik ve akıcılığı gerçek iPhone/Safari ve Android/Chrome üzerinde de
+- [x] Dikey/kısa yatay mobilde seçim, geri alma ve savaş akışını kontrol et.
+- [ ] Netlik ve akıcılığı gerçek iPhone/Safari ve Android/Chrome üzerinde de
   değerlendir; tarayıcı benzetimini fiziksel cihaz kabulü sayma.
 
 Bu adımlar yalnız mobil sunumu sadeleştirir. Oyun kuralları, zar sonuçları,
 tanrı güçlerinin öncelik/ödeme sırası ve masaüstü davranışı korunur.
+
+Doğrulama kaydı: [Mobil sade masa](docs/review/mobile-clean-table.md).
+Kullanıcı fiziksel cihaz testlerini kendisi yapacaktır. Özgün fotoğraflar
+bulunmadığı için fotoğraf karşılaştırması açık kalır; kontrollü 12/18 zar
+sahneleri ve tarayıcı testleri bu iki kabulün yerine geçmez.

@@ -46,6 +46,19 @@ function click(button: HTMLElement) {
     clientY: projected ? parseFloat(button.style.top) * height / 100 : 700 }))
 }
 
+async function longPress(button: HTMLElement) {
+  const root = button.closest('.scene-die-controls')!
+  const width = Number(root.getAttribute('data-test-width'))
+  const height = Number(root.getAttribute('data-test-height'))
+  const x = parseFloat(button.style.left) * width / 100
+  const y = parseFloat(button.style.top) * height / 100
+  pointer(button, 'pointerdown', x, y)
+  await vi.advanceTimersByTimeAsync(410)
+  pointer(button, 'pointerup', x, y)
+  click(button)
+  await nextTick()
+}
+
 describe('mobile projected dice interaction', () => {
   it('preserves the desktop button node and keyboard focus across a presentation lock', async () => {
     const m = await mount('player-1', 1440, 900), button = m.button('player-1/die-1')
@@ -120,10 +133,13 @@ describe('mobile projected dice interaction', () => {
     expect(m.select).toHaveBeenCalledTimes(1)
   })
   it('inspects locked and opponent dice with a persistent description and an explicit close action', async () => {
+    vi.useFakeTimers()
     const m = await mount()
     for (const id of ['player-1/die-2', 'player-2/die-3']) {
       click(m.button(id))
       await nextTick()
+      expect(m.root.querySelector('.die-face-preview')).toBeNull()
+      await longPress(m.button(id))
       const preview = m.root.querySelector('.die-face-preview')!
       expect(preview).not.toBeNull()
       expect(preview.textContent).toContain(id.startsWith('player-2') ? 'Jeton getirir' : 'Kilitli')
@@ -139,6 +155,7 @@ describe('mobile projected dice interaction', () => {
     expect(m.select).not.toHaveBeenCalled()
   })
   it.each([[390, 844], [844, 390]])('exposes cards only in the near bowl and projected targets in both centers for either seat at %ix%i', async (width, height) => {
+    vi.useFakeTimers()
     for (const viewer of ['player-1', 'player-2'] as const) {
       const m = await mount(viewer, width, height)
       const opponent = viewer === 'player-1' ? 'player-2' : 'player-1'
@@ -154,8 +171,7 @@ describe('mobile projected dice interaction', () => {
           expect(target.style.left).toBe(`${m.targets.value.find(t => t.id === `${owner}/die-${index}`)!.x}%`)
         }
       }
-      click(m.button(`${opponent}/die-3`))
-      await nextTick()
+      await longPress(m.button(`${opponent}/die-3`))
       expect(m.root.querySelector('.die-face-preview')!.textContent).toContain('Jeton getirir')
     }
   })
@@ -163,6 +179,32 @@ describe('mobile projected dice interaction', () => {
     const m = await mount('player-1', width, height)
     expect(m.button('player-1/die-1')).not.toBeNull()
     expect(m.button('player-2/die-1')).not.toBeNull()
+  })
+  it('opens one explicit keyboard inspection, closes on Escape, and never inspects from focus alone', async () => {
+    const m = await mount(), center = m.button('player-1/die-3')
+    center.focus()
+    await nextTick()
+    expect(m.root.querySelector('.die-face-preview')).toBeNull()
+    center.dispatchEvent(new KeyboardEvent('keydown', { key: 'F1', bubbles: true, cancelable: true }))
+    await nextTick()
+    expect(m.root.querySelectorAll('.die-face-preview')).toHaveLength(1)
+    expect(m.root.querySelector('.die-face-preview')!.textContent).toContain('× 3')
+    expect(m.select).not.toHaveBeenCalled()
+    center.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+    await nextTick()
+    expect(m.root.querySelector('.die-face-preview')).toBeNull()
+    center.blur(); center.focus()
+    await nextTick()
+    expect(m.root.querySelector('.die-face-preview')).toBeNull()
+  })
+  it('does not let a consumed touch identity replace a later keyboard activation', async () => {
+    vi.useFakeTimers()
+    const m = await mount(), bowl = m.button('player-1/die-1')
+    pointer(bowl, 'pointerdown')
+    await vi.advanceTimersByTimeAsync(410)
+    pointer(bowl, 'pointerup')
+    m.button('player-1/die-3').click()
+    expect(m.select).toHaveBeenCalledExactlyOnceWith('player-1/die-3')
   })
   it('consumes a long press without selecting, then allows a fresh short tap', async () => {
     vi.useFakeTimers()

@@ -88,8 +88,11 @@ kısa düşünme süresinden sonra son seçimini tek grupta uygular; insanın
 seçim sunumu bittikten sonra mevcut sürücü yoluyla bir kez gönderilir.
 
 Bekleyen seçim yalnız bir niyettir; zar yüzü, jeton, can veya fizik sonucu
-üretmez. Kilitli/rakip zarına dokunma ve kendi zarına uzun basma simge, etki
-ve Jeton getirir bilgisini açar; görünür Kapat eylemi vardır. Uzun basma,
+üretmez. Mobil merkezdeki zara uzun basma simge, etki ve Jeton getirir bilgisini
+açar; klavyede F1 açık inceleme isteğidir. Salt okunur merkez zarında
+Enter/Space de inceleyebilir. Odak veya salt okunur merkeze kısa dokunma
+bilgi açmaz; kendi haznemizdeki kısa dokunma seçim davranışını korur.
+Kısa ekranda bilgi içeriği kayar, 44px Kapat her zaman görünür kalır. Uzun basma,
 inceleme veya sürükleme seçim üretmez ve 2000 ms süresini yenilemez.
 Rakibin haznesindeki zarlar için mobil dokunma hedefi üretilmez; merkezdeki
 her zarın tek hedefi vardır. Masaüstünde mevcut 3B yüzler, hover bilgisi ve

@@ -48,6 +48,41 @@ birebir aynıydı. Duraklatma/devam ve son toplama eski vurgu bırakmadı.
 Git dışındaki aynı kanıt klasöründedir. Aktif savaş ekranları açılarak
 incelendi; çalışma zamanı istisnası yoktu.
 
+## Adım 5: istenen zarı geçici inceleme
+
+Merkezde uzun basma yalnız basılan kimliğin büyük yüzünü, etki değerini ve
+bilgisini açar. Salt okunur merkeze kısa dokunma ve odak otomatik bilgi
+açmaz; F1 veya salt okunur hedefte Enter/Space açık klavye isteğidir.
+Kapat/Escape ve dışarı dokunma geçici bilgiyi temizler. Eski dokunma
+kimliği sonradan klavye seçimine taşınmaz. Kısa yatayda bilgi içeride
+kaydırılır, 44px Kapat bilgi yüzeyinin üstünde sabit kalır.
+
+`npm run check`, `npm run test:ci` (45 dosya, 558 test) ve
+`git diff --check` geçti. Testler tek bilgi penceresini, seçim üretmeyen
+uzun basmayı, kilit/iptali, salt okunur kısa dokunmayı, açık F1/Escape
+isteğini ve tüketilen dokunmadan sonra klavye kimliğini kapsar.
+
+Chromium WebGL/CDP dokunma ile 390×844, 844×390 ve 568×320'de beşli
+seçim → uzun basma → Kapat → beşli geri alma → erken onay geçti. Beklerken
+revision değişmedi; tek toplu olay sonrası beş zar merkezdeydi. Saydam
+merkez hedefleri 44×44px, simge/değer/onay kartı olmadan görünüyordu.
+İnceleme revision/seçimi değiştirmedi. Geri alma altı hazne kartını geri
+getirdi. Erken onayda revision 5 ve beş kilitli zar oluştu. HUD durumu
+sunumla eşleşti. Kısa ekranda Kapat sınırları ve içerik kaydırması ayrıca
+kontrol edildi. İlk kısa yatay otomasyonunda `.tap()` komşunun geniş hedefi
+nedeniyle eylem yapılabilirlik kontrolünde durdu; gerçek ekran koordinatına
+dokunularak yeniden koşuldu. Uygulamanın pointerdown yakınlık çözümü doğru
+kimliği seçti. Birleştirme sırasında geçici HMR hata katmanıyla başlatılan
+ilk koşu da son kodun doğrulaması olarak kullanılmadı.
+
+768×1024 ve 1440×900'de klavye tekli seçim, aynı zar odağı, tanrı menüsü,
+savaş ve tur 2 akışı geçti. Altışar/dokuzar merkezli 10 kontrollü sahne
+son görünümde yeniden açıldı; kendi hazne dışında yüz kartı ve merkez
+başlığı yoktu. Ekranlar açılarak incelendi. Kanıtlar `interaction.mjs/json`,
+`inspect-*.png`, `returned-*.png`, `desktop.mjs/json`, `desktop-*.png`,
+`framing.mjs/json` ve `step5-*.log` içindedir. Son başarılı koşularda çalışma
+zamanı istisnası yoktu.
+
 ## Kabul sınırı
 
 Kullanıcı fiziksel cihaz testlerini kendisi yapacağını belirtti.
