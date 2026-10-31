@@ -282,3 +282,12 @@ hareketinin `combatRole` yüzü 3B izdüşümünü takip eder, diğer yuvalar ak
 Bu hareketli yüz kaydırma kabının dışında durur; kısa yatayda da HUD içinde
 kalır. İptal, yeniden maç ve sahne kurulumunda olay/gizleme/bitmiş kimlikleri
 temizlenir; sekme dönüşünde aynı yetkili durumla eşitlenir.
+
+## Sade mobil masa — kadraj
+
+Mobil kamera dokuzlu merkez sırasının zarfını ve yakın haznenin daha dar
+zarfını ayrı ölçer. Dikey görünüm daha tepeden üst yüzü açar; kısa yatayda
+hazne derinliğinin ekran yüksekliğini tüketmesini azaltan açı kullanılır.
+Rakip hazne kadraj girdisi değildir. Atış yüksekliği ve olayın gerçek
+kaynak/hedef payı korunur. Kamera yine yalnız `frameCamera` ile yazılır;
+zarların ölçeği, fizik kaydı ve merkez yuvaları değiştirilmez.

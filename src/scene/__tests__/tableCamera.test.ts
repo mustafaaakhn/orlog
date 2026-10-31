@@ -32,7 +32,11 @@ describe('table framing', () => {
     for (const player of ['player-1', 'player-2'] as const) {
       const side = playerSide(player), camera = new PerspectiveCamera(42, width / height, .1, 100)
       frameTableCamera(camera, width, height, player, width < 620 && width < height, undefined, { insets })
-      for (const x of [-5.5, 5.5]) for (const z of [-1.6, 9.9]) for (const y of [.1, 1.5]) {
+      const envelope = [
+        ...[-5.5, 5.5].flatMap(x => [-1.55, 1.55].flatMap(z => [.1, 1.1].map(y => new Vector3(x, y, z)))),
+        ...[-3.3, 3.3].flatMap(x => [3.4, 9.9].flatMap(z => [.1, 1.7].map(y => new Vector3(x, y, z)))),
+      ]
+      for (const { x, y, z } of envelope) {
         const point = pixels(new Vector3(x * side, y, z * side), camera, width, height)
         expect(point.x).toBeGreaterThan(insets.left); expect(point.x).toBeLessThan(width - insets.right)
         expect(point.y).toBeGreaterThan(insets.top); expect(point.y).toBeLessThan(height - insets.bottom)
@@ -42,6 +46,27 @@ describe('table framing', () => {
       const die = pixels(new Vector3(0, .8, 6.7 * side), camera, width, height)
       const edge = pixels(new Vector3(.88, .8, 6.7 * side), camera, width, height)
       expect(Math.abs(edge.x - die.x)).toBeGreaterThan(previousDieWidth[`${width}x${height}`]! * 1.1)
+    }
+  })
+
+  it.each(mobileSizes)('enlarges center dice without allowing either nine-die row under HUD at %ix%i', (width, height) => {
+    const insets = width > height ? { top: 112, bottom: 80, left: 280, right: 16 } : { top: 172, bottom: 190, left: 16, right: 16 }
+    const previous = width > height ? (width === 844 ? 14.438 : 9.687) : { 360: 21.02, 390: 22.85, 430: 25.3 }[width]!
+    for (const player of ['player-1', 'player-2'] as const) {
+      const camera = new PerspectiveCamera(42, width / height, .1, 100)
+      frameTableCamera(camera, width, height, player, true, undefined, { insets })
+      const side = playerSide(player)
+      const center = pixels(new Vector3(0, .8, 1.08 * side), camera, width, height)
+      const edge = pixels(new Vector3(.88, .8, 1.08 * side), camera, width, height)
+      expect(Math.abs(edge.x - center.x)).toBeGreaterThan(previous * 1.05)
+      for (const z of [-1.08, 1.08]) for (let i = 0; i < 9; i++) {
+        const column = i < 6 ? i - 2.5 : i === 6 ? -3.5 : i - 3.5
+        for (const dx of [-.44, .44]) for (const dz of [-.44, .44]) {
+          const p = pixels(new Vector3((column * 1.125 + dx) * side, .93, (z + dz) * side), camera, width, height)
+          expect(p.x).toBeGreaterThan(insets.left); expect(p.x).toBeLessThan(width - insets.right)
+          expect(p.y).toBeGreaterThan(insets.top); expect(p.y).toBeLessThan(height - insets.bottom)
+        }
+      }
     }
   })
 
