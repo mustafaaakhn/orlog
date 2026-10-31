@@ -456,8 +456,8 @@ function confirm() {
         <section id="about-panel" ref="aboutPanel" class="about-panel" popover aria-labelledby="about-title">
           <h2 id="about-title">Proje hakkında</h2>
           <p>Bu oyun, Assassin’s Creed Valhalla’daki Orlog’dan esinlenen bağımsız bir fan yapımıdır. Resmî bir Ubisoft oyunu değildir; Ubisoft ile bağlantısı yoktur.</p>
-          <p class="about-contact"><span>GitHub</span><a href="https://github.com/mustafaaakhn/orlog" target="_blank" rel="noopener noreferrer">github.com/mustafaaakhn/orlog</a></p>
-          <p class="about-contact"><span>İletişim</span><a href="mailto:mustafaaakhn@gmail.com">mustafaaakhn@gmail.com</a></p>
+          <p class="about-contact"><a href="https://github.com/mustafaaakhn/orlog" target="_blank" rel="noopener noreferrer">GitHub</a></p>
+          <p class="about-contact"><a href="mailto:contact@orlog.games" target="_blank" rel="noopener noreferrer">İletişim</a></p>
         </section>
         <div id="language-picker" ref="languagePicker" class="language-picker" popover>
           <h2>Dil seçimi</h2>

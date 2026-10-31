@@ -72,7 +72,6 @@
 .about-panel h2 { margin: 0 0 14px; font: 400 19px/1.4 var(--display); }
 .about-panel p { margin: 0; }
 .about-panel .about-contact { margin-top: 18px; }
-.about-contact > span { display: block; margin-bottom: 3px; }
 .about-panel a { color: inherit; font-weight: 600; font-synthesis: weight; text-decoration: underline; text-underline-offset: 4px; overflow-wrap: anywhere; }
 .about-panel a:hover { color: var(--gold); }
 @media (min-width: 1024px) {
