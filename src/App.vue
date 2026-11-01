@@ -12,10 +12,9 @@ import {
 import { usePreferences } from "./app/preferences";
 import { createAudioPlayer } from "./audio/player";
 import ExperienceSettings from "./ui/ExperienceSettings.vue";
+import GameGuide from "./ui/GameGuide.vue";
 import GameMark from "./ui/GameMark.vue";
 import UiIcon from "./ui/UiIcon.vue";
-import SymbolIcon from "./ui/SymbolIcon.vue";
-import { SYMBOL_GUIDE } from "./scene/symbols";
 import SceneLoaderState from "./ui/SceneLoaderState.vue";
 import MatchSetup from "./ui/MatchSetup.vue";
 import MatchResult from "./ui/MatchResult.vue";
@@ -574,6 +573,7 @@ function confirm() {
     <dialog
       ref="dialog"
       class="utility-dialog"
+      :class="{ 'is-guide': overlay === 'rules' }"
       aria-labelledby="utility-title"
       @close="overlay = null"
       @cancel="overlay = null"
@@ -599,39 +599,7 @@ function confirm() {
           <UiIcon name="close" />
         </button>
       </div>
-      <div v-if="overlay === 'rules'" class="rules-content">
-        <p>{{ t("Altı zar, üç tanrı gücü. Rakibinin 15 canını sıfırlayan kazanır.") }}</p>
-        <ol>
-          <li>
-            <strong>{{ t("Zarlarını at ve sakla.") }}</strong> {{ t("Sırayla en fazla üç atış yap. Saklamak istediğin zarları seçip onayla.") }}
-          </li>
-          <li>
-            <strong>{{ t("Jetonlarını biriktir.") }}</strong> {{ t("Altın çerçeveli her zar bir tanrı jetonu verir. El, rakibinden jeton çalar.") }}
-          </li>
-          <li>
-            <strong>{{ t("Tanrını çağır.") }}</strong> {{ t("Bir güç ve seviye seç ya da pas geç. Jeton bedeli, güç çalıştığında ödenir.") }}
-          </li>
-          <li>
-            <strong>{{ t("Savaşı izle.") }}</strong> {{ t("Güçler, oklar, baltalar ve çalma sırasıyla çözülür. Zarlar toplandıktan sonra yeni tur otomatik başlar; ilk oyuncu değişir.") }}
-          </li>
-        </ol>
-        <div class="symbol-guide">
-          <div
-            v-for="symbol in SYMBOL_GUIDE"
-            :key="symbol.id"
-            class="symbol-description"
-          >
-            <SymbolIcon :symbol="symbol.id" />
-            <div>
-              <strong>{{ t(symbol.name) }}</strong>
-              <p>{{ t(symbol.description) }}</p>
-            </div>
-          </div>
-        </div>
-        <p>
-          {{ t("Masadaki zarlara Tab ile geçebilirsin. Space/Enter merkeze alır veya geri koyar; yön tuşları ve Home/End zarlar arasında dolaşır.") }}
-        </p>
-      </div>
+      <GameGuide v-if="overlay === 'rules'" @close="overlay = null" />
       <ExperienceSettings
         v-if="overlay === 'settings'"
         :settings="settings"

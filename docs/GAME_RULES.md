@@ -312,3 +312,20 @@ durumu gösterir. Uygun kendi zarına kısa dokunma mevcut seçim komutunu
 gönderir. Rakip/kilitli zar incelemesi, uzun basma ve bilgiyi kapatma oyun
 komutu üretmez. Ekran hedeflerinin ayrılması zar sonucu, fizik kaydı veya
 oyundaki saklama/jeton kurallarını değiştirmez.
+
+## Rehberin temel eşleşme örnekleri — 31 Ekim 2026
+
+Bunlar mevcut kuralların güçsüz/ek etkisiz öğretici örnekleridir; yeni bir
+çözümleme profili değildir. Üçüncü atış, onay/kilit, ödeme ve ölüm sırası
+aynen korunur.
+
+| Kendi zarın | Rakibin savunması/kaynağı | Gösterilen sonuç |
+| --- | --- | --- |
+| 2 balta | 1 miğfer | 1 engellenen saldırı, rakibe 1 hasar |
+| 2 ok | 1 kalkan | 1 engellenen saldırı, rakibe 1 hasar |
+| 1 balta | 1 kalkan | 0 engellenen saldırı, rakibe 1 hasar |
+| 2 el | 3 jeton | Sana 2 jeton, rakipte 1 jeton kalır |
+
+Altın çerçeveli miğferin normal savunmasına ek 1 jeton verdiği de core ile
+kontrol edilir. Çerçeve ayrı bir yüz değildir. Rehberdeki Thor seviye 1
+örneği bedel ve hasarı doğrudan mevcut katalogdan alır (4 jeton / 2 hasar).

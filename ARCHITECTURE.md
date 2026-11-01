@@ -372,3 +372,18 @@ Kullanıcı adları ve oda kodları çevrilmez. Hazırlıkta yalnız dokunulmam�
 varsayılan oyuncu adları dil değişimini izler; maç/ağ verisi yeniden yazılmaz.
 `Haznede` gibi mevcut konum değerleri, komutlar ve olay kimlikleri değişmez.
 Core'a Vue veya çeviri bağımlılığı eklenmez.
+
+## İki sayfalı oyun rehberi
+
+`GameGuide` mevcut yardımcı `dialog` içinde kendi sayfa/scroll/odak durumunu
+tutar; `App` yalnız kapatma olayını alır. İlk sayfa tur akışını, ikinci sayfa
+`guideExamples` içindeki sabit öğretici eşleşmeleri gösterir. Bu çizimler
+canlı maçı okumaz, hasar/jeton hesabı çalıştırmaz veya oyun komutu göndermez.
+Örnek sonuçlar testte mevcut core çözümlemesiyle karşılaştırılır. Thor'un
+bedel/hasar örneği mevcut favor kataloğundan okunur; ikinci bir katalog yoktur.
+
+Başlık, sayfa düğmeleri ve alt gezinme sabittir; içerik ayrı kayar. Sayfa
+geçişi içeriği başa alır ve odağı yeni başlığa taşır. Kapat/Escape mevcut
+modal yaşam döngüsünü kullanır; yeniden açılış ilk sayfadan başlar. Dört dil
+mevcut `t` üzerinden çizilir. Rehberdeki SVG simgeleri mevcut oyun simgeleridir;
+yeni dış varlık veya bağımlılık eklenmez.

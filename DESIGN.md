@@ -227,3 +227,24 @@ kaldırılarak rakip adı, simge ve eylem korunur. Masaüstü kemerli kartlar
 korunur. Ortam/su döngüsü çalmaz; iki müzik sessiz kuyrukları çıkarılmış
 kayıtlarla sırayla sürer. İlk dokunuşun tarayıcı ses iznini açma davranışı
 ve arka sekmede duraklatma korunur.
+
+## Öğretici oyun rehberi
+
+“Masaya ilk kez mi oturuyorsun?” penceresi iki sayfadır. **Turun akışı**
+15 can/6 zar başlangıcını, üç atışı, seçim–onay farkını, altın çerçeveyi,
+güç bedelini ve otomatik savaşı/yeni turu adım adım anlatır. Mobil seçim
+beklemesi ve klavye kontrolleri isteğe bağlı bir ayrıntı alanındadır.
+
+**Zarlar ve örnekler** kendi zarların → rakibin savunması/jetonları
+şemalarıyla dört karşılaşma gösterir: iki balta/bir miğfer, iki ok/bir
+kalkan, baltaya karşı yanlış savunma olan kalkan ve iki elle üç jetondan
+çalma. × işareti engellenen saldırıdır; etki ayrıca metin ve sayıyla yazılır.
+Altın çerçeveli miğferin hem savunması hem jeton kazancı ve Thor'un birinci
+seviye doğrudan hasarı ilk sayfada ayrıca gösterilir. Örneklerin güçsüz/ek
+etkisiz olduğu açıkça belirtilir.
+
+Kapat ve gezinme uzun metnin dışında kalır. Dikey telefonda örnekler tek,
+geniş ekranda iki sütundur; kısa yatayda içerik kendi içinde kayar.
+Sayfa değişimi başa döner, klavye odağı başlığı izler. Şemalar açıklayıcı
+metnin dekoratif eşidir; ekran okuyucu aynı paragrafı iki kez okutmaz.
+Türkçe, İngilizce, Fransızca ve Almanca aynı kapsamı sunar.

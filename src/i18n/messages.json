@@ -2018,5 +2018,215 @@
     "Vár's Bond",
     "Lien de Vár",
     "Várs Bund"
+  ],
+  "Rehber sayfaları": [
+    "Guide pages",
+    "Pages du guide",
+    "Anleitungsseiten"
+  ],
+  "Turun akışı": [
+    "How a round works",
+    "Déroulement d’une manche",
+    "Ablauf einer Runde"
+  ],
+  "Zarlar ve örnekler": [
+    "Dice and examples",
+    "Dés et exemples",
+    "Würfel und Beispiele"
+  ],
+  "Amaç: rakibin canını sıfırla.": [
+    "The goal: reduce your opponent’s health to zero.",
+    "Le but : réduire la vie adverse à zéro.",
+    "Das Ziel: Bringe das Leben des Gegners auf null."
+  ],
+  "İkiniz de 15 can, 6 zar ve 0 jetonla başlarsınız. Hazırlıkta seçtiğin üç tanrı sana özel güçler verir. Canı önce sıfıra düşen kaybeder.": [
+    "You both start with 15 health, 6 dice and 0 tokens. The three gods you choose during setup give you special powers. The first player to reach zero health loses.",
+    "Vous commencez chacun avec 15 points de vie, 6 dés et 0 jeton. Les trois dieux choisis pendant la préparation vous donnent des pouvoirs spéciaux. Le premier joueur à zéro point de vie perd.",
+    "Ihr beginnt beide mit 15 Leben, 6 Würfeln und 0 Marken. Die drei in der Vorbereitung gewählten Götter geben dir besondere Kräfte. Wer zuerst null Leben erreicht, verliert."
+  ],
+  "Zar at, işine yarayanları sakla.": [
+    "Roll, then keep the dice you need.",
+    "Lance les dés et conserve ceux qui te servent.",
+    "Würfle und behalte die passenden Würfel."
+  ],
+  "Sırayla oynarsınız; her tur en fazla üç atış hakkın vardır. Saklamak istediğin zarlara dokun: merkeze geçerler. Diğerleri haznede kalır ve sonraki atışında yeniden atılır.": [
+    "You take turns, with up to three rolls each per round. Tap the dice you want to keep: they move to the center. The others stay in your bowl and are rerolled on your next roll.",
+    "Vous jouez à tour de rôle, avec jusqu’à trois lancers chacun par manche. Touche les dés à conserver : ils vont au centre. Les autres restent dans ton bol et seront relancés à ton prochain lancer.",
+    "Ihr spielt abwechselnd und habt pro Runde jeweils bis zu drei Würfe. Tippe auf die Würfel, die du behalten möchtest: Sie gehen in die Mitte. Die anderen bleiben in deiner Schale und werden beim nächsten Wurf neu gewürfelt."
+  ],
+  "Onay, seçimi kilitler.": [
+    "Confirming locks your selection.",
+    "Confirmer verrouille ta sélection.",
+    "Bestätigen sperrt deine Auswahl."
+  ],
+  "Seçimi onayla demeden merkezdeki zarı geri alabilirsin. Onayladıkların bu tur yeniden atılmaz. Üçüncü atışta kalan zarlar otomatik saklanır; iki taraf bitirince güç seçimine geçilir.": [
+    "You can take a die back from the center until you choose Confirm selection. Confirmed dice cannot be rerolled this round. The third roll automatically keeps all remaining dice; once both players finish, you choose powers.",
+    "Tu peux reprendre un dé du centre tant que tu n’as pas choisi Confirmer la sélection. Les dés confirmés ne seront plus relancés cette manche. Le troisième lancer conserve automatiquement tous les dés restants ; les pouvoirs sont choisis quand les deux joueurs ont terminé.",
+    "Du kannst einen Würfel aus der Mitte zurücknehmen, bis du Auswahl bestätigen wählst. Bestätigte Würfel werden in dieser Runde nicht neu gewürfelt. Nach dem dritten Wurf werden alle übrigen Würfel automatisch behalten; sind beide Spieler fertig, folgt die Kraftwahl."
+  ],
+  "Jeton biriktir, tanrı gücü seç.": [
+    "Collect tokens, then choose a god power.",
+    "Accumule des jetons et choisis un pouvoir divin.",
+    "Sammle Marken und wähle eine Götterkraft."
+  ],
+  "Masada kalan altın çerçeveli her yüz, savaş çözülürken 1 jeton kazandırır. Zarın üzerindeki simge de normal etkisini korur: altın çerçeveli miğfer hem savunur hem jeton getirir.": [
+    "Each gold-bordered face still on the table grants 1 token during resolution. The symbol keeps its normal effect too: a gold-bordered helmet both defends and grants a token.",
+    "Chaque face bordée d’or encore sur la table rapporte 1 jeton pendant la résolution. Le symbole conserve aussi son effet normal : un casque bordé d’or défend et rapporte un jeton.",
+    "Jede noch auf dem Tisch liegende Würfelseite mit Goldrand gibt bei der Abhandlung 1 Marke. Das Symbol behält seine normale Wirkung: Ein Helm mit Goldrand verteidigt und gibt eine Marke."
+  ],
+  "Miğferin savunması + 1 jeton. Çerçeve, ayrı bir zar yüzü değildir.": [
+    "Helmet defense + 1 token. The border is not a separate die face.",
+    "Défense du casque + 1 jeton. La bordure n’est pas une face séparée.",
+    "Helmverteidigung + 1 Marke. Der Rand ist keine eigene Würfelseite."
+  ],
+  "Zarlar tamamlanınca üç tanrından birinin gücünü ve seviyesini seçebilir veya güç kullanmadan devam edebilirsin. Bedel, gücün çalışma sırası geldiğinde ödenir; o anda jeton yetmiyorsa güç çalışmaz.": [
+    "Once the dice are set, choose a power and level from one of your three gods, or continue without a power. The cost is paid when the power takes its turn; if you lack tokens then, it does not activate.",
+    "Quand les dés sont prêts, choisis le pouvoir et le niveau d’un de tes trois dieux, ou continue sans pouvoir. Le coût est payé au tour du pouvoir ; si tu n’as pas assez de jetons à ce moment-là, il ne s’active pas.",
+    "Sind die Würfel fertig, wähle die Kraft und Stufe eines deiner drei Götter oder fahre ohne Kraft fort. Die Kosten werden bezahlt, wenn die Kraft an der Reihe ist; fehlen dann Marken, wird sie nicht aktiviert."
+  ],
+  "{0} jeton → {1} doğrudan hasar": [
+    "{0} tokens → {1} direct damage",
+    "{0} jetons → {1} dégâts directs",
+    "{0} Marken → {1} direkter Schaden"
+  ],
+  "Örneğin Thor'un 1. seviye gücü. Miğfer ve kalkan bu tanrı hasarını engellemez.": [
+    "For example, Thor’s level 1 power. Helmets and shields do not block this god damage.",
+    "Par exemple, le pouvoir de Thor au niveau 1. Casques et boucliers ne bloquent pas ces dégâts divins.",
+    "Zum Beispiel Thors Kraft auf Stufe 1. Helme und Schilde wehren diesen Götterschaden nicht ab."
+  ],
+  "Savaşı izle, yeni tura hazırlan.": [
+    "Watch the battle and prepare for the next round.",
+    "Regarde le combat et prépare la manche suivante.",
+    "Beobachte den Kampf und bereite die nächste Runde vor."
+  ],
+  "İki güç kararı da bitince savaş otomatik başlar. Önce savaş öncesi güçler ve çerçeve jetonları; sonra oklar, baltalar ve jeton çalan eller çözülür. Savaş sonrası güçler en son gelir.": [
+    "Battle starts automatically once both power decisions are made. Pre-battle powers and gold-border tokens come first, then arrows, axes and token-stealing hands. Post-battle powers come last.",
+    "Le combat commence automatiquement après les deux décisions de pouvoir. D’abord les pouvoirs d’avant combat et les jetons des bordures d’or ; puis les flèches, les haches et les mains qui volent des jetons. Les pouvoirs d’après combat viennent en dernier.",
+    "Nach beiden Kraftentscheidungen beginnt der Kampf automatisch. Zuerst kommen die Kräfte vor dem Kampf und die Marken durch Goldränder, dann Pfeile, Äxte und markenstehlende Hände. Kräfte nach dem Kampf kommen zuletzt."
+  ],
+  "Can ve jetonlar sonraki tura taşınır; bütün zarlar yeniden hazırlanır ve ilk başlayan oyuncu değişir. Birinin canı sıfırlanırsa maç hemen biter. İyileştirme canı en fazla 15 yapar.": [
+    "Health and tokens carry over to the next round; all dice are reset and the starting player changes. The match ends immediately if someone reaches zero health. Healing cannot raise health above 15.",
+    "La vie et les jetons sont conservés pour la manche suivante ; tous les dés sont remis en jeu et le premier joueur change. La partie se termine immédiatement à zéro point de vie. Les soins ne peuvent pas dépasser 15 points de vie.",
+    "Leben und Marken bleiben für die nächste Runde erhalten; alle Würfel werden neu vorbereitet und der Startspieler wechselt. Erreicht jemand null Leben, endet die Partie sofort. Heilung kann das Leben nicht über 15 erhöhen."
+  ],
+  "Dokunma ve klavye ipuçları": [
+    "Touch and keyboard tips",
+    "Astuces tactiles et clavier",
+    "Tipps für Touch und Tastatur"
+  ],
+  "Mobilde seçimler son dokunuştan 2 saniye sonra birlikte taşınır; bu süre sıra geçirmez. Seçimi onayla düğmesi beklemeden seçimini uygular ve kilitler.": [
+    "On mobile, selected dice move together 2 seconds after your last tap; this does not end your turn. Confirm selection applies and locks your selection without waiting.",
+    "Sur mobile, les dés sélectionnés se déplacent ensemble 2 secondes après le dernier toucher ; cela ne termine pas ton tour. Confirmer la sélection applique et verrouille ton choix sans attendre.",
+    "Auf Mobilgeräten bewegen sich ausgewählte Würfel 2 Sekunden nach dem letzten Tippen gemeinsam; das beendet deinen Zug nicht. Auswahl bestätigen übernimmt und sperrt deine Auswahl ohne Wartezeit."
+  ],
+  "Zar bilgisi için uzun bas veya F1 kullan. İncelemek zar seçmez. Klavyede Tab ile zara git, Space/Enter ile seç, yön tuşlarıyla dolaş.": [
+    "Hold a die or press F1 for details. Inspecting does not select a die. On a keyboard, use Tab to reach dice, Space/Enter to select and arrow keys to navigate.",
+    "Maintiens un dé ou utilise F1 pour ses détails. L’examiner ne le sélectionne pas. Au clavier, utilise Tab pour atteindre un dé, Espace/Entrée pour le choisir et les flèches pour naviguer.",
+    "Halte einen Würfel gedrückt oder nutze F1 für Details. Ansehen wählt keinen Würfel aus. Mit Tab erreichst du Würfel, mit Leertaste/Enter wählst du sie und mit Pfeiltasten wechselst du zwischen ihnen."
+  ],
+  "Hangi zar, neyi etkiler?": [
+    "Which die affects what?",
+    "Quel dé agit sur quoi ?",
+    "Welcher Würfel bewirkt was?"
+  ],
+  "Senin zarların": [
+    "Your dice",
+    "Tes dés",
+    "Deine Würfel"
+  ],
+  "Rakibin jetonları": [
+    "Opponent’s tokens",
+    "Jetons adverses",
+    "Marken des Gegners"
+  ],
+  "Rakibin savunması": [
+    "Opponent’s defense",
+    "Défense adverse",
+    "Verteidigung des Gegners"
+  ],
+  "{0} engellenen": [
+    "{0} blocked",
+    "Bloquées : {0}",
+    "{0} abgewehrt"
+  ],
+  "{0} can kaybı": [
+    "{0} health lost",
+    "{0} point de vie perdu",
+    "{0} Leben verloren"
+  ],
+  "Rakip: 3 → 1 jeton": [
+    "Opponent: 3 → 1 token",
+    "Adversaire : 3 → 1 jeton",
+    "Gegner: 3 → 1 Marke"
+  ],
+  "Sana +2 jeton": [
+    "You gain 2 tokens",
+    "Tu gagnes 2 jetons",
+    "Du erhältst 2 Marken"
+  ],
+  "Rakibinde hangi savunma var? Seçim yaparken önce buna bak. Jeton biriktirmek ve doğru anda tanrı gücü kullanmak da en az saldırmak kadar önemlidir.": [
+    "What defense does your opponent have? Check that before choosing dice. Collecting tokens and using a god power at the right time matter just as much as attacking.",
+    "Quelle défense a ton adversaire ? Regarde-la avant de choisir tes dés. Accumuler des jetons et utiliser un pouvoir au bon moment compte autant que l’attaque.",
+    "Welche Verteidigung hat dein Gegner? Achte darauf, bevor du Würfel wählst. Marken zu sammeln und eine Götterkraft im richtigen Moment einzusetzen ist genauso wichtig wie anzugreifen."
+  ],
+  "Önceki sayfa": [
+    "Previous page",
+    "Page précédente",
+    "Vorherige Seite"
+  ],
+  "Örneklerle devam et": [
+    "See the examples",
+    "Voir les exemples",
+    "Beispiele ansehen"
+  ],
+  "Anladım": [
+    "Got it",
+    "J’ai compris",
+    "Verstanden"
+  ],
+  "Miğfer baltayı durdurur.": [
+    "Helmets stop axes.",
+    "Les casques arrêtent les haches.",
+    "Helme stoppen Äxte."
+  ],
+  "Her balta 1 hasar verir; her miğfer 1 balta hasarını engeller. İki baltaya karşı bir miğfer varsa yalnız bir balta geçer.": [
+    "Each axe deals 1 damage; each helmet blocks 1 axe damage. With two axes against one helmet, only one axe gets through.",
+    "Chaque hache inflige 1 dégât ; chaque casque bloque 1 dégât de hache. Face à deux haches et un casque, une seule hache passe.",
+    "Jede Axt verursacht 1 Schaden; jeder Helm wehrt 1 Axtschaden ab. Bei zwei Äxten gegen einen Helm kommt nur eine Axt durch."
+  ],
+  "Kalkan oku durdurur.": [
+    "Shields stop arrows.",
+    "Les boucliers arrêtent les flèches.",
+    "Schilde stoppen Pfeile."
+  ],
+  "Ok da 1 hasar verir, ama onu yalnız kalkan engeller. İki oka karşı bir kalkan varsa rakip 1 can kaybeder.": [
+    "An arrow also deals 1 damage, but only a shield blocks it. With two arrows against one shield, the opponent loses 1 health.",
+    "Une flèche inflige aussi 1 dégât, mais seul un bouclier la bloque. Face à deux flèches et un bouclier, l’adversaire perd 1 point de vie.",
+    "Ein Pfeil verursacht ebenfalls 1 Schaden, doch nur ein Schild wehrt ihn ab. Bei zwei Pfeilen gegen einen Schild verliert der Gegner 1 Leben."
+  ],
+  "Doğru savunma gerekir.": [
+    "The right defense matters.",
+    "Il faut la bonne défense.",
+    "Die richtige Verteidigung zählt."
+  ],
+  "Kalkan baltayı, miğfer oku engelleyemez. Burada rakibin kalkanı var; senin baltan yine de 1 hasar verir.": [
+    "A shield cannot block an axe, and a helmet cannot block an arrow. Here the opponent has a shield; your axe still deals 1 damage.",
+    "Un bouclier ne bloque pas une hache et un casque ne bloque pas une flèche. Ici, l’adversaire a un bouclier ; ta hache inflige quand même 1 dégât.",
+    "Ein Schild wehrt keine Axt ab, ein Helm keinen Pfeil. Hier hat der Gegner einen Schild; deine Axt verursacht trotzdem 1 Schaden."
+  ],
+  "El cana değil, jetona gider.": [
+    "Hands target tokens, not health.",
+    "Les mains visent les jetons, pas la vie.",
+    "Hände zielen auf Marken statt auf Leben."
+  ],
+  "Her el rakipten 1 jeton alır. İki elin ve rakibin 3 jetonu varsa 2 jeton sana geçer, rakipte 1 kalır. Rakipte jeton yoksa çalamazsın.": [
+    "Each hand takes 1 token from the opponent. With two hands and 3 enemy tokens, you gain 2 tokens and the opponent keeps 1. You cannot steal from an opponent with no tokens.",
+    "Chaque main prend 1 jeton à l’adversaire. Avec deux mains et 3 jetons adverses, tu gagnes 2 jetons et il lui en reste 1. Tu ne peux rien voler s’il n’a aucun jeton.",
+    "Jede Hand nimmt dem Gegner 1 Marke. Bei zwei Händen und 3 gegnerischen Marken erhältst du 2 Marken und dem Gegner bleibt 1. Hat er keine Marken, kannst du nichts stehlen."
+  ],
+  "Örneklerde tanrı gücü veya ek etki yok. × işareti engellenen saldırıyı gösterir. Engellenmeyen balta ve oklar canı azaltır; savunma zarları saldırıya dönüşmez.": [
+    "These examples have no god powers or bonuses. The × marks a blocked attack. Unblocked axes and arrows reduce health; defense dice do not become attacks.",
+    "Ces exemples sont sans pouvoir divin ni bonus. Le signe × indique une attaque bloquée. Les haches et les flèches non bloquées réduisent la vie ; les dés de défense ne deviennent pas des attaques.",
+    "Diese Beispiele haben keine Götterkräfte oder Boni. Das × markiert einen abgewehrten Angriff. Ungeblockte Äxte und Pfeile verringern das Leben; Verteidigungswürfel werden nicht zu Angriffen."
   ]
 }
