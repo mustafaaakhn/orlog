@@ -484,9 +484,6 @@ function start() {
         </div>
       </div>
       <div class="gods-layout">
-        <section class="god-description" v-if="!mobileCatalog" aria-live="polite">
-          <SetupFavorDetails :id="browsing" :full="currentLoadout.length === 3" :equipped="currentLoadout.includes(browsing)" />
-        </section>
         <div class="god-selection">
           <div class="god-gallery" role="group" :aria-label="t('20 tanrı kataloğu')">
             <button
@@ -550,6 +547,9 @@ function start() {
                 >{{ t("Bir tanrı seç") }}
               </div>
             </div>
+            <section class="god-description" v-if="!mobileCatalog" aria-live="polite">
+              <SetupFavorDetails :id="browsing" :full="currentLoadout.length === 3" :equipped="currentLoadout.includes(browsing)" />
+            </section>
           </aside>
         </div>
       </div>

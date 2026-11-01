@@ -1,0 +1,115 @@
+/* The catalog owns the desktop height; preview details stay beside it. */
+@media (min-width: 1024px) and (min-height: 501px) {
+  .at-preparation:has(.screen-gods) .masthead { height: 68px; }
+  .at-preparation .screen-gods.flow-screen {
+    height: calc(100dvh - 68px);
+    max-width: 1680px;
+    padding-inline: clamp(32px, 3vw, 56px);
+  }
+  .at-preparation .screen-gods .flow-navigation { min-height: 44px; }
+  .at-preparation .screen-gods .gods-heading { margin: 4px 0 22px; gap: 24px; }
+  .at-preparation .screen-gods .gods-heading h1 { margin: 0 0 8px; font-size: 28px; line-height: 1.25; }
+  .at-preparation .screen-gods .gods-heading p { display: block; font-size: 13px; line-height: 1.5; }
+  .at-preparation .screen-gods .player-tabs button { min-width: 120px; padding: 8px 12px; font-size: 13px; }
+  .at-preparation .screen-gods .gods-layout { display: flex; min-height: 0; padding-bottom: 18px; overflow: hidden; }
+  .at-preparation .screen-gods .god-selection {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 28px;
+    min-height: 0;
+    height: 100%;
+    flex: 1;
+  }
+  .at-preparation .screen-gods .god-selection .god-gallery {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-auto-rows: max-content;
+    align-content: start;
+    gap: 20px;
+    overflow-y: auto;
+    padding: 4px 14px 14px 4px;
+    min-height: 0;
+  }
+  .at-preparation .screen-gods .god-selection .god-tile {
+    display: flex;
+    align-items: stretch;
+    justify-content: flex-start;
+    gap: 12px;
+    height: auto;
+    min-height: 0;
+    padding: 14px;
+    border-radius: 10px;
+    border-color: #5c5847;
+    background: #20251f;
+    text-align: left;
+  }
+  .at-preparation .screen-gods .god-tile::after { content: none; }
+  .at-preparation .screen-gods .god-selection .god-tile > .favor-portrait {
+    position: static;
+    inset: auto;
+    z-index: auto;
+    align-self: center;
+    width: clamp(112px, 17dvh, 152px);
+    height: auto;
+    max-width: 100%;
+    aspect-ratio: 1;
+    border-radius: 6px;
+    background-color: #211a14;
+  }
+  .at-preparation .screen-gods .god-selection .god-tile-copy { padding: 0; gap: 8px; }
+  .at-preparation .screen-gods .god-selection .god-tile-name { margin: 0; font-size: 19px; line-height: 1.2; }
+  .at-preparation .screen-gods .god-selection .god-tile-power { margin: 0; min-height: 36px; align-items: flex-start; font-size: 12px; line-height: 1.5; }
+  .at-preparation .screen-gods .god-tile-power svg { margin-top: 1px; width: 17px; height: 17px; }
+  .at-preparation .screen-gods .god-selection .god-tile[aria-pressed="true"] { background: #303e31; border-color: #f4d899; outline-offset: -4px; }
+  .at-preparation .screen-gods .god-tile.browsing { border-color: #d3b176; }
+  .at-preparation .screen-gods .god-tile:hover { background: #293127; }
+  .at-preparation .screen-gods .god-equipped { top: 10px; right: 10px; width: 24px; height: 24px; }
+  .at-preparation .screen-gods .loadout-sidebar { min-height: 0; padding: 4px 0 12px 24px; overflow-y: auto; }
+  .at-preparation .screen-gods .name-field { display: grid; grid-template-columns: 64px minmax(0, 1fr); align-items: center; gap: 10px; margin-bottom: 16px; font-size: 11px; overflow-wrap: anywhere; }
+  .at-preparation .screen-gods .name-field input { min-height: 40px; padding: 8px 10px; margin-top: 0; font-size: 13px; }
+  .at-preparation .screen-gods .loadout-heading { margin: 0 0 12px; }
+  .at-preparation .screen-gods .loadout-heading h2 { font-size: 16px; }
+  .at-preparation .screen-gods .chosen-gods { gap: 10px; }
+  .at-preparation .screen-gods .chosen-god { gap: 5px; }
+  .at-preparation .screen-gods .chosen-god > .favor-portrait { width: 44px; height: 44px; }
+  .at-preparation .screen-gods .chosen-god strong { font-size: 11px; }
+  .at-preparation .screen-gods .chosen-god .icon-button { min-height: 44px; }
+  .at-preparation .screen-gods .empty-god { min-height: 72px; gap: 8px; }
+  .at-preparation .screen-gods .god-description {
+    margin: 14px 0 0;
+    padding: 14px 0 0;
+    border-top: 1px solid var(--line);
+  }
+  .at-preparation .screen-gods .god-description .description-heading { float: none; width: auto; gap: 12px; padding: 0; margin-bottom: 10px; }
+  .at-preparation .screen-gods .god-description .description-heading .favor-portrait { display: block; width: 42px; height: 48px; }
+  .at-preparation .screen-gods .god-description h2 { font-size: 20px; line-height: 1.2; }
+  .at-preparation .screen-gods .god-description .god-effect-summary { font-size: 11px; line-height: 1.45; }
+  .at-preparation .screen-gods .god-description .god-effect-summary svg { width: 16px; height: 16px; }
+  .at-preparation .screen-gods .god-description .favor-timing { margin: 0 0 10px; font-size: 11px; }
+  .at-preparation .screen-gods .god-description dl { display: grid; grid-template-columns: 1fr; gap: 10px; margin: 0; }
+  .at-preparation .screen-gods .god-description dl > div { grid-template-columns: 34px minmax(0, 1fr); gap: 10px; margin: 0; font-size: 12px; line-height: 1.45; }
+  .at-preparation .screen-gods .god-description dt svg { width: 17px; height: 17px; }
+  .at-preparation .screen-gods .god-description .selection-hint { margin: 12px 0 0; font-size: 11px; line-height: 1.5; }
+  .at-preparation .screen-gods .flow-footer { margin-top: 0; padding-block: 12px 16px; }
+  .at-preparation .screen-gods .flow-footer > span { font-size: 13px; }
+  .at-preparation .screen-gods .flow-footer .primary-action { min-height: 44px; padding: 11px 18px; font-size: 13px; }
+}
+@media (min-width: 1600px) and (min-height: 501px) {
+  .at-preparation .screen-gods .god-selection .god-gallery { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; }
+}
+@media (min-width: 1024px) and (max-width: 1279px) and (min-height: 501px) {
+  .at-preparation .screen-gods .god-selection { grid-template-columns: minmax(0, 1fr) 260px; gap: 24px; }
+  .at-preparation .screen-gods .god-selection .god-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (min-width: 1024px) and (min-height: 501px) and (max-height: 800px) {
+  .at-preparation .screen-gods .gods-heading { margin-bottom: 14px; }
+  .at-preparation .screen-gods .gods-heading h1 { font-size: 24px; }
+  .at-preparation:has(.screen-gods) .masthead { height: 64px; }
+  .at-preparation .screen-gods.flow-screen { height: calc(100dvh - 64px); }
+  .at-preparation .screen-gods .flow-navigation { min-height: 40px; }
+  .at-preparation .screen-gods .god-selection .god-tile { padding: 10px; gap: 8px; }
+  .at-preparation .screen-gods .god-selection .god-tile > .favor-portrait { width: clamp(112px, 15dvh, 120px); }
+  .at-preparation .screen-gods .god-selection .god-tile-copy { gap: 6px; }
+  .at-preparation .screen-gods .god-selection .god-tile-name { font-size: 18px; }
+  .at-preparation .screen-gods .god-selection .god-tile-power { min-height: 32px; }
+  .at-preparation .screen-gods .god-selection .god-gallery { gap: 18px; }
+}

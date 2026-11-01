@@ -626,6 +626,7 @@ function confirm() {
 @import "./ui/mode-selection.css";
 @import "./ui/entry-tools.css";
 @import "./ui/setup-refresh.css";
+@import "./ui/desktop-god-selection.css";
 @import "./ui/fjord-table.css";
 @import "./ui/match-moments.css";
 @import "./ui/mobile-resources.css";

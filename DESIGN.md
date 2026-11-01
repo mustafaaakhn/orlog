@@ -269,3 +269,16 @@ WebGL tuvali ve zar hedefleri tarayıcının iki parmakla yakınlaştırma ve
 uzaklaştırmasını engellemez. Mobil giriş metni en az 16px'tir; Safari'nin
 alan odağında kendiliğinden yakınlaşması önlenir. Sekmeden dönüşte kaçırılan
 sunum yerine güncel masa çizilir; boşta dönüş de yeni atış beklemez.
+
+## Masaüstü tanrı hazırlığı: katalog öncelikli yerleşim
+
+1024px ve daha geniş, 500px'ten yüksek ekranlarda hazırlık başlığı ve üst
+araç şeridi kompakt tutulur. Tanrı özellikleri katalog üstündeki yatay
+şeritten sağdaki kuşanım paneline taşınır. Galeri ve sağ panel ayrı kayar;
+önizleme metni veya seçim sayısı katalog yüksekliğini değiştirmez.
+
+Kartlarda tam kare portre, tanrı adı ve kısa güç açıklaması ayrı alanlardır;
+resmin üzerine metin bindirilmez, portre dikdörtgen karta gerilmez. Geniş
+masaüstü beş, orta ekran dört, 1024–1279px ekran üç sütundur. Kısa dizüstünde
+başlık ve portreler ölçülü küçülür; en az 44px kontroller korunur. Mobil
+iki sütun ve alttan açılan bilgi kartı aynı akışı sürdürür.
