@@ -4,13 +4,12 @@ import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
 import WelcomeIntro from "./WelcomeIntro.vue";
 import FavorPortrait from "./FavorPortrait.vue";
 import UiIcon from "./UiIcon.vue";
-import TokenIcon from "./TokenIcon.vue";
+import SetupFavorDetails from "./SetupFavorDetails.vue";
 import GameMark from "./GameMark.vue";
 import { favorSummary } from "./favorSummary";
 import {
   DEFAULT_FAVORS,
   FAVOR_CATALOG,
-  describeFavorTier,
   PLAYER_IDS,
   mathRandom,
   randomIndex,
@@ -87,6 +86,28 @@ for (const id of PLAYER_IDS) watch(() => [names.value[id], loadouts.value[id].jo
 const editingPlayer = ref<PlayerId>("player-1");
 const selectionError = ref("");
 watch(editingPlayer, () => { selectionError.value = ""; });
+const catalogQuery = window.matchMedia('(max-width: 600px), (max-height: 500px) and (orientation: landscape)');
+const mobileCatalog = ref(catalogQuery.matches);
+const detailOpen = ref(false);
+const detailDialog = ref<HTMLDialogElement | null>(null);
+function updateCatalog() {
+  mobileCatalog.value = catalogQuery.matches;
+  if (!mobileCatalog.value) detailOpen.value = false;
+}
+catalogQuery.addEventListener('change', updateCatalog);
+onBeforeUnmount(() => catalogQuery.removeEventListener('change', updateCatalog));
+watch(detailOpen, async open => {
+  await nextTick();
+  if (open) detailDialog.value?.showModal();
+  else detailDialog.value?.close();
+});
+watch([screen, editingPlayer], () => { detailOpen.value = false; });
+function previewFavor(id: FavorId) { if (!mobileCatalog.value) browsing.value = id; }
+function chooseCatalogFavor(id: FavorId) {
+  browsing.value = id;
+  toggleFavor(id);
+  if (mobileCatalog.value) detailOpen.value = true;
+}
 const browsing = ref<FavorId>(FAVOR_ART_IDS[0]!);
 const firstPlayer = ref<PlayerId | null>(props.rematch?.options.firstPlayerId ?? null);
 const roomCode = ref("");
@@ -463,29 +484,8 @@ function start() {
         </div>
       </div>
       <div class="gods-layout">
-        <section class="god-description" aria-live="polite">
-          <div class="description-heading"><FavorPortrait :id="browsing" /><div><h2>{{ t(shortName(browsing)) }}</h2><p class="god-effect-summary" :data-tone="favorSummary(browsing).tone"><UiIcon :name="favorSummary(browsing).icon" />{{ t(favorSummary(browsing).label) }}</p></div></div>
-          <p class="favor-timing">
-            {{ t(FAVOR_CATALOG[browsing].timing === "before-resolution"
-                ? "Savaş öncesi"
-                : "Savaş sonrası") }}
-            {{ t("· Öncelik") }} {{ t(FAVOR_CATALOG[browsing].priority) }}
-          </p>
-          <dl>
-            <div v-for="tier in [1, 2, 3] as const" :key="tier">
-              <dt>{{ t(FAVOR_CATALOG[browsing].tiers[tier].cost) }}<TokenIcon /><span class="sr-only"> {{ t(" jeton") }}</span></dt>
-              <dd>{{ t(describeFavorTier(browsing, tier)) }}</dd>
-            </div>
-          </dl>
-          <p
-            v-if="
-              currentLoadout.length === 3 &&
-              !currentLoadout.includes(browsing)
-            "
-            class="selection-hint"
-          >
-            {{ t("Kuşanmak için önce seçili bir tanrıyı kaldır.") }}
-          </p>
+        <section class="god-description" v-if="!mobileCatalog" aria-live="polite">
+          <SetupFavorDetails :id="browsing" :full="currentLoadout.length === 3" :equipped="currentLoadout.includes(browsing)" />
         </section>
         <div class="god-selection">
           <div class="god-gallery" role="group" :aria-label="t('20 tanrı kataloğu')">
@@ -493,13 +493,15 @@ function start() {
               v-for="id in FAVOR_ART_IDS"
               :key="id"
               class="god-tile"
+              :data-favor-id="id"
+              :aria-haspopup="mobileCatalog ? 'dialog' : undefined"
               :class="{ browsing: browsing === id }"
               :aria-pressed="currentLoadout.includes(id)"
               :aria-disabled="loadoutLocked"
               :aria-label="t(`${shortName(id)}, ${t(favorSummary(id).label)}${t(currentLoadout.includes(id) ? ', kuşanıldı; kaldır' : currentLoadout.length === 3 ? ', seçim sınırı dolu; gücü incele' : ', kuşan')}`)"
-              @pointerenter="browsing = id"
-              @focus="browsing = id"
-              @click="toggleFavor(id)"
+              @pointerenter="previewFavor(id)"
+              @focus="previewFavor(id)"
+              @click="chooseCatalogFavor(id)"
             >
               <FavorPortrait :id="id" />
               <span v-if="currentLoadout.includes(id)" class="god-equipped"><UiIcon name="check" /><span class="sr-only">{{ t("Kuşanıldı") }}</span></span>
@@ -551,6 +553,19 @@ function start() {
           </aside>
         </div>
       </div>
+      <dialog ref="detailDialog" class="setup-favor-sheet" aria-labelledby="setup-favor-title"
+        @cancel="detailOpen = false" @close="detailOpen = false"
+        @click="event => { if (event.target === detailDialog) detailOpen = false; }">
+        <header class="setup-favor-sheet-heading">
+          <h2 id="setup-favor-title">{{ t('Tanrı bilgileri') }}</h2>
+          <button class="text-button" @click="detailOpen = false"><UiIcon name="close" />{{ t('Kapat') }}</button>
+        </header>
+        <div class="setup-favor-sheet-content">
+          <SetupFavorDetails :id="browsing" :full="currentLoadout.length === 3" :equipped="currentLoadout.includes(browsing)" />
+          <p v-if="selectionError" class="selection-warning" role="alert">{{ t(selectionError) }}</p>
+          <p v-else-if="currentLoadout.includes(browsing)" class="setup-favor-equipped"><UiIcon name="check" />{{ t('Kuşanıldı') }}</p>
+        </div>
+      </dialog>
       <div class="flow-footer">
         <span v-if="networkError" class="field-error" role="alert">{{ t(networkError) }}</span>
         <span v-else-if="room && ownReady" role="status">{{ t("Tanrıların hazır. Değiştirmek için Hazır değilim seç.") }}</span>

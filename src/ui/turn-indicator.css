@@ -1,0 +1,32 @@
+.in-match .table-round {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 46px;
+  padding: 7px 14px;
+  border: 1px solid #718273;
+  border-radius: 8px;
+  color: #f5ebd8;
+  background: #15231df2;
+  pointer-events: none;
+}
+.turn-marker { flex-shrink: 0; color: #b4c4b6; font-size: 14px; }
+.turn-copy { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.turn-copy strong { overflow: hidden; text-overflow: ellipsis; font-size: 15px; line-height: 1.25; font-weight: 400; }
+.turn-copy small { overflow: hidden; text-overflow: ellipsis; color: #cad4c8; font-size: 10px; line-height: 1.25; }
+.in-match .table-round.is-your-turn { color: #1c2921; background: #f4d899; border-color: #fff1ce; box-shadow: 0 0 0 3px #d3b17630; animation: turn-arrives 800ms ease-out; }
+.is-your-turn .turn-marker { color: #32583f; }
+.is-your-turn .turn-copy small { color: #3d513e; }
+.in-match:has(.is-your-turn) .match-actions .primary-action { box-shadow: 0 0 0 3px #f4d89945, 0 4px 20px #07120c80; border-color: #fff1ce; }
+@keyframes turn-arrives { from { box-shadow: 0 0 0 10px #f4d89980; } to { box-shadow: 0 0 0 3px #d3b17630; } }
+@media (max-width: 600px), (max-height: 500px) and (orientation: landscape) {
+  .in-match .table-round { min-height: 36px; padding: 5px 10px; gap: 8px; top: 6px; }
+  .turn-copy strong { font-size: 13px; }
+  .turn-copy small { font-size: 9px; }
+}
+@media (min-width: 601px) and (min-height: 501px) {
+  .in-match .network-status { top: 78px; }
+}
+@media (prefers-reduced-motion: reduce) { .in-match .table-round.is-your-turn { animation: none; } }
+[data-reduced-motion="true"] .in-match .table-round.is-your-turn,
+.in-match[data-reduced-motion="true"] .table-round.is-your-turn { animation: none; }

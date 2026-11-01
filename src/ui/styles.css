@@ -3193,3 +3193,9 @@ input[type="radio"] {
   line-height: 1.5;
   pointer-events: none;
 }
+
+/* Preserve browser zoom in both directions over the WebGL surface. */
+.table-viewport canvas { touch-action: pinch-zoom !important; }
+@media (max-width: 600px), (max-height: 500px) and (orientation: landscape) {
+  .experience input, .experience select { font-size: 16px; }
+}

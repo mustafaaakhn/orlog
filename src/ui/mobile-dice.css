@@ -9,7 +9,7 @@
   background: #f6ecd5;
   color: #17221c;
   box-shadow: 0 2px 5px #07120c80;
-  touch-action: none;
+  touch-action: pinch-zoom;
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
@@ -39,7 +39,7 @@
   border-radius: 8px; background: #13251f80;
 }
 .mobile-die-controls .is-overflow .die-slot-surface { position: relative; display: block; }
-.mobile-die-controls .is-overflow .scene-die-target { touch-action: pan-y; }
+.mobile-die-controls .is-overflow .scene-die-target { touch-action: pan-y pinch-zoom; }
 .mobile-die-controls .scene-die-target > * { pointer-events: none; }
 
 .die-target-value { position: absolute; right: -3px; bottom: -3px; padding: 1px 3px; border-radius: 3px; background: #172a21; color: #fff5df; font: 12px/1.3 sans-serif; }

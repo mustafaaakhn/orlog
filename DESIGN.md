@@ -248,3 +248,24 @@ geniş ekranda iki sütundur; kısa yatayda içerik kendi içinde kayar.
 Sayfa değişimi başa döner, klavye odağı başlığı izler. Şemalar açıklayıcı
 metnin dekoratif eşidir; ekran okuyucu aynı paragrafı iki kez okutmaz.
 Türkçe, İngilizce, Fransızca ve Almanca aynı kapsamı sunar.
+
+## Sıra, katalog ve mobil yakınlaştırma
+
+Sıra rozeti ana metinde **Sıra sende** veya oynayan rakibin adını, altında tur
+numarasını gösterir. İnsan eylemi hazır olduğunda rozet açık pirinç rengine
+geçer ve ana düğme vurgulanır. Sıra gelişi bir kez kısa hareketle belirtilir;
+azaltılmış harekette bu efekt kapalıdır. Yerel iki kişide etkin oyuncunun adı
+rozetin alt satırında kalır.
+
+Tanrı kataloğu telefonda iki sütun ve daha büyük portrelerle, masaüstünde
+kartın asgari genişliğini koruyan esnek grid ve geniş boşluklarla gösterilir.
+Mobilde seçim tanrının üç bedel/etki seviyesini alttan açılan bir kartta
+hemen gösterir. Kapat düğmesi kaydırma dışında kalır; Escape ve dış alana
+dokunma da kartı kapatır. Seçim sınırı doluysa güç yine incelenebilir.
+Masa üzerindeki 3B tanrı levhaları mobilde etkileşimsizdir; maç içi bilgi
+ve güç kullanımı **Tanrı gücü** düğmesindedir.
+
+WebGL tuvali ve zar hedefleri tarayıcının iki parmakla yakınlaştırma ve
+uzaklaştırmasını engellemez. Mobil giriş metni en az 16px'tir; Safari'nin
+alan odağında kendiliğinden yakınlaşması önlenir. Sekmeden dönüşte kaçırılan
+sunum yerine güncel masa çizilir; boşta dönüş de yeni atış beklemez.

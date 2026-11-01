@@ -170,7 +170,7 @@ function createPlayback() {
       }
       emit('collected', [...combat.collected]);
       emit('cue', null);
-      focusEvent([]);
+      focusEvent([], true);
       invalidate();
     },
     play(batch: PresentationBatch) {
@@ -214,7 +214,7 @@ function createPlayback() {
       visualEvent = null;
       concealedDice = [];
       finishedDice.clear();
-      focusEvent([]);
+      focusEvent([], true);
       queue.dispose();
       recorder.dispose();
       combat.dispose();
@@ -225,30 +225,32 @@ function createPlayback() {
   };
 }
 let playback: ReturnType<typeof createPlayback> | null = createPlayback();
-let synchronized = Promise.resolve();
 function retirePlayback() {
   const previous = playback;
   playback = null;
-  if (previous) synchronized = previous.stop();
+  if (previous) void previous.stop();
 }
 watch(() => props.background, background => {
   if (background) {
     // An unchanged idle table needs neither a new presenter nor new positions.
     if (playback?.playing || (playback && playback.state !== props.state)) retirePlayback();
     else playback?.setPaused(true);
-  } else if (playback) {
-    playback.setPaused(props.paused);
   } else {
-    synchronized = synchronized.then(() => {
-      if (sceneClosed || props.background || playback) return;
+    // stop() revokes transform ownership synchronously. Never wait for an old
+    // animation/worker promise to repaint the latest authoritative snapshot.
+    if (!playback) {
       playback = createPlayback();
       playback.sync(props.state);
-      playback.setPaused(props.paused);
       if (props.batch) void playback.play(props.batch);
-      publishTargets();
-    });
+    }
+    playback.setPaused(props.paused);
+    // An on-demand WebGL buffer may have been discarded while the tab was away,
+    // even when no state changed. Repaint the idle table on every return too.
+    seatTurn.snap(props.viewerId);
+    frameCamera(seatTurn.angle);
+    invalidate();
   }
-}, { immediate: true, flush: 'sync' });
+}, { flush: 'sync' });
 watch(() => props.speed, value => playback?.setSpeed(value));
 watch(() => props.paused, value => playback?.setPaused(value || props.background), { immediate: true });
 watch(() => props.state, state => {
@@ -260,7 +262,6 @@ watch(() => props.state, state => {
   if (!props.batch && state.revision === 0) playback?.sync(state);
 });
 watch(() => props.batch, async batch => {
-  await synchronized;
   if (sceneClosed || props.background || batch !== props.batch) return;
   if (batch) await playback?.play(batch);
   else { await nextTick(); publishTargets(); }
@@ -338,13 +339,13 @@ function frameCamera(angle: number) {
 watch(() => props.viewerId, player => seatTurn.turn(player, props.reduced, props.paused));
 watch(() => props.paused, paused => { if (paused) seatTurn.snap(props.viewerId); });
 watch(() => props.reduced, reduced => { if (reduced) seatTurn.snap(props.viewerId); });
-function focusEvent(points: readonly Vector3[]) {
+function focusEvent(points: readonly Vector3[], instant = false) {
   if (sceneClosed) return;
   compositionTween?.kill();
   const min = new Vector3(Infinity, Infinity, Infinity), max = min.clone().negate();
   for (const point of points) { min.min(point); max.max(point); }
   const target = points.length ? { weight: 1, minX: min.x, maxX: max.x, minY: min.y, maxY: max.y, minZ: min.z, maxZ: max.z } : { weight: 0 };
-  if (props.reduced) { Object.assign(composition, target); frameCamera(seatTurn.angle); }
+  if (instant || props.reduced || props.background) { Object.assign(composition, target); frameCamera(seatTurn.angle); }
   else compositionTween = gsap.to(composition, { ...target, duration: .28 / props.speed, ease: 'power2.out', onUpdate: () => frameCamera(seatTurn.angle) });
 }
 watch(() => props.reduced, reduced => { if (reduced) { compositionTween?.progress(1); compositionTween?.kill(); } });

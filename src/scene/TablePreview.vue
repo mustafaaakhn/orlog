@@ -76,11 +76,12 @@ const menuFavor = computed(() => inspection.value.target);
 const menuPinned = computed(() => inspection.value.pinned);
 const favorMenu = ref<HTMLElement | null>(null);
 function inspectFavor(target: SceneFavorTarget, activate: boolean) {
-  if (props.batch || props.paused || turningSeat.value) return;
+  if (mobileRendering.value || props.batch || props.paused || turningSeat.value) return;
   inspection.value = inspect(inspection.value, target, activate, props.favorPlayer ?? null);
   if (inspection.value.pinned && activate) void nextTick(() => favorMenu.value?.focus());
 }
 function highlightFavor(target: SceneFavorTarget | null) {
+  if (mobileRendering.value) return;
   highlightedFavor.value = target;
   if (!target) inspection.value = leaveFavor(inspection.value);
 }
@@ -91,12 +92,12 @@ function closeFavor() {
   // Focusing the source is also a preview trigger; Escape must still close it.
   inspection.value = { target: null, pinned: false };
 }
-watch([() => props.batch, () => props.paused, () => props.favorPlayer, () => props.state.gameId, turningSeat], () => {
+watch([() => props.batch, () => props.paused, () => props.favorPlayer, () => props.state.gameId, turningSeat, mobileRendering], () => {
   inspection.value = { target: null, pinned: false };
 });
 const highlightedDie = ref<DieId | null>(null);
 const highlightedFavor = ref<SceneFavorTarget | null>(null);
-watch([() => props.batch, () => props.paused, turningSeat], () => {
+watch([() => props.batch, () => props.paused, turningSeat, mobileRendering], () => {
   highlightedFavor.value = null;
   highlightedDie.value = null;
 });
@@ -262,8 +263,8 @@ onErrorCaptured(() => {
         @favors="favors = $event"
       />
     </TresCanvas>
-    <SceneFavorControls v-if="status === 'ready' && !batch && !paused && !turningSeat" :targets="favors" :active-player="favorPlayer" :pinned-target="menuPinned ? menuFavor : null" @highlight="highlightFavor" @inspect="inspectFavor" />
-    <section v-if="menuFavor && status === 'ready' && !batch && !paused" ref="favorMenu"
+    <SceneFavorControls v-if="status === 'ready' && !mobileRendering && !batch && !paused && !turningSeat" :targets="favors" :active-player="favorPlayer" :pinned-target="menuPinned ? menuFavor : null" @highlight="highlightFavor" @inspect="inspectFavor" />
+    <section v-if="!mobileRendering && menuFavor && status === 'ready' && !batch && !paused" ref="favorMenu"
       id="table-favor-menu" class="table-favor-menu" :class="{ 'is-preview': !menuPinned }" :role="menuPinned ? 'dialog' : 'region'" :aria-label="t(menuPinned ? 'Tanrı gücü seçimi' : 'Tanrı bilgileri')" tabindex="-1">
       <p class="favor-menu-help">{{ t(menuPinned ? 'Seviyeni seç · Escape ile kapat' : menuFavor.playerId === favorPlayer ? 'Seçmek için tanrıya tıkla' : 'Tanrı bilgileri') }}</p>
       <FavorPicker :key="`${menuFavor.playerId}/${menuFavor.favorId}`" :favor-id="menuFavor.favorId"

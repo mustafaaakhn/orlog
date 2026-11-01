@@ -387,3 +387,18 @@ geçişi içeriği başa alır ve odağı yeni başlığa taşır. Kapat/Escape 
 modal yaşam döngüsünü kullanır; yeniden açılış ilk sayfadan başlar. Dört dil
 mevcut `t` üzerinden çizilir. Rehberdeki SVG simgeleri mevcut oyun simgeleridir;
 yeni dış varlık veya bağımlılık eklenmez.
+
+## Sekmeye dönüş ve tanrı ayrıntıları
+
+`TableScene` arka plana geçerken sürmekteki sunumun konum sahipliğini
+senkron bırakır; eski promise'in tamamlanması geri dönüşü engellemez.
+Yeni sunucu/core durumu mevcut board'a uygulanır. Durum değişmese bile
+odak/görünürlük dönüşü kamerayı ve isteğe bağlı WebGL çizimini yeniler;
+canvas veya oyun oturumu sıradan sekme geçişinde yeniden kurulmaz.
+
+`TablePreview` mobil alan eşiğinde masa tanrısı hedeflerini oluşturmaz;
+inceleme ve highlight callback'leri de aynı eşiği kontrol eder. Mobil maç
+bilgisi ve güç seçimi mevcut `MobileFavorPanel` üzerinden yürür.
+Hazırlık kataloğunda `SetupFavorDetails` masaüstü açıklaması ve mobil native
+`dialog` kartı için tek içerik kaynağıdır. Mobil kartın kapanması yalnız
+incelemeyi kapatır; tanrı seçimi veya hazır komutu üretmez.

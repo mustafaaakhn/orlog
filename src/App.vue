@@ -19,6 +19,7 @@ import SceneLoaderState from "./ui/SceneLoaderState.vue";
 import MatchSetup from "./ui/MatchSetup.vue";
 import MatchResult from "./ui/MatchResult.vue";
 import MatchResources from "./ui/MatchResources.vue";
+import MatchTurnIndicator from "./ui/MatchTurnIndicator.vue";
 import MobileFavorPanel from "./ui/MobileFavorPanel.vue";
 import { eventText } from "./presentation/eventText";
 import type {
@@ -528,9 +529,7 @@ function confirm() {
         </p>
         <p>{{ t(instruction) }}</p>
       </div>
-      <p class="table-round" :aria-label="t('Tur ve sıra')">
-        {{ t("Tur") }} {{ t(state.round) }}<span v-if="activePlayer"> · {{ names[activePlayer.id] }}</span>
-      </p>
+      <MatchTurnIndicator :state="state" :names="names" :human-turn="humanTurn" :busy="busy" />
       <p v-if="networkStatus" class="network-status" role="status">{{ t(networkStatus) }}</p>
       <MatchResources :state="state" :names="names" :viewer-id="viewerId">
         <section
@@ -631,4 +630,5 @@ function confirm() {
 @import "./ui/match-moments.css";
 @import "./ui/mobile-resources.css";
 @import "./ui/mobile-camera.css";
+@import "./ui/turn-indicator.css";
 </style>

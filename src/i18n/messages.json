@@ -2228,5 +2228,20 @@
     "These examples have no god powers or bonuses. The × marks a blocked attack. Unblocked axes and arrows reduce health; defense dice do not become attacks.",
     "Ces exemples sont sans pouvoir divin ni bonus. Le signe × indique une attaque bloquée. Les haches et les flèches non bloquées réduisent la vie ; les dés de défense ne deviennent pas des attaques.",
     "Diese Beispiele haben keine Götterkräfte oder Boni. Das × markiert einen abgewehrten Angriff. Ungeblockte Äxte und Pfeile verringern das Leben; Verteidigungswürfel werden nicht zu Angriffen."
+  ],
+  "{0} oynuyor": [
+    "{0} is playing",
+    "{0} joue",
+    "{0} ist am Zug"
+  ],
+  "Oyun bitti": [
+    "Game over",
+    "Partie terminée",
+    "Spiel beendet"
+  ],
+  "Savaş": [
+    "Battle",
+    "Combat",
+    "Kampf"
   ]
 }
