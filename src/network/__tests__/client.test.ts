@@ -32,8 +32,8 @@ function setup() {
   const joined: JoinedRoom = {
     session: { code: '1234', playerId: 'player-1', token: 'private-seat-token' },
     room: { code: '1234', stage: 'playing', preparationId: null, revision: 1, waiting: false, firstPlayerId: 'player-1', players: [
-      { id: 'player-1', name: 'Eivor', connected: true, ready: true, favors: [] },
-      { id: 'player-2', name: 'Sigurd', connected: true, ready: true, favors: [] },
+      { id: 'player-1', name: 'Eivor', connected: true, ready: true, blockedFavors: [], favors: [] },
+      { id: 'player-2', name: 'Sigurd', connected: true, ready: true, blockedFavors: [], favors: [] },
     ] },
     match: { state: new Game({ gameId: 'server-match' }).state, events: [] },
   }

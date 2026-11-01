@@ -6,7 +6,7 @@ import FavorPortrait from './FavorPortrait.vue';
 import UiIcon from './UiIcon.vue';
 import TokenIcon from './TokenIcon.vue';
 import { favorSummary } from './favorSummary';
-defineProps<{ id: FavorId; full: boolean; equipped: boolean }>();
+defineProps<{ id: FavorId; full: boolean; equipped: boolean; unavailable?: boolean }>();
 const shortName = (id: FavorId) => FAVOR_CATALOG[id].name.split("'")[0];
 </script>
 <template>
@@ -24,8 +24,9 @@ const shortName = (id: FavorId) => FAVOR_CATALOG[id].name.split("'")[0];
         <dd>{{ t(describeFavorTier(id, tier)) }}</dd>
       </div>
     </dl>
+    <p v-if="unavailable" class="selection-hint">{{ t('Bu oturumda kullandığın tanrıları tekrar seçemezsin.') }}</p>
     <p
-      v-if="full && !equipped"
+      v-else-if="full && !equipped"
       class="selection-hint"
     >
       {{ t("Kuşanmak için önce seçili bir tanrıyı kaldır.") }}

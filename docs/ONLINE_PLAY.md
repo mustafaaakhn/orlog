@@ -23,8 +23,11 @@ npm run dev
 4. Her oyuncu kendi adını ve üç tanrısını seçer; ortak yazı turadan sonra oynar.
 
 Kurallar ve zar sonuçları sunucudadır. Her oyuncu yalnız kendi koltuğuna ait
-komutları gönderebilir. Maç sonunda Yeni oyun odayı koruyup son tanrılar seçili
-olarak hazırlığı açar; iki oyuncunun onayı gerekir.
+komutları gönderebilir. Maç sonunda Yeni oyun odayı koruyup boş tanrı
+hazırlığını açar; iki oyuncunun üç yeni tanrı seçip onaylaması gerekir.
+Her koltuğun bu lobide kullandığı tanrılar yalnız kendisine kilitlidir.
+Sunucu bu listeleri yeniden bağlanmada korur ve yasak tanrılı hazır isteğini
+reddeder. Üç tanrı kalmadığında kişisel havuz yenilenir; yeni oda temiz başlar.
 
 ## Mobil seçim ve onay
 

@@ -13,6 +13,7 @@ import {
   PLAYER_IDS,
   mathRandom,
   randomIndex,
+  randomLoadout,
 } from "../core";
 import type { FavorId, GameOptions, PlayerId } from "../core";
 import { FAVOR_ART_IDS } from "../scene/favorArt";
@@ -78,8 +79,10 @@ watch(locale, (_value, previous) => {
   }
 });
 const loadouts = ref<Record<PlayerId, FavorId[]>>({
-  "player-1": [...(props.rematch?.options.loadouts?.['player-1'] ?? [])],
-  "player-2": [...(props.rematch?.options.loadouts?.['player-2'] ?? DEFAULT_FAVORS)],
+  "player-1": [],
+  "player-2": props.rematch
+    ? props.rematch.opponent.mode === 'computer' ? randomLoadout(props.rematch.blockedFavors['player-2']) : []
+    : [...DEFAULT_FAVORS],
 });
 const readyPlayers = ref<Record<PlayerId, boolean>>({ 'player-1': false, 'player-2': false });
 for (const id of PLAYER_IDS) watch(() => [names.value[id], loadouts.value[id].join(',')], () => { readyPlayers.value[id] = false; }, { flush: 'sync' });
@@ -137,11 +140,18 @@ const local = computed(() => selectedMode.value !== "computer");
 watch(local, (isLocal) => {
   if (!isLocal) {
     editingPlayer.value = "player-1";
-    loadouts.value["player-2"] = [...DEFAULT_FAVORS];
+    loadouts.value["player-2"] = props.rematch
+      ? randomLoadout(props.rematch.blockedFavors['player-2']) : [...DEFAULT_FAVORS];
     selectionError.value = "";
   }
 });
 const currentLoadout = computed(() => loadouts.value[editingPlayer.value]);
+const blockedFor = (id: PlayerId): readonly FavorId[] => room.value
+  ? room.value.players.find(player => player.id === id)?.blockedFavors ?? []
+  : props.rematch?.blockedFavors[id] ?? [];
+const currentBlocked = computed(() => blockedFor(editingPlayer.value));
+const loadoutAllowed = (id: PlayerId) => loadouts.value[id].length === 3 &&
+  !loadouts.value[id].some(favor => blockedFor(id).includes(favor));
 watch(room, (value, old) => {
   if (!value) {
     if (old) { screen.value = "mode"; firstPlayer.value = null; friendMode.value = "join"; }
@@ -152,7 +162,7 @@ watch(room, (value, old) => {
   friendMode.value = ownId.value === "player-1" ? "host" : "join";
   editingPlayer.value = ownId.value;
   for (const player of value.players) {
-    if (player.id !== ownId.value || player.ready || !old) {
+    if (player.id !== ownId.value || player.ready || !old || value.preparationId !== old.preparationId) {
       names.value[player.id] = player.name;
       loadouts.value[player.id] = [...player.favors];
     }
@@ -178,13 +188,13 @@ const valid = computed(() =>
   PLAYER_IDS.every(
     (id) =>
       ((id === "player-2" && !local.value) || names.value[id].trim()) &&
-      loadouts.value[id].length === 3,
+      loadoutAllowed(id),
   ),
 );
 const canContinueGods = computed(() => {
   if (room.value) return props.online.connected.value && !networkBusy.value && room.value.stage === 'gods' &&
-    (ownReady.value || (currentLoadout.value.length === 3 && !!names.value[ownId.value].trim()));
-  return currentLoadout.value.length === 3 &&
+    (ownReady.value || (loadoutAllowed(ownId.value) && !!names.value[ownId.value].trim()));
+  return loadoutAllowed(editingPlayer.value) &&
     ((editingPlayer.value === 'player-2' && !local.value) || !!names.value[editingPlayer.value].trim()) &&
     ((local.value && editingPlayer.value === 'player-1') || valid.value);
 });
@@ -285,6 +295,10 @@ function toggleFavor(id: FavorId) {
   if (!local.value && editingPlayer.value !== "player-1") return;
   selectionError.value = "";
   browsing.value = id;
+  if (currentBlocked.value.includes(id)) {
+    selectionError.value = 'Bu oturumda kullandığın tanrıları tekrar seçemezsin.';
+    return;
+  }
   const index = currentLoadout.value.indexOf(id);
   if (index >= 0) currentLoadout.value.splice(index, 1);
   else if (currentLoadout.value.length < 3) currentLoadout.value.push(id);
@@ -469,7 +483,10 @@ function start() {
       <div class="flow-heading gods-heading">
         <div>
           <h1 tabindex="-1">{{ t("Tanrılarını yanına al.") }}</h1>
-          <p>{{ t("Yirmi tanrıdan üçü seninle masaya oturacak.") }}</p>
+          <p>{{ t(currentBlocked.length
+            ? 'Bu oturumda kullandığın tanrılar kilitli. Rakibinin tanrılarını seçebilirsin.'
+            : rematching ? 'Tanrı havuzu yenilendi. Yeniden üç tanrı seç.'
+            : 'Yirmi tanrıdan üçü seninle masaya oturacak.') }}</p>
         </div>
         <div v-if="local || room" class="player-tabs" :aria-label="t('Tanrılarını seçtiğin oyuncu')">
           <button
@@ -492,15 +509,16 @@ function start() {
               class="god-tile"
               :data-favor-id="id"
               :aria-haspopup="mobileCatalog ? 'dialog' : undefined"
-              :class="{ browsing: browsing === id }"
+              :class="{ browsing: browsing === id, 'is-unavailable': currentBlocked.includes(id) }"
               :aria-pressed="currentLoadout.includes(id)"
-              :aria-disabled="loadoutLocked"
-              :aria-label="t(`${shortName(id)}, ${t(favorSummary(id).label)}${t(currentLoadout.includes(id) ? ', kuşanıldı; kaldır' : currentLoadout.length === 3 ? ', seçim sınırı dolu; gücü incele' : ', kuşan')}`)"
+              :aria-disabled="loadoutLocked || currentBlocked.includes(id)"
+              :aria-label="t(`${shortName(id)}, ${t(favorSummary(id).label)}${t(currentBlocked.includes(id) ? ', bu oturumda kullanıldı; seçilemez' : currentLoadout.includes(id) ? ', kuşanıldı; kaldır' : currentLoadout.length === 3 ? ', seçim sınırı dolu; gücü incele' : ', kuşan')}`)"
               @pointerenter="previewFavor(id)"
               @focus="previewFavor(id)"
               @click="chooseCatalogFavor(id)"
             >
               <FavorPortrait :id="id" />
+              <span v-if="currentBlocked.includes(id)" class="god-unavailable"><UiIcon name="ban" />{{ t('Kullanıldı') }}</span>
               <span v-if="currentLoadout.includes(id)" class="god-equipped"><UiIcon name="check" /><span class="sr-only">{{ t("Kuşanıldı") }}</span></span>
               <span class="god-tile-copy"><span class="god-tile-name">{{ t(shortName(id)) }}</span>
                 <span class="god-tile-power" :data-tone="favorSummary(id).tone"><UiIcon :name="favorSummary(id).icon" /><span>{{ t(favorSummary(id).label) }}</span></span>
@@ -548,7 +566,7 @@ function start() {
               </div>
             </div>
             <section class="god-description" v-if="!mobileCatalog" aria-live="polite">
-              <SetupFavorDetails :id="browsing" :full="currentLoadout.length === 3" :equipped="currentLoadout.includes(browsing)" />
+              <SetupFavorDetails :id="browsing" :full="currentLoadout.length === 3" :equipped="currentLoadout.includes(browsing)" :unavailable="currentBlocked.includes(browsing)" />
             </section>
           </aside>
         </div>
@@ -561,8 +579,8 @@ function start() {
           <button class="text-button" @click="detailOpen = false"><UiIcon name="close" />{{ t('Kapat') }}</button>
         </header>
         <div class="setup-favor-sheet-content">
-          <SetupFavorDetails :id="browsing" :full="currentLoadout.length === 3" :equipped="currentLoadout.includes(browsing)" />
-          <p v-if="selectionError" class="selection-warning" role="alert">{{ t(selectionError) }}</p>
+          <SetupFavorDetails :id="browsing" :full="currentLoadout.length === 3" :equipped="currentLoadout.includes(browsing)" :unavailable="currentBlocked.includes(browsing)" />
+          <p v-if="selectionError && !currentBlocked.includes(browsing)" class="selection-warning" role="alert">{{ t(selectionError) }}</p>
           <p v-else-if="currentLoadout.includes(browsing)" class="setup-favor-equipped"><UiIcon name="check" />{{ t('Kuşanıldı') }}</p>
         </div>
       </dialog>

@@ -8,3 +8,5 @@ export { INITIAL_HEALTH, MAX_HEALTH, MAX_ROLLS, MAX_FAVORS } from './rules'
 export * from './types'
 
 export { majoritySymbols, validFavorInput } from './favors/targets'
+
+export { availableFavors, randomLoadout, nextBlockedFavors } from './favors/loadouts'

@@ -14,7 +14,7 @@ function settle(session: ReturnType<typeof createRollSession>) {
 }
 
 describe('roll session presentation boundary', () => {
-  it('rematches with the current loadouts and alternating starter, resetting resources and rejecting old presentation callbacks', () => {
+  it('rematches with new loadouts and alternating starter, resetting resources and rejecting old presentation callbacks', () => {
     const session = createRollSession()
     session.start({ random: () => 0, firstPlayerId: 'player-2', loadouts: { 'player-1': ['thors-strike'], 'player-2': ['iduns-rejuvenation'] } })
     expect(session.prepareRematch()).toBeNull()
@@ -35,13 +35,17 @@ describe('roll session presentation boundary', () => {
     const ended = session.state.value
     const draft = session.prepareRematch()!
     expect(session.state.value).toBe(ended)
-    expect(draft.loadouts?.['player-1']).toEqual(['thors-strike'])
-    expect(session.start({ ...draft, loadouts: { ...draft.loadouts, 'player-1': ['baldrs-invulnerability'] } })).toBe(true)
+    expect(draft.options.loadouts?.['player-1']).toEqual([])
+    expect(draft.blockedFavors).toEqual({ 'player-1': ['thors-strike'], 'player-2': ['iduns-rejuvenation'] })
+    expect(session.prepareRematch()).toEqual(draft)
+    expect(session.start({ ...draft.options, loadouts: { 'player-1': ['thors-strike'], 'player-2': ['baldrs-invulnerability'] } })).toBe(false)
+    expect(session.state.value).toBe(ended)
+    expect(session.start({ ...draft.options, loadouts: { 'player-1': ['iduns-rejuvenation'], 'player-2': ['thors-strike'] } })).toBe(true)
     const next = session.state.value
     expect(next.gameId).not.toBe(oldId)
     expect([next.round, next.revision, next.firstPlayerId]).toEqual([1, 0, 'player-1'])
-    expect(next.players['player-1'].favors).toEqual(['baldrs-invulnerability'])
-    expect(next.players['player-2'].favors).toEqual(['iduns-rejuvenation'])
+    expect(next.players['player-1'].favors).toEqual(['iduns-rejuvenation'])
+    expect(next.players['player-2'].favors).toEqual(['thors-strike'])
     expect(Object.values(next.players).every(player => player.health === 15 && player.tokens === 0 && player.rollsUsed === 0 && player.dice.every(die => die.faceId === null))).toBe(true)
     expect(session.history.value).toEqual([])
     expect(session.lastEvent.value).toBeNull()

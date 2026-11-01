@@ -7,6 +7,7 @@ export interface RoomPlayer {
   connected: boolean
   ready: boolean
   favors: readonly FavorId[]
+  blockedFavors: readonly FavorId[]
 }
 export interface RoomView {
   code: string

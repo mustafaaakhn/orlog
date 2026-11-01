@@ -283,8 +283,8 @@ toplu kaynak güncellemesi değişmedi. Zar hover/odak vurgusu seçim niyeti ür
 
 ## 30 Ekim — Aynı masada yeniden maç
 
-Maç sonunda Yeni oyun aynı oyuncularla tanrı seçimini açar. Son maçın üç
-tanrısı seçili gelir. Oyuncu değiştirebilir veya doğrudan Hazırım diyebilir.
+Maç sonunda Yeni oyun aynı oyuncularla boş tanrı seçimini açar. Oyuncular
+bu oturumda kendi kullandıkları tanrılar dışından üç yeni tanrı seçer.
 Botta insan hazır verince, arkadaşla iki insan hazır verince yeni maç açılır.
 Tur 1'e, 15 cana, 0 jetona ve atılmamış zarlara dönülür. Önceki maçta ilk
 başlayan oyuncunun karşısı başlar; tekrar yazı tura yapılmaz.
@@ -329,3 +329,19 @@ aynen korunur.
 Altın çerçeveli miğferin normal savunmasına ek 1 jeton verdiği de core ile
 kontrol edilir. Çerçeve ayrı bir yüz değildir. Rehberdeki Thor seviye 1
 örneği bedel ve hasarı doğrudan mevcut katalogdan alır (4 jeton / 2 hasar).
+
+## 1 Kasım — Oyuncuya özel tanrı havuzu
+
+Aynı yerel oturumda veya çevrim içi lobide Yeni oyun ile devam edilirken
+her oyuncunun tamamlanmış maçlarda kuşandığı tanrılar kişisel olarak
+kilitlenir. Kullanılmayan bir güç de kuşanılmışsa kilitlenir. Rakibin
+kuşandıkları, oyuncu kendisi kullanmadığı sürece seçilebilir; iki oyuncu
+aynı yeni tanrıyı da seçebilir. Bot aynı kişisel kısıtlamayı izler.
+
+Geçmiş maçlar birikir. Üç farklı tanrı seçmeye yetecek kullanılmamış tanrı
+kalmadığında yalnız o oyuncunun havuzu yenilenir. Mevcut 20 tanrı ve üçlü
+seçimle altı maçın ardından 18 tanrı kullanılmış olur; yedinci maç öncesinde
+havuz yeniden açılır. Yeni oda veya ana menüden yeni oturum temiz başlar.
+Hazırlığı açıp kapatmak, hazır durumunu geri almak veya yeniden bağlanmak
+kullanım geçmişini silmez ve yeni kullanım eklemez. Bu bir proje oturum
+kuralıdır; maç içi güçlerin bedeli, önceliği veya etkisi değişmez.

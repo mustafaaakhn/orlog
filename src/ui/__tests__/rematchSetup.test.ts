@@ -14,37 +14,39 @@ afterEach(() => vi.unstubAllGlobals())
 const favors: FavorId[] = ['baldrs-invulnerability', 'bragis-verve', 'skadis-hunt']
 const other: FavorId[] = ['thors-strike', 'iduns-rejuvenation', 'vidars-might']
 function verifyChoices(html: string) {
-  expect(html).toContain('Baldr, Savunmayı artır, kuşanıldı; kaldır')
-  expect(html).toContain('Bragi, Ellerden ek jeton, kuşanıldı; kaldır')
-  expect(html).toContain('Skaði, Okları güçlendir, kuşanıldı; kaldır')
+  expect(html).toContain('Baldr, Savunmayı artır, bu oturumda kullanıldı; seçilemez')
+  expect(html).toContain('Bragi, Ellerden ek jeton, bu oturumda kullanıldı; seçilemez')
+  expect(html).toContain('Skaði, Okları güçlendir, bu oturumda kullanıldı; seçilemez')
   expect(html).toContain('Hazırım')
   expect(html).not.toContain('İlk hamle kaderden.')
   expect(html).not.toContain('Oyuna Başla')
 }
 
 describe('rematch loadout review', () => {
-  it.each(['computer', 'local'] as const)('preselects the previous %s loadout and opens directly at gods without marking either human ready', async mode => {
+  it.each(['computer', 'local'] as const)('opens a fresh %s choice with personal restrictions and without marking either human ready', async mode => {
     const online = createOnlineClient({ snapshot() {}, batch() {}, closed() {} })
     const rematch: RematchSetup = {
-      options: { firstPlayerId: 'player-2', loadouts: { 'player-1': favors, 'player-2': other } },
+      options: { firstPlayerId: 'player-2', loadouts: { 'player-1': [], 'player-2': [] } },
+      blockedFavors: { 'player-1': favors, 'player-2': other },
       names: { 'player-1': 'Eivor', 'player-2': 'Sigurd' }, opponent: { mode, difficulty: 'normal' },
     }
     try {
       const html = await renderToString(createSSRApp(MatchSetup, { rematch, online, reduced: false, paused: false, muted: true, volume: 0 }))
       verifyChoices(html)
       expect(html).toContain('Eivor')
-      expect(rematch.options.loadouts?.['player-1']).toEqual(favors)
+      expect(rematch.blockedFavors['player-1']).toEqual(favors)
+      expect(rematch.options.loadouts?.['player-1']).toEqual([])
     } finally { online.dispose() }
   })
 
-  it('prefills an unready online guest from the retained seat on first mount, including reconnect', async () => {
+  it('restores a guest’s accepted new choices and personal restrictions on reconnect', async () => {
     const online = createOnlineClient({ snapshot() {}, batch() {}, closed() {} })
     online.identity.value = { code: '0007', playerId: 'player-2', token: 'test-seat' }
     online.room.value = {
       code: '0007', stage: 'gods', preparationId: 'setup-1', firstPlayerId: 'player-1', revision: 42, waiting: false,
       players: [
-        { id: 'player-1', name: 'Eivor', favors: other, ready: false, connected: true },
-        { id: 'player-2', name: 'Sigurd', favors, ready: false, connected: true },
+        { id: 'player-1', name: 'Eivor', favors, blockedFavors: other, ready: false, connected: true },
+        { id: 'player-2', name: 'Sigurd', favors: other, blockedFavors: favors, ready: false, connected: true },
       ],
     }
     const ready = vi.spyOn(online, 'ready')
@@ -53,7 +55,7 @@ describe('rematch loadout review', () => {
       verifyChoices(html)
       expect(html).toContain('value="Sigurd"')
       expect(ready).not.toHaveBeenCalled()
-      expect(online.room.value.players.every(player => !player.ready)).toBe(true)
+      expect(online.room.value!.players.every(player => !player.ready)).toBe(true)
     } finally { online.dispose() }
   })
 })

@@ -4,7 +4,7 @@ import { io } from 'socket.io-client'
 import type { Socket } from 'socket.io-client'
 import { attachRoomServer } from '../rooms'
 import { DEFAULT_FAVORS } from '../../src/core'
-import type { GameCommand, PlayerId } from '../../src/core'
+import type { FavorId, GameCommand, PlayerId } from '../../src/core'
 import type { ClientEvents, JoinedRoom, MatchUpdate, Reply, RoomView, ServerEvents } from '../../src/network/protocol'
 
 const fixedDice = vi.hoisted(() => ({ value: false }))
@@ -45,11 +45,11 @@ async function setup(options: Parameters<typeof attachRoomServer>[1] = {}) {
   const joined = data<JoinedRoom>(await host.timeout(2000).emitWithAck('room:create'))
   const guestJoined = data<JoinedRoom>(await guest.timeout(2000).emitWithAck('room:join', joined.room.code))
   let initialPreparationId: string | null = null
-  async function play() {
+  async function play(hostFavors: FavorId[] = [...DEFAULT_FAVORS], guestFavors: FavorId[] = [...DEFAULT_FAVORS]) {
     data(await host.emitWithAck('room:start'))
     initialPreparationId = views.get(host)!.preparationId
-    data(await host.emitWithAck('room:ready', { preparationId: views.get(host)!.preparationId!, ready: true, name: 'Kurucu', favors: [...DEFAULT_FAVORS] }))
-    data(await guest.emitWithAck('room:ready', { preparationId: views.get(host)!.preparationId!, ready: true, name: 'Misafir', favors: [...DEFAULT_FAVORS] }))
+    data(await host.emitWithAck('room:ready', { preparationId: views.get(host)!.preparationId!, ready: true, name: 'Kurucu', favors: hostFavors }))
+    data(await guest.emitWithAck('room:ready', { preparationId: views.get(host)!.preparationId!, ready: true, name: 'Misafir', favors: guestFavors }))
     data(await host.emitWithAck('room:toss'))
     data(await host.emitWithAck('room:play'))
     await vi.waitFor(() => expect(matches.has(guest)).toBe(true))
@@ -70,7 +70,17 @@ async function setup(options: Parameters<typeof attachRoomServer>[1] = {}) {
     data(reply)
     await settle()
   }
-  return { host, guest, peer, joined, guestJoined, views, matches, closed, play, settle, command, get initialPreparationId() { return initialPreparationId } }
+  async function finish() {
+    for (let step = 0; step < 150; step++) {
+      const phase = matches.get(host)!.state.phase
+      if (phase.name === 'ended') return
+      if (phase.name === 'roll') await command({ type: phase.step === 'awaiting-roll' ? 'RollDice' : 'ConfirmRoll', playerId: phase.activePlayerId })
+      else if (phase.name === 'favor') await command({ type: 'SkipFavor', playerId: phase.activePlayerId })
+      else throw new Error('Expected an unlocked player phase')
+    }
+    throw new Error('Expected a completed match')
+  }
+  return { host, guest, peer, joined, guestJoined, views, matches, closed, play, settle, command, finish, get initialPreparationId() { return initialPreparationId } }
 }
 
 describe('two-player Socket.IO rooms', () => {
@@ -207,7 +217,8 @@ describe('two-player Socket.IO rooms', () => {
   it('starts exactly one fresh match in the same room, preserving seats and rejecting packets from the previous match', async () => {
     fixedDice.value = true
     const h = await setup()
-    await h.play()
+    const changed: FavorId[] = ['baldrs-invulnerability', 'bragis-verve', 'skadis-hunt']
+    await h.play([...DEFAULT_FAVORS], changed)
     const previousId = h.matches.get(h.host)!.state.gameId
     const previousFirst = h.matches.get(h.host)!.state.firstPlayerId
     const stranger = await h.peer()
@@ -228,19 +239,24 @@ describe('two-player Socket.IO rooms', () => {
     expect(replies.filter(reply => reply.ok)).toHaveLength(1)
     await vi.waitFor(() => expect(h.views.get(h.guest)!.stage).toBe('gods'))
     expect(h.matches.get(h.host)!.state.gameId).toBe(previousId)
-    expect(h.views.get(h.host)!.players.every(player => !player.ready && player.favors.length === 3)).toBe(true)
+    expect(h.views.get(h.host)!.players.every(player => !player.ready && player.favors.length === 0 && player.blockedFavors.length === 3)).toBe(true)
     const editing = data(await h.host.emitWithAck('room:resume', h.joined.session))
     expect(editing.match).toBeNull()
     expect(editing.room).toMatchObject({ stage: 'gods', waiting: false, code: h.joined.room.code })
     expect(editing.room.preparationId).not.toBe(h.initialPreparationId)
     expect((await h.host.emitWithAck('room:ready', { preparationId: h.initialPreparationId!, ready: false })).ok).toBe(false)
-    const changed = ['thors-strike', 'baldrs-invulnerability', 'vidars-might'] as const
+    expect(editing.room.players[0]!.blockedFavors).toEqual(DEFAULT_FAVORS)
+    expect(editing.room.players[1]!.blockedFavors).toEqual(changed)
+    const denied = await h.host.emitWithAck('room:ready', { preparationId: editing.room.preparationId!, ready: true, name: 'Kurucu', favors: [...DEFAULT_FAVORS] })
+    expect(denied.ok).toBe(false)
+    expect(h.views.get(h.host)!.players[0]!.ready).toBe(false)
     data(await h.host.emitWithAck('room:ready', { preparationId: h.views.get(h.host)!.preparationId!, ready: true, name: 'Kurucu', favors: [...changed] }))
     data(await h.host.emitWithAck('room:ready', { preparationId: editing.room.preparationId!, ready: false }))
     expect(h.views.get(h.host)!.players[0]).toMatchObject({ ready: false, favors: changed })
     data(await h.host.emitWithAck('room:ready', { preparationId: editing.room.preparationId!, ready: true, name: 'Kurucu', favors: [...changed] }))
     expect(h.matches.get(h.host)!.state.gameId).toBe(previousId)
     expect((await h.host.emitWithAck('room:ready', { preparationId: h.views.get(h.host)!.preparationId!, ready: true, name: 'Kurucu', favors: [...DEFAULT_FAVORS] })).ok).toBe(false)
+    expect((await h.guest.emitWithAck('room:ready', { preparationId: editing.room.preparationId!, ready: true, name: 'Misafir', favors: [...changed] })).ok).toBe(false)
     data(await h.guest.emitWithAck('room:ready', { preparationId: h.views.get(h.host)!.preparationId!, ready: true, name: 'Misafir', favors: [...DEFAULT_FAVORS] }))
     await vi.waitFor(() => expect(h.matches.get(h.guest)!.state.gameId).not.toBe(previousId))
     expect((await h.host.emitWithAck('room:ready', { preparationId: editing.room.preparationId!, ready: false })).ok).toBe(false)
@@ -273,7 +289,49 @@ describe('two-player Socket.IO rooms', () => {
     const resumed = data(await restored.emitWithAck('room:resume', h.guestJoined.session))
     expect(resumed.session).toEqual(h.guestJoined.session)
     expect(resumed.room.code).toBe(h.joined.room.code)
+    expect(resumed.room.players.map(p => p.blockedFavors)).toEqual([[...DEFAULT_FAVORS], changed])
     expect(resumed.match!.state.gameId).toBe(next.gameId)
+  }, 30000)
+
+  it('keeps cumulative personal bans on the server through rematches and reconnects, with a clean pool in another room', async () => {
+    fixedDice.value = true
+    const h = await setup()
+    const other: FavorId[] = ['baldrs-invulnerability', 'bragis-verve', 'skadis-hunt']
+    await h.play([...DEFAULT_FAVORS], other)
+    await h.finish()
+    data(await h.host.emitWithAck('game:rematch', h.matches.get(h.host)!.state.gameId))
+    let preparationId = h.views.get(h.host)!.preparationId!
+    data(await h.host.emitWithAck('room:ready', { preparationId, ready: true, name: 'Host', favors: other }))
+    data(await h.guest.emitWithAck('room:ready', { preparationId, ready: true, name: 'Guest', favors: [...DEFAULT_FAVORS] }))
+    await h.settle()
+    await h.finish()
+    data(await h.host.emitWithAck('game:rematch', h.matches.get(h.host)!.state.gameId))
+    preparationId = h.views.get(h.host)!.preparationId!
+    for (const player of h.views.get(h.host)!.players) {
+      expect(new Set(player.blockedFavors)).toEqual(new Set([...DEFAULT_FAVORS, ...other]))
+      expect(player.favors).toEqual([])
+    }
+    // Extra client fields cannot clear the authoritative ban, and older games remain locked.
+    for (const favors of [[...DEFAULT_FAVORS], other]) {
+      const forged = { preparationId, ready: true as const, name: 'Changed', favors, blockedFavors: [] }
+      expect((await h.host.emitWithAck('room:ready', forged)).ok).toBe(false)
+      expect(h.views.get(h.host)!.players[0]).toMatchObject({ name: 'Host', ready: false, favors: [] })
+    }
+    const restored = await h.peer()
+    const resumed = data(await restored.emitWithAck('room:resume', h.joined.session))
+    expect(new Set(resumed.room.players[0]!.blockedFavors)).toEqual(new Set([...DEFAULT_FAVORS, ...other]))
+    expect(resumed.match).toBeNull()
+    const available: FavorId[] = ['freyjas-plenty', 'freyrs-gift', 'friggs-sight']
+    data(await restored.emitWithAck('room:ready', { preparationId, ready: true, name: 'Host', favors: available }))
+    data(await h.guest.emitWithAck('room:ready', { preparationId, ready: true, name: 'Guest', favors: available }))
+    await vi.waitFor(() => expect(h.views.get(h.guest)!.stage).toBe('playing'))
+    expect(h.matches.get(h.guest)!.state.players['player-1'].favors).toEqual(available)
+    const freshHost = await h.peer(), freshGuest = await h.peer()
+    const fresh = data(await freshHost.emitWithAck('room:create'))
+    data(await freshGuest.emitWithAck('room:join', fresh.room.code))
+    data(await freshHost.emitWithAck('room:start'))
+    expect(h.views.get(freshHost)!.players.every(p => p.blockedFavors.length === 0)).toBe(true)
+    data(await freshHost.emitWithAck('room:ready', { preparationId: h.views.get(freshHost)!.preparationId!, ready: true, name: 'Fresh', favors: [...DEFAULT_FAVORS] }))
   }, 30000)
 
   it('runs automatic third-roll and battle transitions with both renderers hidden and no presentation receipts', async () => {

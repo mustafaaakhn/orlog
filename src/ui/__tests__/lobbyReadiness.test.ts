@@ -10,7 +10,7 @@ const cleanups: (() => void)[] = []
 afterEach(() => { cleanups.splice(0).forEach(fn => fn()); document.body.innerHTML = '' })
 async function mount(ready = true) {
   const room = shallowRef<RoomView>({ code: '1234', stage: 'gods', preparationId: 'setup-1', firstPlayerId: null, revision: 0, waiting: false,
-    players: ['player-1', 'player-2'].map((id, i) => ({ id: id as 'player-1' | 'player-2', ready: i === 0 && ready, connected: true, name: i ? 'Sigurd' : 'Eivor', favors: [...DEFAULT_FAVORS] })) })
+    players: ['player-1', 'player-2'].map((id, i) => ({ id: id as 'player-1' | 'player-2', ready: i === 0 && ready, connected: true, name: i ? 'Sigurd' : 'Eivor', blockedFavors: [], favors: [...DEFAULT_FAVORS] })) })
   const busy = shallowRef(false), connected = shallowRef(true), error = shallowRef('')
   const unready = vi.fn(() => { busy.value = true }), submit = vi.fn(() => { busy.value = true })
   const online = { room, busy, connected, error, bothConnected: shallowRef(true), identity: shallowRef({ code: '1234', playerId: 'player-1', token: 'seat' }), ready: submit, unready } as unknown as OnlineClient

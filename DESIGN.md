@@ -130,7 +130,7 @@ mevcut levha menüsü ve Devam et eylemi korunur.
 
 Tek ana eylem görünür tutulur. Geniş masada eylem altta, kısa yatay ekranda
 sağdadır. Yardım/ayar/sonuç pencereleri kendi içlerinde kayar. Sonuç penceresi
-son sunum tamamlanınca açılır; Yeni oyun son tanrıları seçili getirir.
+son sunum tamamlanınca açılır; Yeni oyun kişisel tanrı kilitleriyle boş seçim açar.
 
 ## Hareket ve erişilebilirlik
 
@@ -282,3 +282,13 @@ resmin üzerine metin bindirilmez, portre dikdörtgen karta gerilmez. Geniş
 masaüstü beş, orta ekran dört, 1024–1279px ekran üç sütundur. Kısa dizüstünde
 başlık ve portreler ölçülü küçülür; en az 44px kontroller korunur. Mobil
 iki sütun ve alttan açılan bilgi kartı aynı akışı sürdürür.
+
+## Yeni maçta kişisel tanrı kilitleri
+
+Kullanılmış tanrılar katalogda soluk portre, kesik çerçeve, yasak simgesi ve
+Kullanıldı etiketiyle belirtilir. İnceleme açık kalır; dokunma veya klavye
+seçimi tanrıyı kuşanamaz. Masaüstü sağ paneli ve mobil bilgi kartı aynı
+seçilememe nedenini gösterir. Koltuk değişince kilitler o oyuncuya geçer.
+Üç uygun seçim tamamlanana kadar Hazırım kullanılamaz. Havuz yenilendiğinde
+başlık altındaki açıklama bunu bildirir. Bot kendi uygun havuzundan üç
+farklı tanrıyı otomatik seçer; insanlar boş seçimle başlar.

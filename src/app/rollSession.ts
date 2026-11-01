@@ -1,7 +1,8 @@
 import { shallowRef } from 'vue'
 import { applyResourceEvent, applyResourceProgress, resourceSteps } from '../presentation/resources'
-import { Game } from '../core'
-import type { DieId, GameCommand, GameEvent, GameState, GameOptions } from '../core'
+import { DEFAULT_FAVORS, Game, nextBlockedFavors, PLAYER_IDS } from '../core'
+import type { RematchPreparation } from './rematchSetup'
+import type { DieId, FavorId, GameCommand, GameEvent, GameState, GameOptions, PlayerId } from '../core'
 
 export interface PresentationBatch {
   readonly id: number
@@ -15,6 +16,7 @@ export interface PresentationBatch {
 export function createRollSession(options: GameOptions = {}) {
   let matchSequence = 0
   let game = new Game(options)
+  let usedFavors: Record<PlayerId, FavorId[]> = { 'player-1': [], 'player-2': [] }
   let matchOptions = options
   let initialFirstPlayer = game.state.firstPlayerId
   let appliedSequence = 0
@@ -70,8 +72,21 @@ export function createRollSession(options: GameOptions = {}) {
     pending.value = null
     remote?.settled(state.value.revision)
   }
+  function rematchRestrictions(): Record<PlayerId, FavorId[]> {
+    return {
+      'player-1': nextBlockedFavors(usedFavors['player-1'], state.value.players['player-1'].favors),
+      'player-2': nextBlockedFavors(usedFavors['player-2'], state.value.players['player-2'].favors),
+    }
+  }
   function start(nextOptions: GameOptions) {
     if (pending.value) return false
+    const restrictions: Record<PlayerId, FavorId[]> = !remote && state.value.phase.name === 'ended'
+      ? rematchRestrictions() : { 'player-1': [], 'player-2': [] }
+    if (PLAYER_IDS.some(id => (nextOptions.loadouts?.[id] ?? DEFAULT_FAVORS).some(favor => restrictions[id].includes(favor)))) {
+      error.value = 'Bu oturumda kullandığın tanrıları tekrar seçemezsin.'
+      return false
+    }
+    usedFavors = restrictions
     remote = null
     remoteState = null
     matchOptions = nextOptions
@@ -131,12 +146,15 @@ export function createRollSession(options: GameOptions = {}) {
       history.value = [...history.value, event].slice(-120)
     },
     start,
-    prepareRematch(): GameOptions | null {
+    prepareRematch(): RematchPreparation | null {
       if (remote || pending.value || state.value.phase.name !== 'ended') return null
       return {
-        ...matchOptions,
-        firstPlayerId: initialFirstPlayer === 'player-1' ? 'player-2' : 'player-1',
-        loadouts: { 'player-1': [...state.value.players['player-1'].favors], 'player-2': [...state.value.players['player-2'].favors] },
+        options: {
+          ...matchOptions,
+          firstPlayerId: initialFirstPlayer === 'player-1' ? 'player-2' : 'player-1',
+          loadouts: { 'player-1': [], 'player-2': [] },
+        },
+        blockedFavors: rematchRestrictions(),
       }
     },
     dispatch,
@@ -195,6 +213,7 @@ export function createRollSession(options: GameOptions = {}) {
       remoteState = null
       game = new Game({ ...options, gameId: `local-match-${++matchSequence}` })
       matchOptions = options
+      usedFavors = { 'player-1': [], 'player-2': [] }
       initialFirstPlayer = game.state.firstPlayerId
       appliedSequence = 0
       contactSequence = 0

@@ -14,7 +14,7 @@ async function mount() {
   const desktop = window.matchMedia('(min-width: 1024px)')
   vi.spyOn(window, 'matchMedia').mockImplementation(query => query.includes('max-width: 600px') ? media : desktop)
   const room = shallowRef<RoomView>({ code: '1234', stage: 'gods', preparationId: 'setup-1', firstPlayerId: null, revision: 0, waiting: false,
-    players: ['player-1', 'player-2'].map((id, i) => ({ id: id as 'player-1' | 'player-2', ready: false, connected: true, name: i ? 'Sigurd' : 'Eivor', favors: [...DEFAULT_FAVORS] })) })
+    players: ['player-1', 'player-2'].map((id, i) => ({ id: id as 'player-1' | 'player-2', ready: false, connected: true, name: i ? 'Sigurd' : 'Eivor', blockedFavors: [], favors: [...DEFAULT_FAVORS] })) })
   const ready = vi.fn(), busy = shallowRef(false)
   const online = { room, busy, connected: shallowRef(true), error: shallowRef(''), bothConnected: shallowRef(true),
     identity: shallowRef({ code: '1234', playerId: 'player-1', token: 'seat' }), ready } as unknown as OnlineClient

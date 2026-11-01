@@ -153,10 +153,10 @@ async function rematch() {
     await online.rematch(state.value.gameId);
     return;
   }
-  const options = session.prepareRematch();
-  if (!options) return;
+  const preparation = session.prepareRematch();
+  if (!preparation) return;
   audio.stopEffects();
-  rematchSetup.value = { options, names: { ...names.value }, opponent: { ...opponent.value } };
+  rematchSetup.value = { ...preparation, names: { ...names.value }, opponent: { ...opponent.value } };
   resultOpen.value = false;
   sceneReady.value = false;
   overlay.value = null;

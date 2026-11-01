@@ -402,3 +402,19 @@ bilgisi ve güç seçimi mevcut `MobileFavorPanel` üzerinden yürür.
 Hazırlık kataloğunda `SetupFavorDetails` masaüstü açıklaması ve mobil native
 `dialog` kartı için tek içerik kaynağıdır. Mobil kartın kapanması yalnız
 incelemeyi kapatır; tanrı seçimi veya hazır komutu üretmez.
+
+## Maç serisinde kişisel tanrı kısıtlaması
+
+Saf `core/favors/loadouts` kullanılabilir tanrıları, tekrarsız bot seçimini
+ve üç tanrı kalmadığında havuz yenilemeyi ortak uygular. Maç içi Game durumu
+ve olayları değişmez. Yerelde `rollSession` geçmişi tutar; `prepareRematch`
+boş seçenekler ve oyuncu bazlı `blockedFavors` döndürür. Hazırlık salt okunur;
+tekrar açılması geçmişi ilerletmez. `start` bitmiş maçtan yeni maça geçerken
+aynı geçmişten kısıtlamayı yeniden hesaplayıp doğrular. `restart` geçmişi siler.
+
+Çevrim içi sunucu her koltukta `blockedFavors` tutar; tamamlanmış maçın
+`game:rematch` geçişi bunu ilerletip eski kuşanımı temizler. `RoomPlayer`
+aynı alanı snapshot ve yayınlarda taşır. `room:ready` yalnız yetkili koltuğun
+listesini kontrol eder; istemcinin bildirdiği kısıtlamalara güvenmez.
+Hazır geri alma ve reconnect listeleri değiştirmez. `MatchSetup` bu ortak
+veriyi okur; yeni hazırlık kimliğinde kendi eski taslağını da temizler.

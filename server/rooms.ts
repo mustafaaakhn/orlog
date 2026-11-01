@@ -5,7 +5,7 @@ import type { Server as HttpServer } from 'node:http'
 import type { Http2SecureServer } from 'node:http2'
 import { Server } from 'socket.io'
 import type { Socket } from 'socket.io'
-import { Game, PLAYER_IDS } from '../src/core'
+import { Game, nextBlockedFavors, PLAYER_IDS } from '../src/core'
 import { isFavorId } from '../src/core/favors/catalog'
 import type { GameCommand, GameEvent, GameState, PlayerId } from '../src/core'
 import type { Ack, ClientEvents, JoinedRoom, RoomPlayer, RoomSession, RoomStage, RoomView, ServerEvents } from '../src/network/protocol'
@@ -42,7 +42,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
   function view(room: Room): RoomView {
     return {
       code: room.code, stage: room.stage, preparationId: room.preparationId, firstPlayerId: room.firstPlayerId,
-      players: room.seats.map(({ id, name, connected, ready, favors }) => ({ id, name, connected, ready, favors: [...favors] })),
+      players: room.seats.map(({ id, name, connected, ready, favors, blockedFavors }) => ({ id, name, connected, ready, favors: [...favors], blockedFavors: [...blockedFavors] })),
       revision: room.game?.state.revision ?? 0, waiting: room.waiting,
     }
   }
@@ -179,7 +179,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       const code = createRoomCode(rooms)
       if (code === null) { ack(failure('Odalar şu an dolu. Biraz sonra yeniden dene.')); return }
       const room: Room = { code, stage: 'lobby', preparationId: null, seats: [], firstPlayerId: null, game: null, waiting: false, presented: new Set(), updatedAt: Date.now() }
-      const seat: Seat = { id: 'player-1', token: randomUUID(), name: 'Oyuncu I', connected: true, ready: false, favors: [], socketId: null, disconnectedAt: null, visible: true }
+      const seat: Seat = { id: 'player-1', token: randomUUID(), name: 'Oyuncu I', connected: true, ready: false, favors: [], blockedFavors: [], socketId: null, disconnectedAt: null, visible: true }
       room.seats.push(seat)
       rooms.set(code, room)
       ack({ ok: true, data: bind(socket, room, seat) })
@@ -191,7 +191,7 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       const room = isRoomCode(normalized) ? rooms.get(normalized) : undefined
       if (!room) { ack(failure('Bu kodla bir oda bulunamadı.')); return }
       if (room.stage !== 'lobby' || room.seats.length >= 2) { ack(failure('Bu oda dolu veya oyun başlamış.')); return }
-      const seat: Seat = { id: 'player-2', token: randomUUID(), name: 'Oyuncu II', connected: true, ready: false, favors: [], socketId: null, disconnectedAt: null, visible: true }
+      const seat: Seat = { id: 'player-2', token: randomUUID(), name: 'Oyuncu II', connected: true, ready: false, favors: [], blockedFavors: [], socketId: null, disconnectedAt: null, visible: true }
       room.seats.push(seat)
       ack({ ok: true, data: bind(socket, room, seat) })
     })
@@ -222,6 +222,8 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       if (room.game && !connected(room)) return failure('Hazır olmak için iki oyuncu da bağlı olmalı.')
       if (typeof request.name !== 'string' || !request.name.trim() || request.name.trim().length > 28 ||
         !Array.isArray(request.favors) || request.favors.length !== 3 || new Set(request.favors).size !== 3 || !request.favors.every(isFavorId)) return failure('Bir oyuncu adı ve üç farklı tanrı seç.')
+      if (request.favors.some(id => seat.blockedFavors.includes(id)))
+        return failure('Bu oturumda kullandığın tanrıları tekrar seçemezsin.')
       if (seat.ready) {
         return seat.name === request.name.trim() && seat.favors.every((id, i) => id === request.favors[i])
           ? success() : failure('Tanrılarını değiştirmek için önce Hazır değilim seç.')
@@ -251,7 +253,11 @@ export function attachRoomServer(http: HttpServer | Http2SecureServer, options: 
       room.firstPlayerId = room.firstPlayerId === 'player-1' ? 'player-2' : 'player-1'
       room.stage = 'gods'
       room.preparationId = randomUUID()
-      room.seats.forEach(seat => { seat.ready = false })
+      room.seats.forEach(seat => {
+        seat.blockedFavors = nextBlockedFavors(seat.blockedFavors, room.game!.state.players[seat.id].favors)
+        seat.favors = []
+        seat.ready = false
+      })
       publish(room)
       return success()
     })(ack))

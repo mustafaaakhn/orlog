@@ -2243,5 +2243,25 @@
     "Battle",
     "Combat",
     "Kampf"
+  ],
+  "Bu oturumda kullandığın tanrıları tekrar seçemezsin.": [
+    "You cannot choose gods you have already used in this session.",
+    "Tu ne peux pas choisir des dieux déjà utilisés pendant cette session.",
+    "Du kannst Götter, die du in dieser Sitzung bereits verwendet hast, nicht erneut wählen."
+  ],
+  "Bu oturumda kullandığın tanrılar kilitli. Rakibinin tanrılarını seçebilirsin.": [
+    "Gods you have used in this session are locked. You can choose your opponent’s gods.",
+    "Les dieux que tu as utilisés sont verrouillés. Tu peux choisir ceux de ton adversaire.",
+    "Deine bereits verwendeten Götter sind gesperrt. Du kannst die Götter deines Gegners wählen."
+  ],
+  "Tanrı havuzu yenilendi. Yeniden üç tanrı seç.": [
+    "The god pool has been renewed. Choose three gods again.",
+    "Le choix des dieux a été renouvelé. Choisis à nouveau trois dieux.",
+    "Alle Götter stehen wieder zur Verfügung. Wähle erneut drei Götter."
+  ],
+  ", bu oturumda kullanıldı; seçilemez": [
+    ", already used in this session; unavailable",
+    ", déjà utilisé pendant cette session ; indisponible",
+    ", in dieser Sitzung bereits verwendet; nicht verfügbar"
   ]
 }
