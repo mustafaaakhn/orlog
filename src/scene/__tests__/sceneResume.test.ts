@@ -16,7 +16,7 @@ vi.mock('@tresjs/core', () => ({
 vi.mock('../board', () => ({ createBoard: () => {
   const board = { object: new Group(), dice: new Map(), syncDice: spies.syncDice,
     syncResources: vi.fn(), favorTargets: () => [], setNarrow: vi.fn(), setDiceReadability: vi.fn(),
-    highlightDie: vi.fn(), highlightFavor: vi.fn(), dispose: spies.dispose }
+    highlightDie: vi.fn(), highlightFavor: vi.fn(), tokenTargets: () => [], highlightTokens: vi.fn(), dispose: spies.dispose }
   spies.board(board)
   return board
 } }))
@@ -35,7 +35,7 @@ async function mount() {
   const app = createApp({ render: () => h(TableScene, { state: state.value, batch: batch.value,
     background: background.value, paused: background.value, viewerId: 'player-1',
     audio: { event: vi.fn() } as unknown as AudioPort, speed: 1, reduced: true, quality: 'low',
-    highlightedDie: null, highlightedFavor: null, frameInsets: { top: 0, bottom: 0, left: 0, right: 0 } }) })
+    highlightedDie: null, highlightedFavor: null, highlightedTokens: null, frameInsets: { top: 0, bottom: 0, left: 0, right: 0 } }) })
   app.config.warnHandler = () => {} // Render the Three primitive host tags without a WebGL context.
   app.mount(root); unmounts.push(() => app.unmount()); await nextTick()
   return { game, state, background, batch }

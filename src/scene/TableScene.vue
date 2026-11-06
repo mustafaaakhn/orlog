@@ -24,6 +24,7 @@ import type { DieId, GameState, GameEvent, PlayerId } from "../core";
 
 import type { SceneDieTarget } from "./dieTargets";
 import { projectDiceTargets } from "./projectDiceTargets";
+import { projectTokenTargets } from './projectTokenTargets';
 import { frameTableCamera, isMobileTableView } from './tableCamera';
 import type { TableInsets } from './tableCamera';
 import { eventFocusPoints, collectionFocusPoints } from "./eventFocus";
@@ -38,6 +39,7 @@ const props = defineProps<{
   quality: string;
   speed: number;
   highlightedDie: DieId | null;
+  highlightedTokens: PlayerId | null;
   highlightedFavor: { playerId: PlayerId; favorId: import("../core").FavorId } | null;
   viewerId: PlayerId;
   state: GameState;
@@ -52,6 +54,7 @@ const emit = defineEmits<{
   failed: [];
   targets: [targets: SceneDieTarget[]];
   favors: [targets: import("./dieTargets").SceneFavorTarget[]];
+  tokens: [targets: import('./dieTargets').SceneTokenTarget[]];
   cue: [cue: PresentationCue | null];
   collected: [ids: DieId[]];
   seatTurn: [player: PlayerId | null];
@@ -262,6 +265,7 @@ watch(() => props.state, state => {
   }
   playback?.resources(state);
   if (!props.batch && state.revision === 0) playback?.sync(state);
+  publishTargets();
 });
 watch(() => props.batch, async batch => {
   if (sceneClosed || props.background || batch !== props.batch) return;
@@ -302,8 +306,10 @@ const seatTurn = createSeatTurn(props.viewerId, {
     if (seatTurning) {
       board.highlightDie(null);
       board.highlightFavor(null, null);
+      board.highlightTokens(null);
       emit('targets', []);
       emit('favors', []);
+      emit('tokens', []);
     }
     emit('seatTurn', player);
     if (!seatTurning) publishTargets();
@@ -318,6 +324,7 @@ function publishTargets() {
   board.setDiceReadability(!props.batch, sizes.width.value <= 600 || (sizes.height.value <= 500 && sizes.width.value > sizes.height.value));
   board.object.updateMatrixWorld(true);
   camera.updateMatrixWorld(true);
+  if (!mobile) emit('tokens', projectTokenTargets(board.tokenTargets(), camera, sizes.width.value, sizes.height.value));
   const targets = projectDiceTargets(board.dice, camera, sizes.width.value, sizes.height.value, {
     mobile, presenting: !!props.batch, insets: props.frameInsets, event: visualEvent,
     concealed: concealedDice, finished: finishedDice,
@@ -366,6 +373,7 @@ watch(
 );
 
 watch(() => props.highlightedDie, value => board.highlightDie(value));
+watch(() => props.highlightedTokens, value => board.highlightTokens(value));
 watch(() => props.highlightedFavor, value => board.highlightFavor(value?.playerId ?? null, value?.favorId ?? null));
 const raycaster = new Raycaster();
 let pointer: { x: number; y: number; id: number } | undefined;

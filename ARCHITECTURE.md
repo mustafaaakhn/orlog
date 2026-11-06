@@ -71,6 +71,17 @@ etkileşim yeniden dener; gizli sekme sesi duraklatır. HTML5 oynatma isteği
 tamamlanana kadar parça kimliği ve bekleyen istek korunur; yükleme callback’leri
 aynı parçayı tekrar başlatamaz. Duraklatılan parça aynı ses kimliğiyle sürer.
 
+## Masaüstü jeton incelemesi
+
+`SceneTokenControls`, gerçek jeton gruplarının `projectTokenTargets` ile
+çıkarılan ekran sınırlarında en az 44px hedef sunar. Sınırlar koltuk dönüşünü,
+jeton sayısıyla büyüyen yığını ve rezerv ölçeğini izler. Fare/klavye incelemesi
+yalnız ilgili `InstancedMesh` malzemesini vurgular; konum, fizik ve oyun komutu
+üretmez. Sayı mevcut sunum `state.players[id].tokens` değeridir; bekleyen
+batch'in nihai kaynağını okumaz. Tooltip Escape ile kapanır; sunum, arka plan,
+koltuk dönüşü ve mobil düzende hedef/vurgu temizlenir. Mobil kaynak satırları
+mevcut davranışını korur.
+
 ## Mobil güç paneli
 
 `MobileFavorPanel`, `App` içindeki mevcut sunum `state` ve `viewerId`

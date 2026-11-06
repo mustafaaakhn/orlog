@@ -26,6 +26,13 @@ Maç tek viewport içindedir: oyuncu yakında, rakip karşıda; her koltuğun ke
 haznesi, can taşları ve üç tanrı levhası vardır. Kaynaklar fiziksel taş ve
 jetonlarla gösterilir. Sayısal durum ekran okuyucu metninde de korunur.
 
+Masaüstünde kendi veya rakibin jeton yığınına fareyle gelmek ya da klavyeyle
+odaklanmak yalnız o yığını açık altınla vurgular. Hemen üstünde **Senin
+jetonların** / **Rakibin jetonları**, jeton simgesi ve tam sayı gösterilir.
+Sıfır ve büyük sayılar kısaltılmaz. İşaretçi bilgi alanına taşındığında bilgi
+açık kalır; alandan ayrılma veya Escape kapatır. Atış/savaş, koltuk dönüşü ve
+arka plana geçişte inceleme kapanır. Mobilde mevcut kaynak satırı kullanılır.
+
 Kullanılabilir genişlik 600px veya altındaysa ya da yatay ekranın yüksekliği
 500px veya altındaysa, rakibin adı/canı/jetonu üstte, oyuncununkiler altta
 kompakt satırlarda da gösterilir. Can kalp, jeton masadaki altınla aynı ikon

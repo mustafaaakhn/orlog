@@ -27,6 +27,8 @@ import { inspectFavor as inspect, leaveFavor } from '../ui/favorInspection';
 import type { FavorInspection } from '../ui/favorInspection';
 import type { SceneFavorTarget } from "./dieTargets";
 import SceneDiceControls from "../ui/SceneDiceControls.vue";
+import SceneTokenControls from '../ui/SceneTokenControls.vue';
+import type { SceneTokenTarget } from './dieTargets';
 import { useTableInsets } from './useTableInsets';
 import { isMobileTableView } from './tableCamera';
 import type { SceneDieTarget } from "./dieTargets";
@@ -71,6 +73,7 @@ function seatTurn(player: PlayerId | null) {
 }
 const targets = ref<SceneDieTarget[]>([]);
 const favors = ref<SceneFavorTarget[]>([]);
+const tokens = ref<SceneTokenTarget[]>([]);
 const inspection = ref<FavorInspection>({ target: null, pinned: false });
 const menuFavor = computed(() => inspection.value.target);
 const menuPinned = computed(() => inspection.value.pinned);
@@ -97,9 +100,11 @@ watch([() => props.batch, () => props.paused, () => props.favorPlayer, () => pro
 });
 const highlightedDie = ref<DieId | null>(null);
 const highlightedFavor = ref<SceneFavorTarget | null>(null);
+const highlightedTokens = ref<PlayerId | null>(null);
 watch([() => props.batch, () => props.paused, turningSeat, mobileRendering], () => {
   highlightedFavor.value = null;
   highlightedDie.value = null;
+  highlightedTokens.value = null;
 });
 const cue = ref<PresentationCue | null>(null);
 const collected = ref<DieId[]>([]);
@@ -246,6 +251,7 @@ onErrorCaptured(() => {
         :quality="quality"
         :speed="speed"
         :highlighted-favor="highlightedFavor"
+        :highlighted-tokens="!background && !batch && !paused && !turningSeat && status === 'ready' ? highlightedTokens : null"
         :highlighted-die="!background && !batch && !paused && !blocked && !turningSeat && status === 'ready' ? highlightedDie : null"
         :viewer-id="viewerId ?? 'player-1'"
         :state="state"
@@ -261,8 +267,11 @@ onErrorCaptured(() => {
         @failed="failed"
         @targets="targets = $event"
         @favors="favors = $event"
+        @tokens="tokens = $event"
       />
     </TresCanvas>
+    <SceneTokenControls v-if="status === 'ready' && !mobileRendering && !background && !batch && !paused && !turningSeat"
+      :targets="tokens" :state="state" :viewer-id="viewerId ?? 'player-1'" @highlight="highlightedTokens = $event" />
     <SceneFavorControls v-if="status === 'ready' && !mobileRendering && !batch && !paused && !turningSeat" :targets="favors" :active-player="favorPlayer" :pinned-target="menuPinned ? menuFavor : null" @highlight="highlightFavor" @inspect="inspectFavor" />
     <section v-if="!mobileRendering && menuFavor && status === 'ready' && !batch && !paused" ref="favorMenu"
       id="table-favor-menu" class="table-favor-menu" :class="{ 'is-preview': !menuPinned }" :role="menuPinned ? 'dialog' : 'region'" :aria-label="t(menuPinned ? 'Tanrı gücü seçimi' : 'Tanrı bilgileri')" tabindex="-1">

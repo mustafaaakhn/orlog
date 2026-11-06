@@ -37,3 +37,11 @@ export interface SceneFavorTarget {
   x: number
   y: number
 }
+
+export interface SceneTokenTarget {
+  playerId: import('../core').PlayerId
+  x: number
+  y: number
+  width: number
+  height: number
+}

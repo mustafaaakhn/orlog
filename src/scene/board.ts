@@ -351,6 +351,8 @@ export function createBoard(invalidate: () => void = () => {}, maxAnisotropy = 4
   const flatParts = plateParts.map(part => part.index ? part.toNonIndexed() : part);
   const tokenShape = geometry(mergeGeometries(flatParts)!);
   const gold = material({ color: '#edbd55', metalness: 0.28, roughness: 0.42, map: brass.map, emissive: '#8a5815', emissiveIntensity: 0.14 });
+  const inspectedGold = material({ color: '#ffe3a0', metalness: .2, roughness: .38, map: brass.map, emissive: '#d8ab48', emissiveIntensity: .55 });
+  let inspectedTokens: PlayerId | null = null;
   flatParts.forEach(part => part.dispose());
   plateParts.forEach(part => part.dispose());
   const tokenMeshes: InstancedMesh[] = [];
@@ -389,6 +391,7 @@ export function createBoard(invalidate: () => void = () => {}, maxAnisotropy = 4
     root.add(stones);
     stoneGroups.push(stones);
     const tokens = new Group();
+    tokens.userData.playerId = player;
     tokens.position.set(...seatPosition(player, resourceLayout(false).tokenX, 0, resourceLayout(false).tokenZ));
     tokens.rotation.y = playerAngle(player);
     root.add(tokens);
@@ -581,6 +584,17 @@ export function createBoard(invalidate: () => void = () => {}, maxAnisotropy = 4
     },
     tokenPosition,
     tokenScale,
+    tokenTargets() {
+      tokenMeshes.forEach(plates => plates.computeBoundingBox());
+      return tokenGroups;
+    },
+    highlightTokens(player: PlayerId | null) {
+      inspectedTokens = player;
+      tokenMeshes.forEach((plates, index) => {
+        plates.material = (index === 0 ? 'player-1' : 'player-2') === player ? inspectedGold : gold;
+      });
+      invalidate();
+    },
     totem(playerId: PlayerId, favorId: string) {
       const index = Math.max(0, loadouts[playerId].indexOf(favorId as FavorId));
       return totemGroups[(playerId === "player-1" ? 0 : 3) + index]!;
@@ -675,7 +689,7 @@ export function createBoard(invalidate: () => void = () => {}, maxAnisotropy = 4
           if (plates.instanceMatrix.count < player.tokens) {
             group.remove(plates);
             plates.dispose();
-            plates = new InstancedMesh(tokenShape, gold, Math.max(16, player.tokens * 2));
+            plates = new InstancedMesh(tokenShape, inspectedTokens === player.id ? inspectedGold : gold, Math.max(16, player.tokens * 2));
             plates.castShadow = plates.receiveShadow = true;
             tokenMeshes[index] = plates;
             group.add(plates);
