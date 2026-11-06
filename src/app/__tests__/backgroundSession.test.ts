@@ -3,6 +3,22 @@ import { Game } from '../../core'
 import { createRollSession } from '../rollSession'
 
 describe('background authoritative presentation', () => {
+  it('settles the last hidden network packet before focus returns, without waiting for its drain microtask', () => {
+    const game = new Game({ gameId: 'returning-remote', random: () => .35 })
+    const session = createRollSession()
+    const port = { dispatch: vi.fn(() => true), settled: vi.fn() }
+    session.setBackground(true)
+    session.startRemote(game.state, port)
+    session.setBackground(true)
+    const roll = game.dispatch({ type: 'RollDice', playerId: 'player-1' })
+    if (!roll.ok) throw new Error('expected roll')
+    session.receive(roll.state, roll.events)
+    session.setBackground(false)
+    expect(session.pending.value).toBeNull()
+    expect(session.state.value).toBe(roll.state)
+    expect(port.settled.mock.calls).toEqual([[0], [1]])
+    expect(session.history.value).toEqual(roll.events)
+  })
   it('finishes an in-flight local roll and rejects its stale visual callbacks', async () => {
     const session = createRollSession({ random: () => 0.35 })
     session.dispatch({ type: 'RollDice', playerId: 'player-1' })

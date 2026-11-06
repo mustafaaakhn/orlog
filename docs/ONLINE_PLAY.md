@@ -55,6 +55,9 @@ açılır. Kaybolmuş kabul cevabı komutun tekrar gönderilmesine yol açmaz.
 - Çoklu sunucu, hesap, kalıcı maç geçmişi ve genel eşleştirme bulunmaz.
 - Gizli sekme veya açık yardımcı pencere diğer oyuncuyu sunum onayıyla bekletmez;
   insan oyuncunun kendi hamlesini vermesi gerekir.
+- Chrome'dan başka bir uygulamaya veya sekmeye geçip dönüldüğünde arka plandaki
+  son oyun paketi hemen tamamlanır, sunum onayı gönderilir ve mevcut masa güncel
+  zarlarla çizilir. Odak ve ağ verisinin birlikte gelmesi yeni atış/tur bekletmez.
 
 ## Hazırlığı geri alma
 

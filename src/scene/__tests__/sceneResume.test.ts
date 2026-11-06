@@ -66,4 +66,34 @@ describe('table return from background', () => {
     expect(spies.invalidate).toHaveBeenCalled()
     expect(spies.board).toHaveBeenCalledTimes(1)
   })
+  it('synchronizes dice when the latest network state and focus return in the same render', async () => {
+    const m = await mount()
+    m.background.value = true; await nextTick()
+    const result = m.game.dispatch({ type: 'RollDice', playerId: 'player-1' })
+    if (!result.ok) throw new Error('expected roll')
+    spies.syncDice.mockClear()
+    // A suspended browser can deliver its queued network state together with
+    // focus. The background watcher must read the complete new set of props.
+    m.state.value = result.state
+    m.background.value = false
+    await nextTick()
+    expect(spies.syncDice).toHaveBeenCalledWith(result.state)
+    expect(spies.board).toHaveBeenCalledTimes(1)
+  })
+  it('does not restart a retired batch when focus and its settled snapshot arrive together', async () => {
+    const m = await mount()
+    spies.play.mockImplementation(() => new Promise<void>(() => {}))
+    const result = m.game.dispatch({ type: 'RollDice', playerId: 'player-1' })
+    if (!result.ok) throw new Error('expected roll')
+    m.batch.value = { id: 1, revision: result.state.revision, state: result.state, events: result.events }
+    await nextTick(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve()
+    m.background.value = true; await nextTick()
+    spies.play.mockClear(); spies.syncDice.mockClear()
+    m.state.value = result.state
+    m.batch.value = null
+    m.background.value = false
+    await nextTick(); await Promise.resolve(); await Promise.resolve(); await Promise.resolve()
+    expect(spies.syncDice).toHaveBeenCalledWith(result.state)
+    expect(spies.play).not.toHaveBeenCalled()
+  })
 })

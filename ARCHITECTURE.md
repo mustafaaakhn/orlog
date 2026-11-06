@@ -396,6 +396,13 @@ Yeni sunucu/core durumu mevcut board'a uygulanır. Durum değişmese bile
 odak/görünürlük dönüşü kamerayı ve isteğe bağlı WebGL çizimini yeniler;
 canvas veya oyun oturumu sıradan sekme geçişinde yeniden kurulmaz.
 
+Odak dönüşünde `rollSession.setBackground(false)`, arka planda gelen son
+paketin microtask'ı henüz çalışmamışsa önce bu paketi tamamlar ve sunucuya
+sunum onayını gönderir. `TableScene` arka plan değişimini Vue prop güncellemesi
+tamamlandıktan sonra okur; odak, snapshot ve temizlenen batch aynı güncellemede
+gelse de eski snapshot/sunum yeniden başlatılmaz. Bekleyen sunum yoksa mevcut
+board'un zarları ve kaynakları birlikte eşitlenir; yeni tur/atış beklenmez.
+
 `TablePreview` mobil alan eşiğinde masa tanrısı hedeflerini oluşturmaz;
 inceleme ve highlight callback'leri de aynı eşiği kontrol eder. Mobil maç
 bilgisi ve güç seçimi mevcut `MobileFavorPanel` üzerinden yürür.

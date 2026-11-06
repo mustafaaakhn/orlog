@@ -241,8 +241,8 @@ watch(() => props.background, background => {
     if (!playback) {
       playback = createPlayback();
       playback.sync(props.state);
-      if (props.batch) void playback.play(props.batch);
-    }
+    } else if (!props.batch) playback.sync(props.state);
+    if (props.batch) void playback.play(props.batch);
     playback.setPaused(props.paused);
     // An on-demand WebGL buffer may have been discarded while the tab was away,
     // even when no state changed. Repaint the idle table on every return too.
@@ -250,7 +250,9 @@ watch(() => props.background, background => {
     frameCamera(seatTurn.angle);
     invalidate();
   }
-}, { flush: 'sync' });
+// Read the complete prop update: focus, snapshot and settled batch can arrive
+// together. A synchronous prop watcher can still see the previous snapshot.
+});
 watch(() => props.speed, value => playback?.setSpeed(value));
 watch(() => props.paused, value => playback?.setPaused(value || props.background), { immediate: true });
 watch(() => props.state, state => {

@@ -108,6 +108,9 @@ export function createRollSession(options: GameOptions = {}) {
     lastEvent,
     history,
     setBackground(value: boolean) {
+      // Focus may return before the microtask for the last hidden packet runs.
+      // Publish that authoritative snapshot and its receipt while still passive.
+      if (background && !value) flushBackground()
       background = value
       if (value) flushBackground()
     },
